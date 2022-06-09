@@ -85,7 +85,7 @@ def getSampleIDsByConfounder(save_dir, pheno_data_path, confounder):
 
     return indices
 
-def normalizeToUnitLength(df, gene_names):
+def normalizeToUnitVariance(df, gene_names):
     # normalize gene expression data for each gene vector (col) to unit length
     gene_names = np.array(gene_names)
     for col in df:

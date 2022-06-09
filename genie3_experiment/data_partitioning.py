@@ -208,7 +208,7 @@ for k in range(m):
         final_df = df.filter(items = block, axis='index')
 
         gene_names_cpy = gene_names.copy()
-        final_df, gene_names_cpy = prp.normalizeToUnitLength(final_df, gene_names_cpy)
+        final_df, gene_names_cpy = prp.normalizeToUnitVariance(final_df, gene_names_cpy)
 
         # filter from the set of regulators such genes that are not present in the filtered data set 
         mask = np.isin(regulators, gene_names_cpy)
@@ -270,7 +270,7 @@ for k in range(n): # n random partitions
         final_df = df[df.index.isin(block)]
 
         gene_names_cpy = gene_names.copy()
-        final_df, gene_names_cpy = prp.normalizeToUnitLength(final_df, gene_names_cpy)
+        final_df, gene_names_cpy = prp.normalizeToUnitVariance(final_df, gene_names_cpy)
 
         mask = np.isin(regulators, gene_names_cpy)
         regulators = np.array(regulators)[mask]
