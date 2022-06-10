@@ -170,9 +170,12 @@ with open(os.path.join(data_dir, str(cancer_type)+'_sample_identifiers.pkl'), 'r
 # recombine into pandas data frame
 ######################
 df = pd.DataFrame(raw_data, columns=all_genes, index=all_samples)
-df = df.iloc[:, :100]
-all_genes = all_genes[:100]
 gene_names = np.array(all_genes)
+for col in df:
+    if df[col].sum() == 0:
+            df = df.drop(col, axis=1)
+            gene_names = np.delete(gene_names, np.where(gene_names == col))
+gene_names = np.array(df.columns.copy())
 
 ######################
 # filter samples (rows): only keep 'Primary Tumor' samples
@@ -209,6 +212,7 @@ for k in range(m):
 
         gene_names_cpy = gene_names.copy()
         final_df, gene_names_cpy = prp.normalizeToUnitVariance(final_df, gene_names_cpy)
+        gene_names_cpy = np.array(final_df.columns.copy())
 
         # filter from the set of regulators such genes that are not present in the filtered data set 
         mask = np.isin(regulators, gene_names_cpy)
@@ -271,6 +275,7 @@ for k in range(n): # n random partitions
 
         gene_names_cpy = gene_names.copy()
         final_df, gene_names_cpy = prp.normalizeToUnitVariance(final_df, gene_names_cpy)
+        gene_names_cpy = np.array(final_df.columns.copy())
 
         mask = np.isin(regulators, gene_names_cpy)
         regulators = np.array(regulators)[mask]
