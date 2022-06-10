@@ -89,7 +89,7 @@ def normalizeToUnitVariance(df, gene_names):
     # normalize gene expression data for each gene vector (col) to unit length
     gene_names = np.array(gene_names)
     for col in df:
-        if df[col].std() != 0:
+        if df[col].sum() != 0 and df[col].std() != 0: # this is unnecessary, .std() would be sufficient, but I have to ask how to treat genes without variation
             df[col] = df[col]/df[col].std()
         else:
             df = df.drop(col, axis=1)
