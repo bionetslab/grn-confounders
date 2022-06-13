@@ -132,6 +132,7 @@ dmypy.json
 **/results
 **/input
 **/GENIE3
+**/.vscode
 
 # file formats to ignore
 *.odt
