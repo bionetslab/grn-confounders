@@ -96,3 +96,7 @@ def normalizeToUnitVariance(df, gene_names):
             gene_names = np.delete(gene_names, np.where(gene_names == col))
             print('removed gene ' + str(col) + ' from genes that are taken into account, because there were only 0 entries')
     return df, gene_names
+
+def testDuplicateGenes(genes):
+    u, c = np.unique(genes, return_counts=True)
+    return len(u) < len(genes)
