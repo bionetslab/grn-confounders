@@ -159,6 +159,9 @@ with open(os.path.join(data_dir, str(cancer_type)+'_data_set.pkl'), 'rb') as f:
 with open(os.path.join(data_dir, str(cancer_type)+'_gene_identifiers.pkl'), 'rb') as f:
     all_genes = pickle.load(f)
 all_genes = np.array([gene.split('.')[0] for gene in all_genes])
+duplicates = prp.testDuplicateGenes(all_genes.copy())
+if duplicates:
+    print('Cutting version identifier from ensemble ids caused occurrence of duplicates in list of genes!')
 
 ######################
 # get sample identifiers
@@ -171,6 +174,9 @@ with open(os.path.join(data_dir, str(cancer_type)+'_sample_identifiers.pkl'), 'r
 ######################
 df = pd.DataFrame(raw_data, columns=all_genes, index=all_samples)
 gene_names = np.array(all_genes)
+
+df = df.iloc[:, :100]
+gene_names = gene_names[:100]
 for col in df:
     if df[col].sum() == 0:
             df = df.drop(col, axis=1)
