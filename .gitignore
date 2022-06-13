@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# files to ignore
+**/results
+**/input
+**/GENIE3
+
+# file formats to ignore
+*.odt
+*.txt
