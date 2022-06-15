@@ -21,26 +21,49 @@ def mapEsidToName(esid_list):
     return gene_name_list
 
 def getPrimaryTumorIndices(pheno_data_path):
+    """Returns the sample ids that contain information obtained from Primary Tumor tissue.
+        
+        Parameters
+        ----------
+        pheno_data_path : str
+            Path to file which contains phenotypic information. One row per sample, one column per attribute.
 
+        Returns
+        -------
+        indices : np.array
+            Sample IDs of samples from Primary Tumor tissue.
+    """
     pheno_data = np.genfromtxt(fname=pheno_data_path, delimiter="\t", dtype=str)
     
     # remove normal and metastatic tissue samples from set of sample ids
     tissue_col_index = np.where(pheno_data[0, :] == 'sample_type.samples')[0][0]
     tum_data = pheno_data[pheno_data[0:, tissue_col_index] == 'Primary Tumor']
-
     tum_samples = tum_data[:, 0]
     indices = (['primary_tum_samples'], (tum_samples))
-
     return indices
 
 
-def getSampleIDsByConfounder(save_dir, pheno_data_path, confounder):
-    pheno_data = np.genfromtxt(fname=pheno_data_path, delimiter="\t", dtype=str)
-    
-    data_dir = save_dir
-    if not os.path.exists(data_dir):
-        os.mkdir(data_dir)
+def getSampleIDsByConfounder(pheno_data_path, confounder):
+    """Returns a tuple of two np.arrays with the first containing block string-identifiers of the requested @confounder 
+        and the second containing the sample ids corresponding to the blocks.
+            
+        Parameters
+        ----------
+        pheno_data_path : str
+            Path to file which contains phenotypic information. One row per sample, one column per attribute.
 
+        confounder : str
+            Confounder attribute that is to be used to build the partition.
+        
+        Returns
+        -------
+        blocks : np.array
+            At index i, contains the str-identifier of the block at index i in the @conf_partition.
+        
+        conf_partition : np.array
+            Contains the blocks belonging to the confounder-based partition.
+    """
+    pheno_data = np.genfromtxt(fname=pheno_data_path, delimiter="\t", dtype=str)
     indices = None
 
     # split set of sample ids based on confounder expression
@@ -49,24 +72,18 @@ def getSampleIDsByConfounder(save_dir, pheno_data_path, confounder):
         female_data = pheno_data[pheno_data[:, gender_col_index] == 'female']
         male_data = pheno_data[pheno_data[:, gender_col_index] == 'male']
 
-        pickle.dump(female_data, open(os.path.join(data_dir, 'TCGA-BLCA_female_data.pkl'), 'wb'))
-        pickle.dump(male_data, open(os.path.join(data_dir, 'TCGA-BLCA_male_data.pkl'), 'wb'))
-
         female_samples = female_data[:, 0]
         male_samples = male_data[:, 0]
-        indices = (['female', 'male'], (female_samples, male_samples))
+        (blocks, conf_partition) = (['female', 'male'], [female_samples, male_samples])
 
     if confounder == 'ethnicity':
         ethn_col_index = np.where(pheno_data[0, :] == 'ethnicity.demographic')[0][0]
         hisp_lat_data = pheno_data[pheno_data[:, ethn_col_index] == 'hispanic or latino']
         nonHisp_nonLat_data = pheno_data[pheno_data[:, ethn_col_index] == 'not hispanic or latino']
 
-        pickle.dump(hisp_lat_data, open(os.path.join(data_dir, 'TCGA-BLCA_hisp_lat_data.pkl'), 'wb'))
-        pickle.dump(nonHisp_nonLat_data, open(os.path.join(data_dir, 'TCGA-BLCA_nonHisp_nonLat_data.pkl'), 'wb'))
-
         hisp_lat_samples = hisp_lat_data[:, 0]
         nonHisp_nonLat_samples = nonHisp_nonLat_data[:, 0]
-        indices = (['hisp_lat', 'non_hisp_lat'], (hisp_lat_samples, nonHisp_nonLat_samples))
+        (blocks, conf_partition) = (['hisp_lat', 'non_hisp_lat'], [hisp_lat_samples, nonHisp_nonLat_samples])
 
     if confounder == 'race':
         race_col_index = np.where(pheno_data[0, :] == 'race.demographic')[0][0]
@@ -74,34 +91,28 @@ def getSampleIDsByConfounder(save_dir, pheno_data_path, confounder):
         african_data = pheno_data[pheno_data[:, race_col_index] == 'black or african american']
         white_data = pheno_data[pheno_data[:, race_col_index] == 'white']
 
-        pickle.dump(asian_data, open(os.path.join(data_dir, 'TCGA-BLCA_asian_data.pkl'), 'wb'))
-        pickle.dump(african_data, open(os.path.join(data_dir, 'TCGA-BLCA_african_data.pkl'), 'wb'))
-        pickle.dump(white_data, open(os.path.join(data_dir, 'TCGA-BLCA_white_data.pkl'), 'wb'))
-
         asian_samples = asian_data[:, 0]
         african_samples = african_data[:, 0]
         white_samples = white_data[:, 0]
-        indices = (['asian', 'african', 'white'], (asian_samples, african_samples, white_samples))
+        (blocks, conf_partition) = (['asian', 'african', 'white'], [asian_samples, african_samples, white_samples])
 
-    return indices
+    return (blocks, conf_partition)
 
-def normalizeToUnitVariance(df, gene_names):
+def normalizeToUnitVariance(df):
     # normalize gene expression data for each gene vector (col) to unit length
-    gene_names = np.array(gene_names)
     for col in df:
-        if df[col].std() != 0: # this is unnecessary, .std() would be sufficient, but I have to ask how to treat genes without variation
+        if df[col].std() != 0:
             df[col] = df[col]/df[col].std()
         else:
-            df = df.drop(col, axis=1)
-            gene_names = np.delete(gene_names, np.where(gene_names == col))
-            print('removed gene ' + str(col) + ' from genes that are taken into account, because there were only 0 entries')
-    return df, gene_names
+            print('df contains column '+str(col) + ' with std()==0. Normalization would produce nan value. Remove column ' + str(col) + ' before normalization.')
+    return df
 
 def testDuplicateGenes(genes):
     u, c = np.unique(genes, return_counts=True)
-    return len(u) < len(genes)
+    if len(u)<len(genes):
+        print('Cutting version identifier from ensemble ids caused occurrence of duplicates in list of gene identifiers!')
 
-def preprocess(raw_data_dir, cancer_type):
+def preprocessToPkl(raw_data_dir, data_dir, cancer_type):
 
     ######################
     # load data, cut column with gene names, header with sample names and then transpose the data matrix
@@ -148,3 +159,12 @@ def preprocess(raw_data_dir, cancer_type):
     with open(path, 'wb') as handle:
         pickle.dump(gene_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
     """
+
+def preprocessToCsv(raw_data_dir, data_dir, cancer_type):
+    print('start preprocessing...')
+    df = (pd.read_csv(os.path.join(raw_data_dir, str(cancer_type)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)).T
+    df = df.rename(columns={'Ensembl_ID':'sample_ID'}) # now the first column contains sample identifiers & should be named accordingly
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+    print('save pd.DataFrame to csv file ' + str(os.path.join(data_dir, str(cancer_type)+'_data_set.csv')))
+    df.to_csv(os.path.join(data_dir, str(cancer_type)+'_data_set.csv'), sep='\t')

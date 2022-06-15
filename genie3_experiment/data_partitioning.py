@@ -11,8 +11,6 @@ from GENIE3_python import GENIE3 as gn
 import preprocessing as prp
 import argparse
 import numpy as np
-import os
-import pickle
 import pandas as pd
 import csv
 import datetime
@@ -96,47 +94,22 @@ if not os.path.exists(rnd_results_dir):
 ####################################################################
 
 if do_preprocessing:
-    prp.preprocess(raw_data_dir, cancer_types)
+    prp.preprocessToCsv(raw_data_dir, data_dir, cancer_type) # cancer_type only needed for file naming; TODO: later also for data download
 
 ####################################################################
 # prepare final data set
 ####################################################################
 
 ######################
-# get data: one col per gene, one row per sample
+# get data: one col per gene, one row per sample and remove columns col where col.std() is 0
 ######################
-with open(os.path.join(data_dir, str(cancer_type)+'_data_set.pkl'), 'rb') as f:
-    raw_data = pickle.load(f)
-
-######################
-# get gene identifiers and remove the version identifier and the dot
-######################
-with open(os.path.join(data_dir, str(cancer_type)+'_gene_identifiers.pkl'), 'rb') as f:
-    all_genes = pickle.load(f)
-all_genes = np.array([gene.split('.')[0] for gene in all_genes])
-duplicates = prp.testDuplicateGenes(all_genes.copy())
-if duplicates:
-    print('Cutting version identifier from ensemble ids caused occurrence of duplicates in list of genes!')
-
-######################
-# get sample identifiers
-######################
-with open(os.path.join(data_dir, str(cancer_type)+'_sample_identifiers.pkl'), 'rb') as f:
-    all_samples = pickle.load(f)
-
-######################
-# recombine into pandas data frame
-######################
-df = pd.DataFrame(raw_data, columns=all_genes, index=all_samples)
-gene_names = np.array(all_genes)
-
+df = pd.read_csv(os.path.join(data_dir, str(cancer_type)+'_data_set.csv'), sep='\t', index_col=0, header=0)
 df = df.iloc[:, :100]
-gene_names = gene_names[:100]
+df = df.loc[:, (df.std() != 0)]
 for col in df:
-    if df[col].sum() == 0:
-            df = df.drop(col, axis=1)
-            gene_names = np.delete(gene_names, np.where(gene_names == col))
-gene_names = np.array(df.columns.copy())
+    df.rename({col: col.split('.')[0]}, axis=1, inplace=True)
+
+prp.testDuplicateGenes(df.columns.copy())
 
 ######################
 # filter samples (rows): only keep 'Primary Tumor' samples
@@ -152,9 +125,7 @@ regulators = np.genfromtxt(fname=os.path.join(raw_data_dir, 'TFs_Ensembl_v_1.01.
 ######################
 # group sample ids based on confounder-induced partitions
 ######################
-res = prp.getSampleIDsByConfounder(data_dir, os.path.join(raw_data_dir, str(cancer_type)+'.GDC_phenotype.tsv'), confounder) # returns the confounder based class names and an arrays of sample ids corresponding each to one class
-classes = res[0]
-conf_partition = res[1]
+(blocknames, conf_partition) = prp.getSampleIDsByConfounder(os.path.join(raw_data_dir, str(cancer_type)+'.GDC_phenotype.tsv'), confounder)
 
 ####################################################################
 # start GENIE3 on confounder based partitions
@@ -170,41 +141,29 @@ for k in range(m):
 
         # generate partition: select samples from data set based on the index set that was prepared before
         final_df = df.filter(items = block, axis='index')
-
-        gene_names_cpy = gene_names.copy()
-        final_df, gene_names_cpy = prp.normalizeToUnitVariance(final_df, gene_names_cpy)
-        gene_names_cpy = np.array(final_df.columns.copy())
+        final_df = final_df.loc[:, (final_df.std() != 0)]
+        final_df = prp.normalizeToUnitVariance(final_df)
+        gene_names = np.array(final_df.columns.copy())
 
         # filter from the set of regulators such genes that are not present in the filtered data set 
-        mask = np.isin(regulators, gene_names_cpy)
+        mask = np.isin(regulators, gene_names)
         regulators = np.array(regulators)[mask]
-        
-        # only keep gene columns in the data frame that the user wishes to examine
-        final_df = final_df[gene_names_cpy]
-        # make sure that the gene_names_cpy list matches the cols of the data frame again
-        mask = np.isin(gene_names_cpy, final_df.columns.values)
-        gene_names_cpy = np.array(gene_names_cpy)[mask]
 
-        gene_names_cpy = gene_names_cpy.tolist()
-        regulators = regulators.tolist() # TODO: print error message if there are no genes in regulators left and skip iteration
-        if len(regulators) < 1 or len(gene_names_cpy) < 1:
+        gene_names = gene_names.tolist()
+        regulators = regulators.tolist()
+        if len(regulators) < 1 or len(gene_names) < 1:
             print('no overlap of regulators and genes in data set. Skipping iteration.')
             break
         data = final_df.to_numpy()
         
-        p = len(gene_names_cpy)
-
         # Use Random Forest method
         tree_method='RF'
         # Number of randomly chosen candidate regulators at each node of a tree
+        p = len(gene_names)
         K = p-1
-        # Number of trees per ensemble
-        #ntrees = 50
-        # Run the method with these settings
-        VIM3 = gn.GENIE3(data,tree_method=tree_method,K=K,nthreads=nthreads,ntrees=ntrees)
-        print(VIM3)
 
-        gn.get_link_list(VIM3,gene_names=gene_names_cpy, regulators=regulators,file_name=os.path.join(conf_results_dir, 'ranking_iter_'+str(k)+'_confBlock_'+str(classes[i])+'.txt'))
+        VIM3 = gn.GENIE3(data,tree_method=tree_method,K=K,nthreads=nthreads,ntrees=ntrees)
+        gn.get_link_list(VIM3,gene_names=gene_names, regulators=regulators,file_name=os.path.join(conf_results_dir, 'ranking_iter_'+str(k)+'_confBlock_'+str(blocknames[i])+'.txt'))
 
         i = i+1
 
@@ -231,42 +190,36 @@ for k in range(n): # n random partitions
     i = 0
     # iterate through partition
     for block in partition:
-
-        final_df = df[df.index.isin(block)]
-
-        gene_names_cpy = gene_names.copy()
-        final_df, gene_names_cpy = prp.normalizeToUnitVariance(final_df, gene_names_cpy)
-        gene_names_cpy = np.array(final_df.columns.copy())
-
-        mask = np.isin(regulators, gene_names_cpy)
-        regulators = np.array(regulators)[mask]
-        
-        # only keep gene columns in the data frame that the user wishes to examine
-        final_df = final_df[gene_names_cpy]
-
-        # make sure that the gene_names_cpy list matches the cols of the data frame again
-        mask = np.isin(gene_names_cpy, final_df.columns.values)
-        gene_names_cpy = np.array(gene_names_cpy)[mask]
-
-        gene_names_cpy = gene_names_cpy.tolist()
-        regulators = regulators.tolist()
-        data = final_df.to_numpy()
-        if len(regulators) < 1 or len(gene_names_cpy) < 1:
-            print('no overlap of regulators and genes in data set. Skipping iteration.')
+        if len(block) <=1:
+            print('Block must contain at least two elements, otherwise, normalization to unit variance will cause NaN values.')
             break
 
-        p = len(gene_names_cpy)
+        # generate partition: select samples from data set based on the index set that was prepared before
+        final_df = df.filter(items = block, axis='index')
+        final_df = final_df.loc[:, (final_df.std() != 0)]
+        final_df = prp.normalizeToUnitVariance(final_df)
+        gene_names = np.array(final_df.columns.copy())
 
+        # filter from the set of regulators such genes that are not present in the filtered data set 
+        mask = np.isin(regulators, gene_names)
+        regulators = np.array(regulators)[mask]
+
+        gene_names = gene_names.tolist()
+        regulators = regulators.tolist()
+        if len(regulators) < 1 or len(gene_names) < 1:
+            print('no overlap of regulators and genes in data set. Skipping iteration.')
+            break
+        data = final_df.to_numpy()
+        
         # Use Random Forest method
         tree_method='RF'
         # Number of randomly chosen candidate regulators at each node of a tree
+        p = len(gene_names)
         K = p-1
-        # Number of trees per ensemble
-        #ntrees = 50
-        # Run the method with these settings
+
         VIM3 = gn.GENIE3(data,tree_method=tree_method,K=K,nthreads=nthreads,ntrees=ntrees)
 
-        gn.get_link_list(VIM3,gene_names=gene_names_cpy, regulators=regulators,file_name=os.path.join(rnd_results_dir, 'ranking_iter_'+str(k)+'_rndBlock_'+str(classes[i])+'.txt'))
+        gn.get_link_list(VIM3,gene_names=gene_names, regulators=regulators,file_name=os.path.join(rnd_results_dir, 'ranking_iter_'+str(k)+'_rndBlock_'+str(blocknames[i])+'.txt'))
 
         i = i+1
 
