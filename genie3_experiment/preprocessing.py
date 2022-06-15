@@ -89,7 +89,7 @@ def normalizeToUnitVariance(df, gene_names):
     # normalize gene expression data for each gene vector (col) to unit length
     gene_names = np.array(gene_names)
     for col in df:
-        if df[col].sum() != 0 and df[col].std() != 0: # this is unnecessary, .std() would be sufficient, but I have to ask how to treat genes without variation
+        if df[col].std() != 0: # this is unnecessary, .std() would be sufficient, but I have to ask how to treat genes without variation
             df[col] = df[col]/df[col].std()
         else:
             df = df.drop(col, axis=1)
@@ -100,3 +100,51 @@ def normalizeToUnitVariance(df, gene_names):
 def testDuplicateGenes(genes):
     u, c = np.unique(genes, return_counts=True)
     return len(u) < len(genes)
+
+def preprocess(raw_data_dir, cancer_type):
+
+    ######################
+    # load data, cut column with gene names, header with sample names and then transpose the data matrix
+    ######################
+    data = np.genfromtxt(fname=os.path.join(raw_data_dir, str(cancer_type)+'.htseq_fpkm.tsv'), delimiter="\t", skip_header=1) # cut header with sample identifiers
+    data = data[:,1:]
+    (rows, cols) = data.shape
+    data = np.transpose(data) # transpose: now one col per gene, one row per sample
+
+    # read gene names and sample ids in separate arrays
+    gene_identifiers = np.empty(rows, dtype=object)
+    sample_identifiers = np.empty(cols, dtype=object)
+    i = -1
+    with open(os.path.join(raw_data_dir, str(cancer_type)+'.htseq_fpkm.tsv'),encoding='utf8') as tsvfile:
+        tsvreader = csv.reader(tsvfile, delimiter="\t")
+        for line in tsvreader:
+            if i == -1:
+                sample_identifiers = np.array(line[1:], dtype=object)
+            if i > -1:
+                gene_identifiers[i] = str(line[0])
+            i = i + 1
+
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
+    # save gene identifiers, sample identifiers and data
+    pickle.dump(sample_identifiers, open(os.path.join(data_dir, str(cancer_type)+'_sample_identifiers.pkl'), 'wb'))
+    pickle.dump(gene_identifiers, open(os.path.join(data_dir, str(cancer_type)+'_gene_identifiers.pkl'), 'wb'))
+    pickle.dump(data, open(os.path.join(data_dir, str(cancer_type)+'_data_set.pkl'), 'wb'))
+    
+    ######################
+    # create dictionary for translation of gene identifiers to gene names with mapping file provided by tcga
+    ######################
+    """
+    gene_dict_path = os.path.join(cwd, 'TCGA-BLCA_raw_data', 'gencode.v22.annotation.gene.probeMap')
+    gene_dict_data = np.genfromtxt(fname=gene_dict_path, delimiter="\t", skip_header=1, dtype=str)
+
+    ident_list = list(gene_dict_data[:, 0])
+    gene_name_list = list(gene_dict_data[:, 1])
+    zipped = zip(ident_list, gene_name_list)
+    gene_dict = dict(zipped)
+
+    path = os.path.join(cwd, 'TCGA-BLCA_data', 'TCGA-BLCA_gene_dict.pkl')
+    with open(path, 'wb') as handle:
+        pickle.dump(gene_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    """
