@@ -1,8 +1,9 @@
 from NetworkInferenceWrapper import NetworkInferenceWrapper
 
-# TODO: we want to provide a script that works specifically on TCGA data; it takes the data and puts it into the format that
+# NOTE: we want to provide a script that works specifically on TCGA data; it takes the data and puts it into the format that
 # is required here. As this framework should also be applicable to data from other sources, this preprocessing procedure
 # is not included here. This preprocessing script should also perform the removal of version ids from the gene ids.
+# TODO: ask DB about his opinion
 
 # TODO: define path name conventions
 
@@ -27,6 +28,8 @@ class GENIEWrapper(NetworkInferenceWrapper):
 
 
         # 1. bring gene expression data into right format, get gene- and sample identifiers and create pd.DataFrame df
+            # note: from now on, we only cut the data frame to make sure that the order of the sample names and gene names 
+            # always match the data
             # remove 0-std cols
 
 
@@ -40,6 +43,8 @@ class GENIEWrapper(NetworkInferenceWrapper):
 
 
         # 5. form confounder-based partitions
+            # normalize to unit varince
+            # remove 0-std columns
 
 
         # 6. form random partitions
