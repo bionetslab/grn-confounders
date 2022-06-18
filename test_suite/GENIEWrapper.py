@@ -1,24 +1,27 @@
 from NetworkInferenceWrapper import NetworkInferenceWrapper
-
-# NOTE: we want to provide a script that works specifically on TCGA data; it takes the data and puts it into the format that
-# is required here. As this framework should also be applicable to data from other sources, this preprocessing procedure
-# is not included here. This preprocessing script should also perform the removal of version ids from the gene ids.
-# TODO: ask DB about his opinion
+import sys
+import os
+import pandas as pd
+import numpy as np
+import subprocess
+import preprocessing as prp
+test_suite = os.path.join(os.path.dirname(__file__))
+sys.path.append(test_suite)
 
 # TODO: define path name conventions
 
 class GENIEWrapper(NetworkInferenceWrapper):
 
-    def _infer_network(expression_data):
+    def _infer_network(self, expression_data):
 
-        """Abstract method to infer a network from expression data. Must be implemented by derived classes.
-        
+        """Method to infer a network from expression data using the GENIE3 algorithm.
+
         Parameters
         ----------
         expression_data : pd.DataFrame
             Gene expression data stored in a data frame with sample identifiers as indices and 
             gene symbols as column names.
-        
+
         Returns
         -------
         inferred_network : pd.DataFrame
@@ -26,34 +29,33 @@ class GENIEWrapper(NetworkInferenceWrapper):
             edge scores in inferred network.
         """
 
+        # remove columns with zero standard deviation and normalize columns to unit variance
+        expression_data = expression_data.loc[:, (expression_data.std() != 0)]
+        expression_data = prp.normalizeToUnitVariance(expression_data)
 
-        # 1. bring gene expression data into right format, get gene- and sample identifiers and create pd.DataFrame df
-            # note: from now on, we only cut the data frame to make sure that the order of the sample names and gene names 
-            # always match the data
-            # remove 0-std cols
+        # get regulators and remove from list of regulators such genes that are not present in expression_data
+        gene_names = np.array(expression_data.columns.copy())
+        regulators = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', sep='\t')
+        regulators = np.array(regulators)[np.isin(regulators, gene_names)]
 
+        targets = gene_names.tolist()
+        regulators = regulators.tolist()
+        if len(regulators) < 1 or len(gene_names) < 1:
+            print('no overlap of regulators and genes in data set. No results for current block.')
+    
+        # save expression_data as csv
+        data_path = os.path.join(test_suite, '..', 'temp', 'genie3_expression_data.csv') # TODO make unpredictable
+        expression_data.to_csv(data_path, sep='\t')
 
-        # 2. get known-TFs as regulators
-
-
-        # 3. bring phenotype data into right format
-
-
-        # 4. remove non-"Primary Tumor" samples from df
-
-
-        # 5. form confounder-based partitions
-            # normalize to unit varince
-            # remove 0-std columns
-
-
-        # 6. form random partitions
-
-
-        # 7. call GENIE3 on both confounder-based partitions and random partitions
+        # GENIE3 read.expr.matrix
+        genie3 = 'Rscript ../algorithms/GENIE3_R/GENIE3_script.R' 
+        ntrees = 50 # TODO
+        command = f'{genie3} {data_path} {regulators} {targets} {ntrees}'
+        subprocess.call(command, shell=True, stdout=subprocess.PIPE)
 
 
-        # 8. save results in permanent file
+        # TODO delete temporary data from output of genie call
+
 
 
     def _get_top_k_edges(self, i, k):
