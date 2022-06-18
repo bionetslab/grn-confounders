@@ -1,8 +1,3 @@
-"""
-@date: 28rd May 2022
-@author: Anna Ketteler
-"""
-
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'GENIE3'))
@@ -104,7 +99,7 @@ if do_preprocessing:
 # get data: one col per gene, one row per sample and remove columns col where col.std() is 0
 ######################
 df = pd.read_csv(os.path.join(data_dir, str(cancer_type)+'_data_set.csv'), sep='\t', index_col=0, header=0)
-df = df.iloc[:, :100]
+df = df.iloc[:, :100] # TODO remove later
 df = df.loc[:, (df.std() != 0)]
 for col in df:
     df.rename({col: col.split('.')[0]}, axis=1, inplace=True)
@@ -120,6 +115,11 @@ df = df.filter(items = tum_samples, axis=0)
 ######################
 # get list of regulators
 ######################
+"""
+# 2. get known-TFs as regulators
+url = 'http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt' # TODO problematic concerning security?
+ktf = pd.read_csv(url, sep='\t')
+"""
 regulators = np.genfromtxt(fname=os.path.join(raw_data_dir, 'TFs_Ensembl_v_1.01.txt'), delimiter="\t", dtype=str)
 
 ######################
@@ -145,14 +145,13 @@ for k in range(m):
         final_df = prp.normalizeToUnitVariance(final_df)
         gene_names = np.array(final_df.columns.copy())
 
-        # filter from the set of regulators such genes that are not present in the filtered data set 
-        mask = np.isin(regulators, gene_names)
-        regulators = np.array(regulators)[mask]
+        # filter from the set of regulators such genes that are not present in the filtered data set
+        regulators = np.array(regulators)[np.isin(regulators, gene_names)]
 
         gene_names = gene_names.tolist()
         regulators = regulators.tolist()
         if len(regulators) < 1 or len(gene_names) < 1:
-            print('no overlap of regulators and genes in data set. Skipping iteration.')
+            print('no overlap of regulators and genes in data set. No results for current block.')
             break
         data = final_df.to_numpy()
         
