@@ -1,7 +1,7 @@
 # script by David B. Blumenthal
 
 from abc import ABC, abstractmethod
-import itertoools as itt
+#import itertoools as itt
 
 class NetworkInferenceWrapper(ABC):
     """An abstract wrapper class for network inference methods.
@@ -49,8 +49,10 @@ class NetworkInferenceWrapper(ABC):
         """Infers all networks for the stored partition and expression data."""
         self._inferred_networks = []
         for block in self.partition:
-            self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
-            
+            #self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
+            # avoid KeyErrors in the above call if block contains elements that are not in the index of expression_data:
+            self._inferred_networks.append(self._infer_network(self.expression_data.filter(items = block, axis='index')))
+
     def mean_jaccard_index_at_k(self, k):
         """Returns the mean Jaccard index for the top k edges in the inferred networks.
         
