@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import subprocess
 import preprocessing as prp
+import csv
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
@@ -44,22 +45,28 @@ class GENIEWrapper(NetworkInferenceWrapper):
             print('no overlap of regulators and genes in data set. No results for current block.')
     
         # save expression_data as csv
-        data_path = os.path.join(test_suite, '..', 'temp', 'genie3_expression_data.csv') # TODO make unpredictable
+        main = os.path.join(test_suite, '..')
+        data_path = os.path.join(main, 'temp', 'genie3_expression_data.csv') # TODO make unpredictable
+        expression_data = expression_data.T # R version of genie wants gene x sample data set
         expression_data.to_csv(data_path, sep='\t')
 
-        # GENIE3 read.expr.matrix
+        # GENIE3 read.expr.matrix TODO: set parameter nTrees
+        out_path = os.path.join(main, 'temp', 'genie3_link_list.csv')
         genie3 = 'Rscript ../algorithms/GENIE3_R/GENIE3_script.R' 
-        ntrees = 50 # TODO
-        command = f'{genie3} {data_path} {regulators} {targets} {ntrees}'
-        subprocess.call(command, shell=True, stdout=subprocess.PIPE)
+        command = f'{genie3} {data_path} {out_path} {regulators} {targets}'
+        subprocess.call(command, shell=True, stdout=subprocess.PIPE) # TODO something is not working
 
+        # get results
+        network = pd.read_csv(out_path, sep='\t')
 
-        # TODO delete temporary data from output of genie call
+        # remove temporary files
+        subprocess.call('rm '+str(output_path), shell=True)
+        subprocess.call('rm '+str(data_path), shell=True)
 
-
+        return network
 
     def _get_top_k_edges(self, i, k):
-            """Abstract method to returns the top k edges for the inferred network for block i. 
+            """Abstract method to return the top k edges for the inferred network for block i. 
             Must be implemented by derived classes.
             
             Parameters
@@ -76,3 +83,18 @@ class GENIEWrapper(NetworkInferenceWrapper):
                 correlation), use tuples of form (<gene_1>, <gene_2>, <sense>), where <sense> is either -1 or 1.
                 For undirected edges, ensure that <gene_2> <= <gene_2> for all tuples contained in edge set.
             """
+
+            if self._inferred_networks is None:
+                print('Call method infer_networks first.')
+                return
+            elif len(self.partition) <= i:
+                print('Block with index ' + str(i) + ' does not exist in partition.')
+                return
+
+            block = self._inferred_networks[i]
+            if block.shape[1] > 2:
+                block = block.iloc[:, :2]
+            if k >= len(block):
+                k = len(block) - 1
+
+            return set(block.iloc[:k, :])
