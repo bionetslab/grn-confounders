@@ -18,4 +18,20 @@ usage:
 Call the script data_partitioning.py. When calling the script for the first time on a new system, use the option -prp to enable data preprocessing. In all subsequent executions of the script, the -prp option can be omitted as the preprocessed data is available locally in .pkl format.
 ![usage](https://user-images.githubusercontent.com/62886428/172936096-da788d0d-3d2c-4412-ba18-765594d6b4e1.png)
 
-Then explain briefly data visualization
+#### required folder structure
+The source code for GENIE3 has to be placed in the root directory of the subproject, i.e. the directory "genie3_experiment".
+
+genie3_experiment
+          - data_partitioning.py
+          - preprocessing.py
+          - postprocessing.ipynb
+          - input
+              - raw_data
+          - GENIE3 
+              - GENIE3_python
+                  - GENIE3.py
+                  
+TCGA data can be obtained from ... UCSC xena (TODO) ... and has to be placed in raw_data. Required files are RNAseq - FPKM and phenotype file (TODO exact names from example). Known transcription factors can be obtained from ... (TODO) ...
+
+Then briefly explain data visualization / postprocessing.
+
