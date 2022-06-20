@@ -45,25 +45,30 @@ class GENIEWrapper(NetworkInferenceWrapper):
             print('no overlap of regulators and genes in data set. No results for current block.')
     
         # save expression_data as csv
-        main = os.path.join(test_suite, '..')
-        data_path = os.path.join(main, 'temp', 'genie3_expression_data.csv') # TODO make unpredictable
+        main = os.path.join('/home', 'anna', 'BIONETS_code')
+        prefix = 'genie3'
+        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv') # TODO make unpredictable
+
         expression_data = expression_data.T # R version of genie wants gene x sample data set
         expression_data.to_csv(data_path, sep='\t')
 
         # GENIE3 read.expr.matrix TODO: set parameter nTrees
-        out_path = os.path.join(main, 'temp', 'genie3_link_list.csv')
-        genie3 = 'R ../algorithms/GENIE3_R/GENIE3_script.R' 
-        #command = [str(genie3), str(data_path), str(out_path), str(regulators), str(targets)]
-        command = f'{genie3} {data_path} {out_path} {regulators} {targets}'
-        subprocess.call(command, shell=True, stdout=subprocess.PIPE) # TODO something is not working
+        out_path = os.path.join(main, 'temp', f'{prefix}_link_list.csv')
+
+        cur = os.getcwd()
+        os.chdir(os.path.join(main, 'algorithms', 'GENIE3_R'))
+        command = f'Rscript GENIE3_script.R {prefix} {regulators} {targets}' 
+        ret = subprocess.run(command, shell=True)
+        os.chdir(cur)
+        print(os.getcwd())
 
         # get results
         network = pd.read_csv(out_path, sep='\t')
-        """
+        
         # remove temporary files
         subprocess.call('rm '+str(output_path), shell=True)
         subprocess.call('rm '+str(data_path), shell=True)
-        """
+        
         return network
 
     def _get_top_k_edges(self, i, k):
