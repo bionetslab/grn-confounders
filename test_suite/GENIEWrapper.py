@@ -52,17 +52,18 @@ class GENIEWrapper(NetworkInferenceWrapper):
 
         # GENIE3 read.expr.matrix TODO: set parameter nTrees
         out_path = os.path.join(main, 'temp', 'genie3_link_list.csv')
-        genie3 = 'Rscript ../algorithms/GENIE3_R/GENIE3_script.R' 
+        genie3 = 'R ../algorithms/GENIE3_R/GENIE3_script.R' 
+        #command = [str(genie3), str(data_path), str(out_path), str(regulators), str(targets)]
         command = f'{genie3} {data_path} {out_path} {regulators} {targets}'
         subprocess.call(command, shell=True, stdout=subprocess.PIPE) # TODO something is not working
 
         # get results
         network = pd.read_csv(out_path, sep='\t')
-
+        """
         # remove temporary files
         subprocess.call('rm '+str(output_path), shell=True)
         subprocess.call('rm '+str(data_path), shell=True)
-
+        """
         return network
 
     def _get_top_k_edges(self, i, k):
@@ -92,9 +93,9 @@ class GENIEWrapper(NetworkInferenceWrapper):
                 return
 
             block = self._inferred_networks[i]
-            if block.shape[1] > 2:
-                block = block.iloc[:, :2]
-            if k >= len(block):
-                k = len(block) - 1
+            k = min(k, len(block))
+            top_k_edges = []
+            for j in range(k):
+                top_k_edges.append((block.iloc[j, 0], block.iloc[j, 1]))
 
-            return set(block.iloc[:k, :])
+            return set(top_k_edges)
