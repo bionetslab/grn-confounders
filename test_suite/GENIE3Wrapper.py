@@ -66,7 +66,7 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
         network = pd.read_csv(out_path, sep='\t')
         
         # remove temporary files
-        subprocess.call('rm '+str(output_path), shell=True)
+        subprocess.call('rm '+str(out_path), shell=True)
         subprocess.call('rm '+str(data_path), shell=True)
         
         return network
@@ -87,7 +87,7 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
                 Set of tuples encoding edges. For edges without a sense, use tuples of form (<gene_1>, <gene_2>),
                 where <gene_1> and <gene_2> are gene symbols. For edges with a sense (e.g., positive or negative
                 correlation), use tuples of form (<gene_1>, <gene_2>, <sense>), where <sense> is either -1 or 1.
-                For undirected edges, ensure that <gene_2> <= <gene_2> for all tuples contained in edge set.
+                For undirected edges, ensure that <gene_1> <= <gene_2> for all tuples contained in edge set.
             """
 
             if self._inferred_networks is None:
