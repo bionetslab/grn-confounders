@@ -1,5 +1,5 @@
 from NetworkInferenceWrapper import NetworkInferenceWrapper
-import pandas as import pd
+import pandas as pd
 import numpy as np
 
 #https://bitbucket.org/sonnhammergrni/genespider/src/master/

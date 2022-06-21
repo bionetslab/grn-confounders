@@ -1,7 +1,7 @@
 # script by David B. Blumenthal
 
 from abc import ABC, abstractmethod
-import itertoools as itt
+#import itertoools as itt
 
 class NetworkInferenceWrapper(ABC):
     """An abstract wrapper class for network inference methods.
