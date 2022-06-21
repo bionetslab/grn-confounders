@@ -3,6 +3,7 @@ import GENIE3Wrapper
 import ARACNEWrapper
 import LSCONWrapper
 import pandas as pd
+import os
 
 class AlgorithmSelector(Enum):
     """Enum specifying which network inference algorithm should be used."""
@@ -47,7 +48,9 @@ def download_TCGA_expression_data(cancer_type_selector):
         A data frame with gene symbols as indices and column names whose entries correspond to
         non-normalized gene expression data.
     """
+    cwd = os.path.join(os.path.dirname(__file__))
     url = ""
     if cancer_type_selector == CancerTypeSelector.BLCA:
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
-    return pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
+    df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
+    df.to_csv(os.path.join(cwd, '..', 'data', 'TCGA-BLCA.htseq_fpkm.tsv'), sep='\t')
