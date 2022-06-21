@@ -1,5 +1,5 @@
 genie3_r <- getwd()
-source(paste(genie3_r, "/GENIE3.R", sep=""))
+library(GENIE3)
 
 main <- file.path(genie3_r, '..', '..')
 args <- commandArgs(trailingOnly=TRUE)
