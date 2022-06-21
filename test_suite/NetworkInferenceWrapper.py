@@ -1,7 +1,7 @@
 # script by David B. Blumenthal
 
 from abc import ABC, abstractmethod
-#import itertoools as itt
+import itertoools as itt
 
 class NetworkInferenceWrapper(ABC):
     """An abstract wrapper class for network inference methods.
@@ -50,7 +50,8 @@ class NetworkInferenceWrapper(ABC):
         self._inferred_networks = []
         for block in self.partition:
             #self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
-            # avoid KeyErrors in the above call if block contains elements that are not in the index of expression_data:
+            # @DB other possibility to avoid KeyErrors in the above call if block contains elements that are not in the index of expression_data?
+            # for now:
             self._inferred_networks.append(self._infer_network(self.expression_data.filter(items = block, axis='index')))
 
     def mean_jaccard_index_at_k(self, k):
@@ -77,6 +78,13 @@ class NetworkInferenceWrapper(ABC):
             sum_jaccard_indices += size_intersection / size_union
             num_comparisons += 1
         return sum_jaccard_indices / num_comparisons
+
+    # @DB suggestion: what we talked about last time. Compare variance within a partition across all confounder based partitions,
+    # or all random partitions, respectively --> how consistent is the tool from iteration to iteration?
+    # Across confounder-based partitions only makes sense if tool involves random procedures
+    # (?)
+    def compare_variance_across_partitions(self):
+        pass
     
     @staticmethod
     @abstractmethod        
