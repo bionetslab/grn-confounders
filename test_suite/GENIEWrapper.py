@@ -45,7 +45,7 @@ class GENIEWrapper(NetworkInferenceWrapper):
             print('no overlap of regulators and genes in data set. No results for current block.')
     
         # save expression_data as csv
-        main = os.path.join('/home', 'anna', 'BIONETS_code')
+        main = os.path.join(test_suite, '..')
         prefix = 'genie3'
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv') # TODO make unpredictable
 
