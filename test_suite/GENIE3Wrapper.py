@@ -101,6 +101,6 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
             k = min(k, len(block))
             top_k_edges = []
             for j in range(k):
-                top_k_edges.append((block.iloc[j, 0], block.iloc[j, 1]))
+                top_k_edges.append((block.iloc[j, 0], block.iloc[j, 1])) # TODO directed network --> sense always 1; add it still to not confuse with undirected network?
 
             return set(top_k_edges)
