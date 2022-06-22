@@ -76,13 +76,6 @@ class NetworkInferenceWrapper(ABC):
             sum_jaccard_indices += size_intersection / size_union
             num_comparisons += 1
         return sum_jaccard_indices / num_comparisons
-
-    # @DB suggestion: what we talked about last time. Compare variance within a partition across all confounder based partitions,
-    # or all random partitions, respectively --> how consistent is the tool from iteration to iteration?
-    # Across confounder-based partitions only makes sense if tool involves random procedures
-    # (?)
-    def compare_variance_across_partitions(self):
-        pass
     
     @staticmethod
     @abstractmethod        
