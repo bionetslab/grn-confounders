@@ -36,17 +36,11 @@ def get_algorithm_wrapper(algorithm_selector):
         return LSCON()
 
 def download_TCGA_expression_data(cancer_type_selector):
-    """Returns TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from USCS Xena.
+    """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from USCS Xena in /data.
     Parameters
     ----------
     cancer_type_selector : CancerTypeSelector
         Specifies which algorithm should be used.
-
-    Returns
-    -------
-    raw_expression_data : pd.DataFrame
-        A data frame with gene symbols as indices and column names whose entries correspond to
-        non-normalized gene expression data.
     """
     cwd = os.path.join(os.path.dirname(__file__))
     url = ""
@@ -54,3 +48,9 @@ def download_TCGA_expression_data(cancer_type_selector):
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
     df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
     df.to_csv(os.path.join(cwd, '..', 'data', 'TCGA-BLCA.htseq_fpkm.tsv'), sep='\t')
+
+def download_known_tfs():
+    """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
+    """
+    df = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', delimiter='\t', index_col=0)
+    df.to_csv(os.path.join(cwd, '..', 'data', 'regulators.csv'), sep='\t')
