@@ -50,8 +50,6 @@ class NetworkInferenceWrapper(ABC):
         self._inferred_networks = []
         for block in self.partition:
             #self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
-            # @DB other possibility to avoid KeyErrors in the above call if block contains elements that are not in the index of expression_data?
-            # for now:
             self._inferred_networks.append(self._infer_network(self.expression_data.filter(items = block, axis='index')))
 
     def mean_jaccard_index_at_k(self, k):
@@ -122,7 +120,7 @@ class NetworkInferenceWrapper(ABC):
             Set of tuples encoding edges. For edges without a sense, use tuples of form (<gene_1>, <gene_2>),
             where <gene_1> and <gene_2> are gene symbols. For edges with a sense (e.g., positive or negative
             correlation), use tuples of form (<gene_1>, <gene_2>, <sense>), where <sense> is either -1 or 1.
-            For undirected edges, ensure that <gene_2> <= <gene_2> for all tuples contained in edge set.
+            For undirected edges, ensure that <gene_1> <= <gene_2> for all tuples contained in edge set.
         """
         pass
             
