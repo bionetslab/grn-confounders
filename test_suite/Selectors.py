@@ -104,13 +104,12 @@ def get_pheno_data(cancer_type_selector):
     -------
     pheno_data : pd.DataFrame
         Expression data (indices are sample IDs, column names are gene IDs).
-    
     """
     pheno_data = pd.read_csv(os.path.join(cwd, '..', 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
     return pheno_data # TODO check if it really works if we do not filter on Primary Tumor here, but only in samples
 
 
-def get_conf_partition(pheno_data, confounder):
+def get_conf_partition(pheno_data, confounder_selector):
     """Returns two np.arrays with the first containing string-identifiers for the blocks of the requested confounder 
         and the second containing the sample ids corresponding to the blocks.
             
@@ -119,7 +118,7 @@ def get_conf_partition(pheno_data, confounder):
         pheno_data : pd.DataFrame
             Data frame containing phenotypic information. One row per sample, one column per attribute.
 
-        confounder : str
+        confounder_selector : ConfounderSelector
             Confounder attribute that is to be used to build the partition.
         
         Returns
@@ -133,7 +132,7 @@ def get_conf_partition(pheno_data, confounder):
     indices = None
 
     # split set of sample ids based on confounder expression
-    if confounder == 'sex':
+    if str(confounder_selector) == 'sex':
         gender_col_index = np.where(pheno_data[0, :] == 'gender.demographic')[0][0]
         female_data = pheno_data[pheno_data[:, gender_col_index] == 'female']
         male_data = pheno_data[pheno_data[:, gender_col_index] == 'male']
@@ -141,8 +140,8 @@ def get_conf_partition(pheno_data, confounder):
         female_samples = female_data[:, 0]
         male_samples = male_data[:, 0]
         blocks, conf_partition = ['female', 'male'], [female_samples, male_samples]
-
-    if confounder == 'ethnicity':
+    """
+    if str(confounder_selector) == 'ethnicity':
         ethn_col_index = np.where(pheno_data[0, :] == 'ethnicity.demographic')[0][0]
         hisp_lat_data = pheno_data[pheno_data[:, ethn_col_index] == 'hispanic or latino']
         nonHisp_nonLat_data = pheno_data[pheno_data[:, ethn_col_index] == 'not hispanic or latino']
@@ -150,8 +149,8 @@ def get_conf_partition(pheno_data, confounder):
         hisp_lat_samples = hisp_lat_data[:, 0]
         nonHisp_nonLat_samples = nonHisp_nonLat_data[:, 0]
         blocks, conf_partition = ['hisp_lat', 'non_hisp_lat'], [hisp_lat_samples, nonHisp_nonLat_samples]
-
-    if confounder == 'race':
+    """
+    if str(confounder_selector) == 'race':
         race_col_index = np.where(pheno_data[0, :] == 'race.demographic')[0][0]
         asian_data = pheno_data[pheno_data[:, race_col_index] == 'asian']
         african_data = pheno_data[pheno_data[:, race_col_index] == 'black or african american']
@@ -162,9 +161,27 @@ def get_conf_partition(pheno_data, confounder):
         white_samples = white_data[:, 0]
         blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples, african_samples, white_samples]
 
+    if str(confounder_selector) == 'age':
+        pass # TODO
+
     return conf_partition
 
 def get_n_random_partitions(n, samples, conf_partition):
+    """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
+    confounder based partition.
+    Parameters
+    ----------
+    n : int
+        Specifies the number of random partitions that should be generated.
+    samples : pd.DataFrame
+        Contains all sample identifiers.
+    conf_partition : np.array
+        Array of blocks as pd.DataFrames with one column containing the sample identifiers belonging to the block.
+    Returns
+    -------
+    partitions : list
+        List of random partitions. Each partition is an np.array.
+    """
     partitions = []
     pos = 0
     cuts = []
@@ -174,4 +191,4 @@ def get_n_random_partitions(n, samples, conf_partition):
     for k in range(n): # TODO
         np.random.shuffle(samples.copy())
         partitions.append(np.split(samples_cpy, cuts[:-1]))
-    return partitions
+    return np.array(partitions)
