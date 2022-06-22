@@ -47,7 +47,7 @@ def download_TCGA_expression_data(cancer_type_selector):
     if cancer_type_selector == CancerTypeSelector.BLCA:
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
     df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
-    df.to_csv(os.path.join(cwd, '..', 'data', 'TCGA-BLCA.htseq_fpkm.tsv'), sep='\t')
+    df.to_csv(os.path.join(cwd, '..', 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
 
 def download_known_tfs():
     """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
