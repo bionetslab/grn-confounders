@@ -8,7 +8,7 @@ main <- file.path(genie3_r, '..', '..')
 args <- commandArgs(trailingOnly=TRUE)
 prefix <- args[1]
 
-regulator_path <- paste(main, '/temp/', 'regulators.csv', sep="")
+regulator_path <- paste(main, '/temp/', prefix, '_regulators.csv', sep="")
 data_path <- paste(main, '/temp/', prefix, '_expression_data.csv', sep="")
 out_path <- paste(main, '/temp/', prefix, '_link_list.csv', sep="")
 

@@ -44,9 +44,10 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
 
         # get regulators and remove such genes that are not present in expression_data
         ktf_path = os.path.join(main, 'data', 'regulators.csv')
-        regulators = pd.read_csv(ktf_path, sep='\t').filter(items = expression_data.columns, axis='columns')
-        regulator_path = os.path.join(main, 'temp', 'regulators.csv')
-        regulators.to_csv(regulator_path, sep='\t')
+        regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
+        regulators = regulators[np.isin(regulators, expression_data.index)]
+        regulator_path = os.path.join(main, 'temp', f'{prefix}_regulators.csv')
+        pd.DataFrame(regulators).to_csv(regulator_path, sep='\t')
 
         # set output path
         out_path = os.path.join(main, 'temp', f'{prefix}_link_list.csv')
