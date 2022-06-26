@@ -1,6 +1,13 @@
 from NetworkInferenceWrapper import NetworkInferenceWrapper
 import pandas as pd
 import numpy as np
+import subprocess
+import os
+import sys
+import preprocessing as prp
+import csv
+test_suite = os.path.join(os.path.dirname(__file__))
+sys.path.append(test_suite)
 
 #https://github.com/califano-lab/ARACNe-AP
 #https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-S1-S7#Sec13
@@ -22,41 +29,63 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             A data frame with gene symbols as indices and column names whose entries correspond to
             edge scores in inferred network.
         """
-
-
-        # -e: prepare .txt file with genes on rows and samples on columns; tab separated, with row- and column names
-        # TODO: check again if normalization is done by the tool
-        expression_data = expression_data.T
-        expression_path = None # TODO
-
-        # -o: set output folder
         main = os.path.join(test_suite, '..')
         prefix = 'aracne'
-        out_path = os.path.join(main, 'temp', f'{prefix}_link_list.csv')
 
-        # --tfs: prepare .txt file with known transcription factors and hand path
-        tfs = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', sep='\t')
-        tfs_path = None # TODO
+        # remove columns with zero standard deviation and normalize columns to unit variance
+        expression_data = expression_data.loc[:, (expression_data.std() != 0)]
+        expression_data = prp.normalizeToUnitVariance(expression_data)
 
-        # --pvalue: 1E-8 (from tutorial)
-        p = 1E-8
+        # -e: save expression_data to csv
+        expression_data = expression_data.T # ARACNe expects gene x sample data set
+        gene_dict = dict(zip(expression_data.index, range(len(expression_data.index))))
+        expression_data.insert(loc=0, column='gene', value=[gene_dict[i] for i in expression_data.index])
+        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.txt')
+        expression_data.to_csv(data_path, sep='\t', index=False)
 
-        # run aracne: java -Xmx5G -jar aracne.jar -e test/matrix.txt  -o outputFolder --tfs test/tfs.txt --pvalue 1E-8
+        # get regulators and remove such genes that are not present in expression_data
+        ktf_path = os.path.join(main, 'data', 'regulators.csv')
+        regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
+        regulators = regulators[np.isin(regulators, expression_data.index)]
+        regulators = [gene_dict[i] for i in regulators]
+        regulator_path = os.path.join(main, 'temp', f'{prefix}_regulators.txt')
+        pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
+
+        # set parameters seed and p-value
+        p = '1E-8'
+        seed = '1'
+
+        # -o: set output folder
+        out_dir = os.path.join(main, 'temp', prefix)
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
+        out_path = os.path.join(out_dir, 'network.txt')
+
+        # run ARACNe:
         cur = os.getcwd()
-        os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP'))
-        # TODO: copied from amim
-        command = f'java -Xmx2g -jar keypathwayminer-standalone-5.0.jar -e {expression_path} -tfs {tfs_path} -o {out_path} --pvalue {p}'
+        os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP')) # TODO: we can't rename the output files e.g. of the bootstrapping step
+        exe = os.path.join('dist','aracne.jar') # TODO: what are the three thresholds for?
+        thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --calculateThreshold'
+        subprocess.run(thresholdCommand, shell=True)
+        #for i in range(3):
+        command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {2}'
+        subprocess.run(command, shell=True)
+        command = f'java -Xmx5G -jar {exe} -o {out_dir} --consolidate --nobonferroni' # TODO: why is the network empty if we do not add --nobonferroni
         subprocess.run(command, shell=True)
         os.chdir(cur)
 
         # get results
         network = pd.read_csv(out_path, sep='\t')
+        inv_gene_dict = {v: k for k, v in gene_dict.items()}
+        network['Regulator'] = [inv_gene_dict[i] for i in network['Regulator']]
+        network['Target'] = [inv_gene_dict[i] for i in network['Target']]
         
         # remove temporary files
-        subprocess.call('rm '+str(output_path), shell=True)
         subprocess.call('rm '+str(data_path), shell=True)
+        subprocess.call('rm '+str(regulator_path), shell=True)
+        subprocess.call('rm -r '+str(out_dir), shell=True)
         
-        return network
+        return network # TODO should the columns have special names?
 
     def _get_top_k_edges(self, i, k):
             """Abstract method to return the top k edges for the inferred network for block i. 
