@@ -1,13 +1,13 @@
-#import testsuite.utils as utils
-import Selectors as Selectors
+from . import Selectors
 import pandas as pd
 import numpy as np
 
 class TestRunner(object):
     """Runs the tests."""
 
-    def __init__(self):
+    def __init__(self, n):
         """Constructs TestRunner object."""
+        self.n = n
         self.cancer_type_selectors = list(Selectors.CancerTypeSelector) # a "cohort" in TCGA terminology
         self.algorithm_selectors = list(Selectors.AlgorithmSelector)
         self.confounder_selectors = list(Selectors.ConfounderSelector)
@@ -15,14 +15,17 @@ class TestRunner(object):
         self.expression_datasets = {sel: Selectors.get_expression_data(sel) for sel in self.cancer_type_selectors}
         self.pheno_datasets = {sel: Selectors.get_pheno_data(sel) for sel in self.cancer_type_selectors} # only hand over Primary Tumor samples
         self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
-        self.conf_partitions = {ct_sel: {conf_sel: Selectors.get_conf_partition(ct_sel, conf_sel) for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_types}
-        
+        self.conf_partitions = {ct_sel: {conf_sel: Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_sel) for conf_sel in self.confounder_selectors}
+            for ct_sel in self.cancer_type_selectors}
+        self.rnd_partitions = {ct_sel: [Selectors.get_n_random_partitions(self.n, self.pheno_datasets[ct_sel]['submitter_id.samples'], self.conf_partitions[ct_sel][conf_sel])
+            for conf_sel in self.confounder_selectors] for ct_sel in self.cancer_type_selectors}
+
         self.cancer_type_names = []
         self.algorithm_names = []
         self.confounder_names = []
         self.partitions = []
         self.conf_partition = []
-        self.results = {ct_sel: {conf_sel: [] for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_types} # a list of length n per cancer_type and confounder
+        self.results = {ct_sel: {conf_sel: [] for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors} # a list of length n per cancer_type and confounder
         self.outfile = ''
 
     def run_on_all_cancer_types_confounders_partitions(self, n, cancer_type_selector, confounder_selector, algorithm_selector, verbose):
@@ -42,13 +45,15 @@ class TestRunner(object):
         verbose : bool
             Print progress to stdout.
         """
+        Selectors.download_known_tfs()
+
         self.cancer_type_names.append(str(cancer_type_selector))
         self.algorithm_names.append(str(algorithm_selector))
         self.confounder_names.append(str(confounder_selector))
-        
-        self.conf_partition = self.conf_partitions[cancer_type_selector][confounder_selector]
-        samples = self.pheno_datasets[cancer_type_selectors][0, :]
-        self.partitions = Selectors.get_n_random_partitions(n, samples, self.conf_partition)
+
+        #self.conf_partition = self.conf_partitions[cancer_type_selector][confounder_selector]
+        #samples = self.pheno_datasets[cancer_type_selector][0, :]
+        #self.partitions = Selectors.get_n_random_partitions(n, samples, self.conf_partition)
 
         prefix = f'{str(algorithm_selector)}'
         if verbose:
