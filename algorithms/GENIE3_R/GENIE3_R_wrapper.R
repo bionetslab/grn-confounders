@@ -27,7 +27,7 @@ treeMethod <- 'RF'
 K = 'sqrt'
 targets <- NULL
 
-weightMat <- GENIE3(exprMat, regulators=regulators, targets=targets, nTrees=50, returnMatrix = TRUE, K=K, treeMethod=treeMethod)
+weightMat <- GENIE3(exprMat, regulators=regulators, targets=targets, nTrees=1000, returnMatrix = TRUE, K=K, treeMethod=treeMethod)
 linkList <- getLinkList(weightMat)
 write.table(linkList, out_path, sep='\t')
 
