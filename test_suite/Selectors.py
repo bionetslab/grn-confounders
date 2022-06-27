@@ -91,7 +91,6 @@ def get_expression_data(cancer_type_selector):
     -------
     expression_data : pd.DataFrame
         Expression data (indices are sample IDs, column names are gene IDs).
-    
     """
     cwd = os.getcwd()
     try:
@@ -126,42 +125,31 @@ def get_pheno_data(cancer_type_selector): # TODO: fix data type in dataframe in 
 def get_conf_partition(pheno_data, confounder_selector):
     """Returns two np.arrays with the first containing string-identifiers for the blocks of the requested confounder 
         and the second containing the sample ids corresponding to the blocks.
-            
         Parameters
         ----------
         pheno_data : pd.DataFrame
             Data frame containing phenotypic information. One row per sample, one column per attribute.
-
         confounder_selector : ConfounderSelector
             Confounder attribute that is to be used to build the partition.
-        
         Returns
         -------
-        blocks : np.array
-            At index i, contains the str-identifier of the block at index i in the @conf_partition.
-        
         conf_partition : np.array
             Contains the blocks belonging to the confounder-based partition.
     """
     indices = None
-
-    # split set of sample ids based on confounder expression
     if confounder_selector == ConfounderSelector.SEX:
         female_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'female']['submitter_id.samples']
         male_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'male']['submitter_id.samples']
         blocks, conf_partition = ['female', 'male'], [female_samples, male_samples]
-
     if confounder_selector == ConfounderSelector.RACE:
         asian_samples = pheno_data.loc[pheno_data['race.demographic'] == 'asian']['submitter_id.samples']
         african_samples = pheno_data.loc[pheno_data['race.demographic'] == 'black or african american']['submitter_id.samples']
         white_samples = pheno_data.loc[pheno_data['race.demographic'] == 'white']['submitter_id.samples']
         blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples, african_samples, white_samples]
-
     if confounder_selector == ConfounderSelector.AGE:
         low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] < 50]['submitter_id.samples']
         high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > 70]['submitter_id.samples']
         blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples, high_age_samples]
-
     return conf_partition
 
 def get_n_random_partitions(n, samples, conf_partition):
