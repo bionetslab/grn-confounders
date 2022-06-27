@@ -1,10 +1,10 @@
-from NetworkInferenceWrapper import NetworkInferenceWrapper
+from .NetworkInferenceWrapper import NetworkInferenceWrapper
 import sys
 import os
 import pandas as pd
 import numpy as np
 import subprocess
-import preprocessing as prp
+from . import preprocessing as prp
 import csv
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)

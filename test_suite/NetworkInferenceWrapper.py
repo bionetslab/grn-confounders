@@ -1,7 +1,7 @@
 # script by David B. Blumenthal
 
 from abc import ABC, abstractmethod
-#import itertoools as itt
+import itertools as itt
 
 class NetworkInferenceWrapper(ABC):
     """An abstract wrapper class for network inference methods.
@@ -45,7 +45,7 @@ class NetworkInferenceWrapper(ABC):
         self.partition = None
         self._inferred_networks = None
         
-    def infer_networks(self):
+    def infer_networks(self): # TODO: align column names of network in all wrappers; TODO: network: gene symbols as indices or first col?
         """Infers all networks for the stored partition and expression data."""
         self._inferred_networks = []
         for block in self.partition:
