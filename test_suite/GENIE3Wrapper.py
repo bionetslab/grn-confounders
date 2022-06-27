@@ -15,7 +15,6 @@ sys.path.append(test_suite)
 class GENIE3Wrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data):
-
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -52,7 +51,6 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
         # set output path
         out_path = os.path.join(main, 'temp', f'{prefix}_link_list.csv')
 
-        # TODO: set parameters in R_script
         # TODO: hand paths to R script (won't recognize the paths)
         os.chdir(os.path.join(main, 'algorithms', 'GENIE3_R'))
         command = f'Rscript GENIE3_R_wrapper.R {prefix}'# {regulator_path} {out_path}'
@@ -71,7 +69,6 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
         
     def _get_top_k_edges(self, i, k):
             """Method to return the top k edges for the inferred network for block i. 
-            Must be implemented by derived classes.
             
             Parameters
             ----------

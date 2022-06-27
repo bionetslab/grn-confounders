@@ -14,7 +14,6 @@ sys.path.append(test_suite)
 class ARACNEWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data):
-
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -63,7 +62,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
 
         # run ARACNe:
         cur = os.getcwd()
-        os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP')) # TODO: we can't rename the output files e.g. of the bootstrapping step
+        os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP'))
         exe = os.path.join('dist','aracne.jar') # TODO: what are the three thresholds for?
         thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --calculateThreshold'
         subprocess.run(thresholdCommand, shell=True)
@@ -88,8 +87,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         return network # TODO should the columns have special names?
 
     def _get_top_k_edges(self, i, k):
-            """Abstract method to return the top k edges for the inferred network for block i. 
-            Must be implemented by derived classes.
+            """Method to return the top k edges for the inferred network for block i. 
             
             Parameters
             ----------
@@ -105,14 +103,6 @@ class ARACNEWrapper(NetworkInferenceWrapper):
                 correlation), use tuples of form (<gene_1>, <gene_2>, <sense>), where <sense> is either -1 or 1.
                 For undirected edges, ensure that <gene_1> <= <gene_2> for all tuples contained in edge set.
             """
-
-            if self._inferred_networks is None:
-                print('Call method infer_networks first.')
-                return
-            elif len(self.partition) <= i:
-                print('Block with index ' + str(i) + ' does not exist in partition.')
-                return
-
             block = self._inferred_networks[i]
             k = min(k, len(block))
             top_k_edges = []
