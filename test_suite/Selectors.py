@@ -1,14 +1,15 @@
 from enum import Enum
-import GENIE3Wrapper
-import ARACNEWrapper
-import LSCONWrapper
+from .GENIE3Wrapper import GENIE3Wrapper
+from .ARACNEWrapper import ARACNEWrapper
+from .LSCONWrapper import LSCONWrapper
 import pandas as pd
+import numpy as np
 import os
 
 class AlgorithmSelector(Enum):
     """Enum specifying which network inference algorithm should be used."""
     GENIE3 = 'GENIE3'
-    ARACNe = 'ARACNe'
+    ARACNE = 'ARACNE'
     LSCON = 'LSCON'
 
     def __str__(self):
@@ -39,10 +40,10 @@ def get_algorithm_wrapper(algorithm_selector):
     """
     if algorithm_selector == AlgorithmSelector.GENIE3:
         return GENIE3Wrapper()
-    elif algorithm_selector == AlgorithmSelector.ARACNe:
-        return ARACNe()
+    elif algorithm_selector == AlgorithmSelector.ARACNE:
+        return ARACNEWrapper()
     elif algorithm_selector == AlgorithmSelector.LSCON:
-        return LSCON()
+        return LSCONWrapper()
 
 def download_TCGA_expression_data(cancer_type_selector):
     """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
@@ -51,12 +52,12 @@ def download_TCGA_expression_data(cancer_type_selector):
     cancer_type_selector : CancerTypeSelector
         Specifies the cohort that the phenotype file is to be downloaded for.
     """
-    cwd = os.path.join(os.path.dirname(__file__))
+    cwd = os.getcwd()
     url = ""
     if cancer_type_selector == CancerTypeSelector.BLCA:
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
     df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
-    df.to_csv(os.path.join(cwd, '..', 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
+    df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
 
 def download_TCGA_phenotype_data(cancer_type_selector):
     """Saves TCGA phenotype data for the specifies @cancer_type obtained from UCSC Xena in /data.
@@ -65,19 +66,20 @@ def download_TCGA_phenotype_data(cancer_type_selector):
     cancer_type_selector : CancerTypeSelector
         Specifies the cohort that the phenotype file is to be downloaded for.
     """
-    cwd = os.path.join(os.path.dirname(__file__))
+    cwd = os.getcwd()
     url = ""
     if cancer_type_selector == CancerTypeSelector.BLCA:
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.GDC_phenotype.tsv.gz"
     pheno_data = pd.read_csv(url, delimiter='\t')
     pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
-    pheno_data.to_csv(os.path.join(cwd, '..', 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
+    pheno_data.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
 
 def download_known_tfs():
     """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
     """
+    cwd = os.getcwd()
     df = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', delimiter='\t', index_col=0)
-    df.to_csv(os.path.join(cwd, '..', 'data', 'regulators.csv'), sep='\t')
+    df.to_csv(os.path.join(cwd, 'data', 'regulators.csv'), sep='\t')
 
 def get_expression_data(cancer_type_selector):
     """Loads the expression data for the selected cancer type.
@@ -91,10 +93,15 @@ def get_expression_data(cancer_type_selector):
         Expression data (indices are sample IDs, column names are gene IDs).
     
     """
-    expression_data = pd.read_csv(os.path.join(cwd, '..', 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
+    cwd = os.getcwd()
+    try:
+        expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
+    except FileNotFoundError:
+        download_TCGA_expression_data(cancer_type_selector)
+        expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
     return expression_data # TODO check if it really works if we do not filter on Primary Tumor here, but only in samples
 
-def get_pheno_data(cancer_type_selector):
+def get_pheno_data(cancer_type_selector): # TODO: fix data type in dataframe in case that someone needs the cols with numeric values
     """Loads the phenotype data for the selected cancer type.
     Parameters
     ----------
@@ -105,7 +112,14 @@ def get_pheno_data(cancer_type_selector):
     pheno_data : pd.DataFrame
         Expression data (indices are sample IDs, column names are gene IDs).
     """
-    pheno_data = pd.read_csv(os.path.join(cwd, '..', 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
+    cwd = os.getcwd()
+    try:
+        pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
+        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': int, 'submitter_id.samples': str})
+    except FileNotFoundError:
+        download_TCGA_phenotype_data(cancer_type_selector)
+        pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
+        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': int, 'submitter_id.samples': str})
     return pheno_data # TODO check if it really works if we do not filter on Primary Tumor here, but only in samples
 
 
@@ -132,37 +146,21 @@ def get_conf_partition(pheno_data, confounder_selector):
     indices = None
 
     # split set of sample ids based on confounder expression
-    if str(confounder_selector) == 'sex':
-        gender_col_index = np.where(pheno_data[0, :] == 'gender.demographic')[0][0]
-        female_data = pheno_data[pheno_data[:, gender_col_index] == 'female']
-        male_data = pheno_data[pheno_data[:, gender_col_index] == 'male']
-
-        female_samples = female_data[:, 0]
-        male_samples = male_data[:, 0]
+    if confounder_selector == ConfounderSelector.SEX:
+        female_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'female']['submitter_id.samples']
+        male_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'male']['submitter_id.samples']
         blocks, conf_partition = ['female', 'male'], [female_samples, male_samples]
-    """
-    if str(confounder_selector) == 'ethnicity':
-        ethn_col_index = np.where(pheno_data[0, :] == 'ethnicity.demographic')[0][0]
-        hisp_lat_data = pheno_data[pheno_data[:, ethn_col_index] == 'hispanic or latino']
-        nonHisp_nonLat_data = pheno_data[pheno_data[:, ethn_col_index] == 'not hispanic or latino']
 
-        hisp_lat_samples = hisp_lat_data[:, 0]
-        nonHisp_nonLat_samples = nonHisp_nonLat_data[:, 0]
-        blocks, conf_partition = ['hisp_lat', 'non_hisp_lat'], [hisp_lat_samples, nonHisp_nonLat_samples]
-    """
-    if str(confounder_selector) == 'race':
-        race_col_index = np.where(pheno_data[0, :] == 'race.demographic')[0][0]
-        asian_data = pheno_data[pheno_data[:, race_col_index] == 'asian']
-        african_data = pheno_data[pheno_data[:, race_col_index] == 'black or african american']
-        white_data = pheno_data[pheno_data[:, race_col_index] == 'white']
-
-        asian_samples = asian_data[:, 0]
-        african_samples = african_data[:, 0]
-        white_samples = white_data[:, 0]
+    if confounder_selector == ConfounderSelector.RACE:
+        asian_samples = pheno_data.loc[pheno_data['race.demographic'] == 'asian']['submitter_id.samples']
+        african_samples = pheno_data.loc[pheno_data['race.demographic'] == 'black or african american']['submitter_id.samples']
+        white_samples = pheno_data.loc[pheno_data['race.demographic'] == 'white']['submitter_id.samples']
         blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples, african_samples, white_samples]
 
-    if str(confounder_selector) == 'age':
-        pass # TODO
+    if confounder_selector == ConfounderSelector.AGE:
+        low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] < 50]['submitter_id.samples']
+        high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > 70]['submitter_id.samples']
+        blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples, high_age_samples]
 
     return conf_partition
 
@@ -175,20 +173,18 @@ def get_n_random_partitions(n, samples, conf_partition):
         Specifies the number of random partitions that should be generated.
     samples : pd.DataFrame
         Contains all sample identifiers.
-    conf_partition : np.array
-        Array of blocks as pd.DataFrames with one column containing the sample identifiers belonging to the block.
+    conf_partition : list
+        List of blocks as pd.DataFrames with one column containing the sample identifiers belonging to the block.
     Returns
     -------
     partitions : list
-        List of random partitions. Each partition is an np.array.
+        List of random partitions.
     """
     partitions = []
-    pos = 0
-    cuts = []
-    for block in self.conf_partition:
-        cuts.append(pos+len(block))
-        pos = pos + len(block) # this might seem weird, but the np.split function is very handy and it needs the indices where the cuts should be placed
-    for k in range(n): # TODO
-        np.random.shuffle(samples.copy())
-        partitions.append(np.split(samples_cpy, cuts[:-1]))
-    return np.array(partitions)
+    samples_cpy = samples.copy()
+    for k in range(n):
+        cur = []
+        for i in range(len(conf_partition)):
+            cur.append(samples_cpy.sample(n=len(conf_partition[i]), replace=True))
+        partitions.append(cur)
+    return partitions
