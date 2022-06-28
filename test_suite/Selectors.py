@@ -8,9 +8,9 @@ import os
 
 class AlgorithmSelector(Enum):
     """Enum specifying which network inference algorithm should be used."""
-    GENIE3 = 'GENIE3'
     ARACNE = 'ARACNE'
-    LSCON = 'LSCON'
+    GENIE3 = 'GENIE3'
+    #LSCON = 'LSCON'
 
     def __str__(self):
         return self.value
@@ -33,6 +33,7 @@ class ConfounderSelector(Enum):
 
 def get_algorithm_wrapper(algorithm_selector):
     """Returns the appropriate algorithm based on the selection.
+
     Parameters
     ----------
     algorithm_selector : AlgorithmSelector
@@ -42,11 +43,12 @@ def get_algorithm_wrapper(algorithm_selector):
         return GENIE3Wrapper()
     elif algorithm_selector == AlgorithmSelector.ARACNE:
         return ARACNEWrapper()
-    elif algorithm_selector == AlgorithmSelector.LSCON:
-        return LSCONWrapper()
+    #elif algorithm_selector == AlgorithmSelector.LSCON:
+        #return LSCONWrapper()
 
 def download_TCGA_expression_data(cancer_type_selector):
     """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
+
     Parameters
     ----------
     cancer_type_selector : CancerTypeSelector
@@ -57,10 +59,13 @@ def download_TCGA_expression_data(cancer_type_selector):
     if cancer_type_selector == CancerTypeSelector.BLCA:
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
     df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
+    #for col in df:
+        #df.rename({col: col.split('.')[0]}, axis=1, inplace=True) # TODO
     df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
 
 def download_TCGA_phenotype_data(cancer_type_selector):
     """Saves TCGA phenotype data for the specifies @cancer_type obtained from UCSC Xena in /data.
+
     Parameters
     ----------
     cancer_type_selector : CancerTypeSelector
@@ -83,10 +88,12 @@ def download_known_tfs():
 
 def get_expression_data(cancer_type_selector):
     """Loads the expression data for the selected cancer type.
+
     Parameters
     ----------
     cancer_type_selector : CancerTypeSelector
         Specifies for which cancer type the phenotypes should be loaded.
+        
     Returns
     -------
     expression_data : pd.DataFrame
@@ -98,14 +105,17 @@ def get_expression_data(cancer_type_selector):
     except FileNotFoundError:
         download_TCGA_expression_data(cancer_type_selector)
         expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
+
     return expression_data # TODO check if it really works if we do not filter on Primary Tumor here, but only in samples
 
-def get_pheno_data(cancer_type_selector): # TODO: fix data type in dataframe in case that someone needs the cols with numeric values
+def get_pheno_data(cancer_type_selector):
     """Loads the phenotype data for the selected cancer type.
+
     Parameters
     ----------
     cancer_type_selector : CancerTypeSelector
         Specifies for which cancer type the phenotypes should be loaded.
+
     Returns
     -------
     pheno_data : pd.DataFrame
@@ -123,46 +133,53 @@ def get_pheno_data(cancer_type_selector): # TODO: fix data type in dataframe in 
 
 
 def get_conf_partition(pheno_data, confounder_selector):
-    """Returns two np.arrays with the first containing string-identifiers for the blocks of the requested confounder 
+    """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
         and the second containing the sample ids corresponding to the blocks.
+
         Parameters
         ----------
         pheno_data : pd.DataFrame
             Data frame containing phenotypic information. One row per sample, one column per attribute.
+
         confounder_selector : ConfounderSelector
             Confounder attribute that is to be used to build the partition.
+
         Returns
         -------
-        conf_partition : np.array
+        conf_partition : list
             Contains the blocks belonging to the confounder-based partition.
     """
     indices = None
     if confounder_selector == ConfounderSelector.SEX:
         female_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'female']['submitter_id.samples']
         male_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'male']['submitter_id.samples']
-        blocks, conf_partition = ['female', 'male'], [female_samples, male_samples]
+        blocks, conf_partition = ['female', 'male'], [female_samples.tolist(), male_samples.tolist()]
     if confounder_selector == ConfounderSelector.RACE:
         asian_samples = pheno_data.loc[pheno_data['race.demographic'] == 'asian']['submitter_id.samples']
         african_samples = pheno_data.loc[pheno_data['race.demographic'] == 'black or african american']['submitter_id.samples']
         white_samples = pheno_data.loc[pheno_data['race.demographic'] == 'white']['submitter_id.samples']
-        blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples, african_samples, white_samples]
+        blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples.tolist(), african_samples.tolist(), white_samples.tolist()]
     if confounder_selector == ConfounderSelector.AGE:
         low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] < 50]['submitter_id.samples']
         high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > 70]['submitter_id.samples']
-        blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples, high_age_samples]
+        blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples.tolist(), high_age_samples.tolist()]
     return conf_partition
 
 def get_n_random_partitions(n, samples, conf_partition):
     """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
     confounder based partition.
+
     Parameters
     ----------
     n : int
         Specifies the number of random partitions that should be generated.
+
     samples : pd.DataFrame
         Contains all sample identifiers.
+
     conf_partition : list
         List of blocks as pd.DataFrames with one column containing the sample identifiers belonging to the block.
+        
     Returns
     -------
     partitions : list
@@ -173,6 +190,7 @@ def get_n_random_partitions(n, samples, conf_partition):
     for k in range(n):
         cur = []
         for i in range(len(conf_partition)):
-            cur.append(samples_cpy.sample(n=len(conf_partition[i]), replace=True))
+            block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
+            cur.append(block)
         partitions.append(cur)
     return partitions

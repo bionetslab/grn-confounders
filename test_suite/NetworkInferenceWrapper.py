@@ -36,7 +36,6 @@ class NetworkInferenceWrapper(ABC):
     --------------
     _infer_network(expression_data):
         Abstract method to infer a network from expression data. Must be implemented by derived classes.
-
     """
     
     def __init__(self):
@@ -49,8 +48,9 @@ class NetworkInferenceWrapper(ABC):
         """Infers all networks for the stored partition and expression data."""
         self._inferred_networks = []
         for block in self.partition:
-            #self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
-            self._inferred_networks.append(self._infer_network(self.expression_data.filter(items = block, axis='index')))
+            print('next block')
+            print(len(self.expression_data.index.intersection(block))) # now: when using small subset of samples, intrsection is much smaller than initial block
+            self._inferred_networks.append(self._infer_network(self.expression_data.loc[self.expression_data.index.intersection(block)]))
 
     def mean_jaccard_index_at_k(self, k):
         """Returns the mean Jaccard index for the top k edges in the inferred networks.
@@ -68,12 +68,18 @@ class NetworkInferenceWrapper(ABC):
         """
         sum_jaccard_indices = 0.0
         num_comparisons = 0
-        for i, j in itt.combinations(range(len(self_.inferred_networks)), 2):
-            top_k_edges_i = self._get_top_k_edges(self, i, k)
-            top_k_edges_j = self._get_top_k_edges(self, j, k)
+        print(self._inferred_networks)
+        for i, j in itt.combinations(range(len(self._inferred_networks)), 2): # how should we handle m-tuples in general?
+            top_k_edges_i = self._get_top_k_edges(i, k)
+            top_k_edges_j = self._get_top_k_edges(j, k)
+            print(top_k_edges_i)
+            print(top_k_edges_j)
             size_intersection = len(top_k_edges_i.intersection(top_k_edges_j))
-            size_union = len(top_k_edges_j.union(top_k_edges_j))
-            sum_jaccard_indices += size_intersection / size_union
+            size_union = len(top_k_edges_i.union(top_k_edges_j)) # TODO: this was union of j and j, but it is supposed to be i and j?
+            if size_union > 0:
+                sum_jaccard_indices += size_intersection / size_union # TODO: size_union could be zero, too; union empty --> intersection empty --> = 0?
+            else:
+                sum_jaccard_indices += 0
             num_comparisons += 1
         return sum_jaccard_indices / num_comparisons
     

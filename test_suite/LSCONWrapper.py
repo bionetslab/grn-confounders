@@ -1,6 +1,7 @@
 from NetworkInferenceWrapper import NetworkInferenceWrapper
 import pandas as pd
 import numpy as np
+import os
 
 #https://bitbucket.org/sonnhammergrni/lscon/src/master/
 #https://academic.oup.com/bioinformatics/article/38/8/2263/6530276
