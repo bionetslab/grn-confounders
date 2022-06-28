@@ -14,7 +14,7 @@ def run_tests(verbose=True):
     #print(test_runner.conf_partitions[Selectors.CancerTypeSelector.BLCA].keys())
     if verbose:
         print('running the tests ...')
-    #test_runner.run_on_all_cancer_types_confounders_partitions()
+    test_runner.run_on_all_cancer_types_confounders_partitions(verbose=True)
     if verbose:
         print('saving the results')
     #test_runner.save_results()

@@ -31,45 +31,47 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         main = os.path.join(test_suite, '..')
         prefix = 'aracne'
 
-        # remove columns with zero standard deviation and normalize columns to unit variance
-        expression_data = expression_data.loc[:, (expression_data.std() != 0)]
-        expression_data = prp.normalizeToUnitVariance(expression_data)
-
-        # -e: save expression_data to csv
-        expression_data = expression_data.T # ARACNe expects gene x sample data set
-        gene_dict = dict(zip(expression_data.index, range(len(expression_data.index))))
-        expression_data.insert(loc=0, column='gene', value=[gene_dict[i] for i in expression_data.index])
-        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.txt')
-        expression_data.to_csv(data_path, sep='\t', index=False)
-
-        # get regulators and remove such genes that are not present in expression_data
-        ktf_path = os.path.join(main, 'data', 'regulators.csv')
-        regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
-        regulators = regulators[np.isin(regulators, expression_data.index)]
-        regulators = [gene_dict[i] for i in regulators]
-        regulator_path = os.path.join(main, 'temp', f'{prefix}_regulators.txt')
-        pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
-
-        # set parameters seed and p-value
-        p = '1E-8'
-        seed = '1'
-
         # -o: set output folder
         out_dir = os.path.join(main, 'temp', prefix)
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
         out_path = os.path.join(out_dir, 'network.txt')
 
+        # remove columns with zero standard deviation and normalize columns to unit variance
+        expression_data = expression_data.loc[:, (expression_data.std() != 0)]
+        expression_data = prp.normalizeToUnitVariance(expression_data)
+
+        # -e: save expression_data to csv
+        expression_data = expression_data.T # ARACNe expects gene x sample data set
+        gene_dict = dict(zip(expression_data.index, range(len(expression_data.index)))) # ARACNe expects numeric gene identifiers in first column
+        expression_data.insert(loc=0, column='gene', value=[gene_dict[i] for i in expression_data.index])
+        print('shape:')
+        print(expression_data.shape)
+        data_path = os.path.join(main, 'temp', 'aracne', f'{prefix}_expression_data.txt')
+        expression_data.to_csv(data_path, sep='\t', index=False)
+
+        # get regulators and remove such genes that are not present in expression_data
+        ktf_path = os.path.join(main, 'data', 'regulators.csv')
+        regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
+        regulators = regulators[np.isin(regulators, expression_data.index)] # intersection on original symbols, then map to numeric value
+        regulators = [gene_dict[i] for i in regulators]
+        regulator_path = os.path.join(main, 'temp', 'aracne', f'{prefix}_regulators.txt')
+        pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
+
+        # set parameters seed and p-value
+        p = '1E-8'
+        seed = '1'
+
         # run ARACNe:
         cur = os.getcwd()
         os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP'))
-        exe = os.path.join('dist','aracne.jar') # TODO: what are the three thresholds for?
+        exe = os.path.join('dist','aracne.jar')
         thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --calculateThreshold'
         subprocess.run(thresholdCommand, shell=True)
-        #for i in range(3):
+        #for i in range(3): # TODO: multiple or not?
         command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {2}'
         subprocess.run(command, shell=True)
-        command = f'java -Xmx5G -jar {exe} -o {out_dir} --consolidate --nobonferroni' # TODO: why is the network empty if we do not add --nobonferroni
+        command = f'java -Xmx5G -jar {exe} -o {out_dir} --consolidate --nobonferroni' # TODO: why is the network empty if we do not add --nobonferroni ?
         subprocess.run(command, shell=True)
         os.chdir(cur)
 
@@ -79,9 +81,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         network['Regulator'] = [inv_gene_dict[i] for i in network['Regulator']]
         network['Target'] = [inv_gene_dict[i] for i in network['Target']]
         
-        # remove temporary files
-        subprocess.call('rm '+str(data_path), shell=True)
-        subprocess.call('rm '+str(regulator_path), shell=True)
+        # remove temporary directory
         subprocess.call('rm -r '+str(out_dir), shell=True)
         
         return network # TODO should the columns have special names?
@@ -108,5 +108,4 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             top_k_edges = []
             for j in range(k):
                 top_k_edges.append((block.iloc[j, 0], block.iloc[j, 1])) # TODO translate MI to 1 depending on p-value?
-
-            return set(top_k_edges)
+            return set(top_k_edges) # TODO: ARACNe is directed, so this is ok?
