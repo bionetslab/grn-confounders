@@ -59,8 +59,6 @@ def download_TCGA_expression_data(cancer_type_selector):
     if cancer_type_selector == CancerTypeSelector.BLCA:
         url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
     df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
-    #for col in df:
-        #df.rename({col: col.split('.')[0]}, axis=1, inplace=True) # TODO
     df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
 
 def download_TCGA_phenotype_data(cancer_type_selector):
@@ -105,8 +103,7 @@ def get_expression_data(cancer_type_selector):
     except FileNotFoundError:
         download_TCGA_expression_data(cancer_type_selector)
         expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
-
-    return expression_data # TODO check if it really works if we do not filter on Primary Tumor here, but only in samples
+    return expression_data
 
 def get_pheno_data(cancer_type_selector):
     """Loads the phenotype data for the selected cancer type.
@@ -129,26 +126,27 @@ def get_pheno_data(cancer_type_selector):
         download_TCGA_phenotype_data(cancer_type_selector)
         pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
         dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': int, 'submitter_id.samples': str})
-    return pheno_data # TODO check if it really works if we do not filter on Primary Tumor here, but only in samples
+    return pheno_data
 
 
-def get_conf_partition(pheno_data, confounder_selector):
+def get_conf_partition(pheno_data_orig, confounder_selector):
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
-        and the second containing the sample ids corresponding to the blocks.
+    and the second containing the sample ids corresponding to the blocks.
 
-        Parameters
-        ----------
-        pheno_data : pd.DataFrame
-            Data frame containing phenotypic information. One row per sample, one column per attribute.
+    Parameters
+    ----------
+    pheno_data : pd.DataFrame
+        Data frame containing phenotypic information. One row per sample, one column per attribute.
 
-        confounder_selector : ConfounderSelector
-            Confounder attribute that is to be used to build the partition.
+    confounder_selector : ConfounderSelector
+        Confounder attribute that is to be used to build the partition.
 
-        Returns
-        -------
-        conf_partition : list
-            Contains the blocks belonging to the confounder-based partition.
+    Returns
+    -------
+    conf_partition : list
+        Contains the blocks belonging to the confounder-based partition.
     """
+    pheno_data = pheno_data_orig.copy()
     indices = None
     if confounder_selector == ConfounderSelector.SEX:
         female_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'female']['submitter_id.samples']
@@ -160,12 +158,14 @@ def get_conf_partition(pheno_data, confounder_selector):
         white_samples = pheno_data.loc[pheno_data['race.demographic'] == 'white']['submitter_id.samples']
         blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples.tolist(), african_samples.tolist(), white_samples.tolist()]
     if confounder_selector == ConfounderSelector.AGE:
-        low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] < 50]['submitter_id.samples']
-        high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > 70]['submitter_id.samples']
+        lower = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.25)
+        upper = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.75)
+        low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] <= lower]['submitter_id.samples']
+        high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] >= upper]['submitter_id.samples']
         blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples.tolist(), high_age_samples.tolist()]
     return conf_partition
 
-def get_n_random_partitions(n, samples, conf_partition):
+def get_n_random_partitions(n, samples, conf_partition, ct_sel, conf_sel):
     """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
     confounder based partition.
 
@@ -185,12 +185,25 @@ def get_n_random_partitions(n, samples, conf_partition):
     partitions : list
         List of random partitions.
     """
-    partitions = []
-    samples_cpy = samples.copy()
-    for k in range(n):
-        cur = []
-        for i in range(len(conf_partition)):
-            block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
-            cur.append(block)
-        partitions.append(cur)
+    try:
+        partitions=[]
+        for k in range(n):
+            cur = []
+            part = pd.read_csv(os.path.join('partitions', f'rnd_part{k+1}_of_{n}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
+            begin = 0
+            for i in range(len(conf_partition)):
+                #cur.append(part[begin:len(conf_partition[i])])
+                cur.append([item for sublist in part[begin:len(conf_partition[i])] for item in sublist])
+                begin += len(conf_partition[i])
+            partitions.append(cur)
+    except FileNotFoundError:
+        partitions = []
+        samples_cpy = samples.copy()
+        for k in range(n):
+            cur = []
+            for i in range(len(conf_partition)):
+                block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
+                block.to_csv(os.path.join('partitions', f'rnd_part{k+1}_of_{n}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                cur.append(block)
+            partitions.append(cur)
     return partitions
