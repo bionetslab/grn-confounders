@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import itertools as itt
+import os
 
 class NetworkInferenceWrapper(ABC):
     """An abstract wrapper class for network inference methods.
@@ -44,13 +45,11 @@ class NetworkInferenceWrapper(ABC):
         self.partition = None
         self._inferred_networks = None
         
-    def infer_networks(self): # TODO: align column names of network in all wrappers; TODO: network: gene symbols as indices or first col?
+    def infer_networks(self):
         """Infers all networks for the stored partition and expression data."""
         self._inferred_networks = []
         for block in self.partition:
-            print('next block')
-            print(len(self.expression_data.index.intersection(block))) # now: when using small subset of samples, intrsection is much smaller than initial block
-            self._inferred_networks.append(self._infer_network(self.expression_data.loc[self.expression_data.index.intersection(block)]))
+            self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
 
     def mean_jaccard_index_at_k(self, k):
         """Returns the mean Jaccard index for the top k edges in the inferred networks.
@@ -68,12 +67,9 @@ class NetworkInferenceWrapper(ABC):
         """
         sum_jaccard_indices = 0.0
         num_comparisons = 0
-        print(self._inferred_networks)
-        for i, j in itt.combinations(range(len(self._inferred_networks)), 2): # how should we handle m-tuples in general?
+        for i, j in itt.combinations(range(len(self._inferred_networks)), 2):
             top_k_edges_i = self._get_top_k_edges(i, k)
             top_k_edges_j = self._get_top_k_edges(j, k)
-            print(top_k_edges_i)
-            print(top_k_edges_j)
             size_intersection = len(top_k_edges_i.intersection(top_k_edges_j))
             size_union = len(top_k_edges_i.union(top_k_edges_j)) # TODO: this was union of j and j, but it is supposed to be i and j?
             if size_union > 0:
@@ -97,8 +93,9 @@ class NetworkInferenceWrapper(ABC):
         Returns
         -------
         inferred_network : pd.DataFrame
-            A data frame with gene symbols as indices and column names whose entries correspond to
-            edge scores in inferred network.
+            A data frame whose entries in the column 'score' correspond to edge scores in inferred network. An edge connects the genes
+            whose symbols are in the columns 'source' and 'target', respectively, of the same row. The last column, 'type', indicates
+            whether the network is directed or undirected.
         """
         pass
         
@@ -122,6 +119,8 @@ class NetworkInferenceWrapper(ABC):
             For undirected edges, ensure that <gene_1> <= <gene_2> for all tuples contained in edge set.
         """
         pass
+
+
             
 
 
