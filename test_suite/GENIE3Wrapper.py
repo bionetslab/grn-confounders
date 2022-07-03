@@ -49,10 +49,9 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
         # set output path
         out_path = os.path.join(main, 'temp', f'{prefix}_link_list.csv')
 
-        # TODO: hand paths to R script (won't recognize the paths)
         cur = os.getcwd()
         os.chdir(os.path.join(main, 'algorithms', 'GENIE3_R'))
-        command = f'Rscript GENIE3_R_wrapper.R {prefix}'# {regulator_path} {out_path}'
+        command = f'Rscript GENIE3_R_wrapper.R {prefix}'
         ret = subprocess.run(command, shell=True)
         os.chdir(cur)
 
