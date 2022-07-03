@@ -9,7 +9,7 @@ import os
 class AlgorithmSelector(Enum):
     """Enum specifying which network inference algorithm should be used."""
     ARACNE = 'ARACNE'
-    GENIE3 = 'GENIE3'
+    #GENIE3 = 'GENIE3'
     #LSCON = 'LSCON'
 
     def __str__(self):
@@ -39,9 +39,9 @@ def get_algorithm_wrapper(algorithm_selector):
     algorithm_selector : AlgorithmSelector
         Specifies which algorithm should be used.
     """
-    if algorithm_selector == AlgorithmSelector.GENIE3:
-        return GENIE3Wrapper()
-    elif algorithm_selector == AlgorithmSelector.ARACNE:
+    #if algorithm_selector == AlgorithmSelector.GENIE3:
+        #return GENIE3Wrapper()
+    if algorithm_selector == AlgorithmSelector.ARACNE:
         return ARACNEWrapper()
     #elif algorithm_selector == AlgorithmSelector.LSCON:
         #return LSCONWrapper()
@@ -185,25 +185,21 @@ def get_n_random_partitions(n, samples, conf_partition, ct_sel, conf_sel):
     partitions : list
         List of random partitions.
     """
+    samples_cpy = samples.copy()
     try:
         partitions=[]
         for k in range(n):
             cur = []
-            part = pd.read_csv(os.path.join('partitions', f'rnd_part{k+1}_of_{n}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
-            begin = 0
-            for i in range(len(conf_partition)):
-                #cur.append(part[begin:len(conf_partition[i])])
-                cur.append([item for sublist in part[begin:len(conf_partition[i])] for item in sublist])
-                begin += len(conf_partition[i])
-            partitions.append(cur)
-    except FileNotFoundError:
-        partitions = []
-        samples_cpy = samples.copy()
-        for k in range(n):
-            cur = []
-            for i in range(len(conf_partition)):
-                block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
-                block.to_csv(os.path.join('partitions', f'rnd_part{k+1}_of_{n}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
-                cur.append(block)
+            try:
+                part = pd.read_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
+                begin = 0
+                for i in range(len(conf_partition)):
+                    cur.append([item for sublist in part[begin:len(conf_partition[i])] for item in sublist])
+                    begin += len(conf_partition[i])
+            except FileNotFoundError:
+                for i in range(len(conf_partition)):
+                    block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
+                    block.to_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                    cur.append(block)
             partitions.append(cur)
     return partitions

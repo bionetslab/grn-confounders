@@ -9,7 +9,6 @@ import os
 class LSCONWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data):
-
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -24,14 +23,15 @@ class LSCONWrapper(NetworkInferenceWrapper):
             A data frame with gene symbols as indices and column names whose entries correspond to
             edge scores in inferred network.
         """
-
         main = os.path.join(test_suite, '..')
         prefix = 'lscon'
         out_path = os.path.join(main, 'temp', f'{prefix}_link_list.csv')
 
-        # data
+        # remove columns with zero standard deviation and normalize columns to unit variance
+        expression_data = expression_data.loc[:, (expression_data.std() != 0)]
+        expression_data = prp.normalizeToUnitVariance(expression_data) # TODO tool only performs normalization on the inferred GRN?
 
-        # net
+        # net ? TODO
 
         # zetavec?
 

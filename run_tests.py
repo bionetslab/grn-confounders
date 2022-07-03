@@ -23,24 +23,21 @@ def run_tests(args, verbose=True):
 
     Parameters
     ----------
-    args: Namespace
+    args: argparse.Namespace
         Namespace object populated with user command line arguments.
 
     verbose : bool
         Print progress to stdout.
     """
-
     if verbose:
         print('loading data ...')
     test_runner = TestRunner(args.n, args.k)
     if verbose:
         print('running the tests ...')
     test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
-    return 0
+    return
 
 if __name__ == '__main__':
     args = get_parser().parse_args()
-    cwd = os.getcwd()
-    #os.chdir(cwd) # on HPC, this line needs to be commented, as the batch_script cd-s into the right directory
     run_tests(args)
     

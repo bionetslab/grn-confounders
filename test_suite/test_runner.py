@@ -134,6 +134,7 @@ class TestRunner(object):
             print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[self.expression_datasets[sel].index.intersection(self.pheno_datasets[sel]['submitter_id.samples'])]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
+            self.expression_datasets[sel] = self.expression_datasets[sel].loc[:, (self.expression_datasets[sel].std() != 0)]
 
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel):
         """Saves the inferred networks to csv.
