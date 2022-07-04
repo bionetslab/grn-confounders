@@ -19,7 +19,7 @@ def get_parser():
     return parser
 
 def run_tests(args, verbose=True):
-    """runs the tests.
+    """instantiates testRunner object and passes the user arguments.
 
     Parameters
     ----------

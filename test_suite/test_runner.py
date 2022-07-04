@@ -14,7 +14,7 @@ class TestRunner(object):
         self.algorithm_selectors = list(Selectors.AlgorithmSelector)
         self.confounder_selectors = list(Selectors.ConfounderSelector)
 
-        self.expression_datasets = {sel: Selectors.get_expression_data(sel).iloc[:, :5000] for sel in self.cancer_type_selectors}
+        self.expression_datasets = {sel: Selectors.get_expression_data(sel) for sel in self.cancer_type_selectors}
         self.pheno_datasets = {sel: Selectors.get_pheno_data(sel) for sel in self.cancer_type_selectors}
         self.preprocessData()
         self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
@@ -91,7 +91,10 @@ class TestRunner(object):
                 print(f'\t\talgorithm = {str(alg_sel)}')
 
             algorithm_wrapper = self.algorithm_wrappers[alg_sel]
-            algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
+            if str(alg_sel) == 'GENIE3':
+                algorithm_wrapper.expression_data = self.expression_datasets[ct_sel].iloc[:, :5000]
+            else:
+                algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
 
             print('running on random partitions...')
             for ct_sel in self.cancer_type_selectors:
