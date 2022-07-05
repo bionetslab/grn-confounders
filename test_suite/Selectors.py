@@ -1,6 +1,7 @@
 from enum import Enum
 from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
+from .WGCNAWrapper import WGCNAWrapper
 from .LSCONWrapper import LSCONWrapper
 import pandas as pd
 import numpy as np
@@ -10,8 +11,7 @@ class AlgorithmSelector(Enum):
     """Enum specifying which network inference algorithm should be used."""
     ARACNE = 'ARACNE'
     GENIE3 = 'GENIE3'
-    #LSCON = 'LSCON'
-
+    WGCNA = 'WGCNA'
     def __str__(self):
         return self.value
 
@@ -43,6 +43,8 @@ def get_algorithm_wrapper(algorithm_selector):
         return GENIE3Wrapper()
     elif algorithm_selector == AlgorithmSelector.ARACNE:
         return ARACNEWrapper()
+    elif algorithm_selector == AlgorithmSelector.WGCNA:
+        return WGCNAWrapper()
     #elif algorithm_selector == AlgorithmSelector.LSCON:
         #return LSCONWrapper()
 
