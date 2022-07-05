@@ -165,7 +165,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples.tolist(), high_age_samples.tolist()]
     return conf_partition
 
-def get_n_random_partitions(n, samples, conf_partition, ct_sel, conf_sel):
+def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
     """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
     confounder based partition.
 
@@ -187,7 +187,7 @@ def get_n_random_partitions(n, samples, conf_partition, ct_sel, conf_sel):
     """
     samples_cpy = samples.copy()
     partitions=[]
-    for k in range(n):
+    for k in range(n_from, n_to):
         cur = []
         try:
             part = pd.read_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
