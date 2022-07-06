@@ -34,7 +34,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         out_dir = os.path.join(main, 'temp', prefix)
         if not os.path.exists(out_dir):
             os.mkdir(out_dir)
-        out_path = os.path.join(out_dir, 'network.txt')
+        out_path = os.path.join(out_dir, 'nobootstrap_network.txt')
 
         # remove columns with zero standard deviation and normalize columns to unit variance
         expression_data = expression_data.loc[:, (expression_data.std() != 0)]
@@ -65,10 +65,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         exe = os.path.join('dist','aracne.jar')
         thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --calculateThreshold'
         subprocess.run(thresholdCommand, shell=True)
-        for i in range(3): # TODO: multiple or not?
-            command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed}'
-            subprocess.run(command, shell=True)
-        command = f'java -Xmx5G -jar {exe} -o {out_dir} --consolidate --nobonferroni' # TODO: why is the network empty if we do not add --nobonferroni ?
+        command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --nobootstrap'# --nobonferroni'
         subprocess.run(command, shell=True)
         os.chdir(cur)
 
@@ -108,5 +105,5 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             for j in range(k):
                 source = block.iloc[j, 0]
                 target = block.iloc[j, 1]
-                top_k_edges.append((source, target)) # TODO p-vals?
+                top_k_edges.append((source, target))
             return set(top_k_edges)

@@ -6,11 +6,8 @@ import os
 class TestRunner(object):
     """Runs the tests."""
 
-    #def __init__(self, n, m, k):
     def __init__(self, n_from, n_to, m_from, m_to, k):
         """Constructs TestRunner object."""
-        #self.n = n # nb of random partitions to be generated
-        #self.m = m # nb of iterations on confounder-based partition
         self.n_from = n_from
         self.n_to = n_to
         self.m_from = m_from
@@ -40,7 +37,6 @@ class TestRunner(object):
     def run_all(self):
         """Runs the tests for all cancer types and all confounders on all algorithms.
         """
-        #Selectors.download_known_tfs()
         for ct_sel in self.cancer_type_selectors:
             self.cancer_type_names.append(str(ct_sel))
             for conf_sel in self.confounder_selectors:
@@ -64,7 +60,6 @@ class TestRunner(object):
         verbose : bool
             Print progress to stdout.
         """
-        #Selectors.download_known_tfs()
         ct_selectors = [Selectors.CancerTypeSelector(val) for val in cancer_types]
         conf_selectors = [Selectors.ConfounderSelector(val) for val in confounders]
         for ct_sel in ct_selectors:
@@ -98,27 +93,26 @@ class TestRunner(object):
                 print(f'\t\talgorithm = {str(alg_sel)}')
             
             algorithm_wrapper = self.algorithm_wrappers[alg_sel]
-            if str(alg_sel) == 'GENIE3':
-                algorithm_wrapper.expression_data = self.expression_datasets[ct_sel].iloc[:, :5000]
-            else:
-                algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
+            #if str(alg_sel) == 'GENIE3':
+                #algorithm_wrapper.expression_data = self.expression_datasets[ct_sel].iloc[:, :5000]
+            #else:
+            algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
             
             print('running on random partitions...')
-            for ct_sel in self.cancer_type_selectors:
-                for i in range(self.n_from, self.n_to):
-                    algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i]
-                    algorithm_wrapper.infer_networks()
-                    self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
-                    index = []
-                    for k in range(10, self.k, 10):
-                        try:
-                            self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
-                            index.append(k)
-                        except IndexError:
-                            print('no more edges')
-                            break
-                    pd.DataFrame({'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
-            
+            for i in range(self.n_from, self.n_to):
+                algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i]
+                algorithm_wrapper.infer_networks()
+                self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
+                index = []
+                for k in range(10, self.k, 10):
+                    try:
+                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
+                        index.append(k)
+                    except IndexError:
+                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(-1)
+                        index.append(k)
+                pd.DataFrame({'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
+        
             print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
@@ -130,8 +124,8 @@ class TestRunner(object):
                         self.conf_results[ct_sel][conf_sel][alg_sel].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
                         index.append(k)
                     except IndexError:
-                        print('no more edges')
-                        break
+                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(-1)
+                        index.append(k)
                 pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
     def preprocessData(self):

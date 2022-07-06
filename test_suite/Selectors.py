@@ -12,6 +12,8 @@ class AlgorithmSelector(Enum):
     ARACNE = 'ARACNE'
     GENIE3 = 'GENIE3'
     WGCNA = 'WGCNA'
+    CEMI = 'CEMI'
+    
     def __str__(self):
         return self.value
 
@@ -45,8 +47,8 @@ def get_algorithm_wrapper(algorithm_selector):
         return ARACNEWrapper()
     elif algorithm_selector == AlgorithmSelector.WGCNA:
         return WGCNAWrapper()
-    #elif algorithm_selector == AlgorithmSelector.LSCON:
-        #return LSCONWrapper()
+    elif algorithm_selector == AlgorithmSelector.CEMI:
+        return CEMiWrapper()
 
 def download_TCGA_expression_data(cancer_type_selector):
     """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
@@ -192,15 +194,16 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
     for k in range(n_from, n_to):
         cur = []
         try:
-            part = pd.read_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
+            part = pd.read_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
             begin = 0
             for i in range(len(conf_partition)):
                 cur.append([item for sublist in part[begin:len(conf_partition[i])] for item in sublist])
                 begin += len(conf_partition[i])
         except FileNotFoundError:
+            print(f'rnd_partition {k} not found. Create new partitions.')
             for i in range(len(conf_partition)):
                 block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
-                block.to_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
                 cur.append(block)
         partitions.append(cur)
     return partitions
