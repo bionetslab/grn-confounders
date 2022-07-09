@@ -3,6 +3,7 @@ from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .LSCONWrapper import LSCONWrapper
+from .CEMiWrapper import CEMiWrapper
 import pandas as pd
 import numpy as np
 import os
@@ -20,6 +21,11 @@ class AlgorithmSelector(Enum):
 class CancerTypeSelector(Enum):
     """Enum specifying which cancer type should be investigated."""
     BLCA = 'BLCA'
+    COAD = 'COAD'
+    BRCA = 'BRCA'
+    LUAD = 'LUAD'
+    PRAD = 'PRAD'
+    SKCM = 'SKCM'
 
     def __str__(self):
         return self.value
@@ -60,10 +66,10 @@ def download_TCGA_expression_data(cancer_type_selector):
     """
     cwd = os.getcwd()
     url = ""
-    if cancer_type_selector == CancerTypeSelector.BLCA:
-        url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.htseq_fpkm.tsv.gz"
-    df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
-    df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
+    if cancer_type_selector in list(CancerTypeSelector):
+        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
+        df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
+        df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
 
 def download_TCGA_phenotype_data(cancer_type_selector):
     """Saves TCGA phenotype data for the specifies @cancer_type obtained from UCSC Xena in /data.
@@ -75,11 +81,11 @@ def download_TCGA_phenotype_data(cancer_type_selector):
     """
     cwd = os.getcwd()
     url = ""
-    if cancer_type_selector == CancerTypeSelector.BLCA:
-        url = "https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-BLCA.GDC_phenotype.tsv.gz"
-    pheno_data = pd.read_csv(url, delimiter='\t')
-    pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
-    pheno_data.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
+    if cancer_type_selector in list(CancerTypeSelector):
+        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.GDC_phenotype.tsv.gz'
+        pheno_data = pd.read_csv(url, delimiter='\t')
+        pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
+        pheno_data.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
 
 def download_known_tfs():
     """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
@@ -201,9 +207,9 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 begin += len(conf_partition[i])
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
-            for i in range(len(conf_partition)):
-                block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
-                block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
-                cur.append(block)
+            #for i in range(len(conf_partition)):
+                #block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
+                #block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                #cur.append(block)
         partitions.append(cur)
     return partitions

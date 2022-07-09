@@ -6,15 +6,16 @@ import os
 class TestRunner(object):
     """Runs the tests."""
 
-    def __init__(self, n_from, n_to, m_from, m_to, k):
+    def __init__(self, n_from, n_to, m_from, m_to, k, rank):
         """Constructs TestRunner object."""
+        self.rank = rank
         self.n_from = n_from
         self.n_to = n_to
         self.m_from = m_from
         self.m_to = m_to
         self.k = k # max k to select in top_k_edges
         
-        self.cancer_type_selectors = list(Selectors.CancerTypeSelector) # a "cohort" in TCGA terminology # TODO: rename to 'cohort'?
+        self.cancer_type_selectors = list(Selectors.CancerTypeSelector) # a "cohort" in TCGA terminology
         self.algorithm_selectors = list(Selectors.AlgorithmSelector)
         self.confounder_selectors = list(Selectors.ConfounderSelector)
         
@@ -93,15 +94,12 @@ class TestRunner(object):
                 print(f'\t\talgorithm = {str(alg_sel)}')
             
             algorithm_wrapper = self.algorithm_wrappers[alg_sel]
-            #if str(alg_sel) == 'GENIE3':
-                #algorithm_wrapper.expression_data = self.expression_datasets[ct_sel].iloc[:, :5000]
-            #else:
             algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
             
             print('running on random partitions...')
             for i in range(self.n_from, self.n_to):
-                algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i]
-                algorithm_wrapper.infer_networks()
+                algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
+                algorithm_wrapper.infer_networks(self.rank)
                 self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
                 index = []
                 for k in range(10, self.k, 10):
@@ -116,7 +114,7 @@ class TestRunner(object):
             print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
-                algorithm_wrapper.infer_networks()
+                algorithm_wrapper.infer_networks(self.rank)
                 self.save_networks(algorithm_wrapper._inferred_networks, 0, 'conf', alg_sel, ct_sel, conf_sel)
                 index=[]
                 for k in range(10, self.k, 10):
@@ -137,9 +135,14 @@ class TestRunner(object):
             print('Remove version identifiers from gene symbols in expression data for cohort ' + str(sel) + '...')
             self.expression_datasets[sel].columns = self.expression_datasets[sel].columns.str.split('.').str[0].tolist()
             print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
-            self.expression_datasets[sel] = self.expression_datasets[sel].loc[self.expression_datasets[sel].index.intersection(self.pheno_datasets[sel]['submitter_id.samples'])]
+            keep = self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)
+            self.pheno_datasets[sel] = self.pheno_datasets[sel][keep]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
+            samples = self.pheno_datasets[sel]['submitter_id.samples']            
+            self.expression_datasets[sel] = self.expression_datasets[sel].loc[samples]
+            print('Remove gene where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[:, (self.expression_datasets[sel].std() != 0)]
+            self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
 
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel):
         """Saves the inferred networks to csv.

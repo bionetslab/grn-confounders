@@ -10,7 +10,7 @@ test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
 
-class WGCNAWrapper(NetworkInferenceWrapper):
+class CEMiWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data):
         """Method to infer a network from expression data using the GENIE3 algorithm.
@@ -45,7 +45,8 @@ class WGCNAWrapper(NetworkInferenceWrapper):
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
-
+        network['type'] = 'undirected'
+        
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)
         subprocess.call('rm ' + str(data_path), shell=True)

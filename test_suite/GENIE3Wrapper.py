@@ -11,7 +11,7 @@ sys.path.append(test_suite)
 
 class GENIE3Wrapper(NetworkInferenceWrapper):
 
-    def _infer_network(self, expression_data):
+    def _infer_network(self, expression_data, rank):
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -28,7 +28,7 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
             Fr directed networks, these columns are named 'source' and 'target'.
         """
         main = os.path.join(test_suite, '..')
-        prefix = 'genie3'
+        prefix = 'genie3'+str(rank)
 
         # remove columns with zero standard deviation and normalize columns to unit variance
         expression_data = expression_data.loc[:, (expression_data.std() != 0)]

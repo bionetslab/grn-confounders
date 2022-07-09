@@ -45,11 +45,11 @@ class NetworkInferenceWrapper(ABC):
         self.partition = None
         self._inferred_networks = None
         
-    def infer_networks(self):
+    def infer_networks(self, rank):
         """Infers all networks for the stored partition and expression data."""
         self._inferred_networks = []
         for block in self.partition:
-            self._inferred_networks.append(self._infer_network(self.expression_data.loc[block]))
+            self._inferred_networks.append(self._infer_network(self.expression_data.loc[block], rank))
 
     def mean_jaccard_index_at_k(self, k):
         """Returns the mean Jaccard index for the top k edges in the inferred networks.
@@ -81,7 +81,7 @@ class NetworkInferenceWrapper(ABC):
     
     @staticmethod
     @abstractmethod        
-    def _infer_network(expression_data):
+    def _infer_network(expression_data, rank):
         """Abstract method to infer a network from expression data. Must be implemented by derived classes.
         
         Parameters

@@ -11,7 +11,7 @@ sys.path.append(test_suite)
 
 class ARACNEWrapper(NetworkInferenceWrapper):
 
-    def _infer_network(self, expression_data):
+    def _infer_network(self, expression_data, rank):
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -28,7 +28,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             Fr directed networks, these columns are named 'source' and 'target'.
         """
         main = os.path.join(test_suite, '..')
-        prefix = 'aracne'
+        prefix = 'aracne'+str(rank)
 
         # -o: set output folder
         out_dir = os.path.join(main, 'temp', prefix)
@@ -44,7 +44,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         expression_data = expression_data.T # ARACNe expects gene x sample data set
         gene_dict = dict(zip(expression_data.index, range(len(expression_data.index)))) # ARACNe expects numeric gene identifiers in first column
         expression_data.insert(loc=0, column='gene', value=[gene_dict[i] for i in expression_data.index])
-        data_path = os.path.join(main, 'temp', 'aracne', f'{prefix}_expression_data.txt')
+        data_path = os.path.join(main, 'temp', str(prefix), f'{prefix}_expression_data.txt')
         expression_data.to_csv(data_path, sep='\t', index=False)
 
         # get regulators and remove such genes that are not present in expression_data
@@ -52,7 +52,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
         regulators = regulators[np.isin(regulators, expression_data.index)]
         regulators = [gene_dict[i] for i in regulators]
-        regulator_path = os.path.join(main, 'temp', 'aracne', f'{prefix}_regulators.txt')
+        regulator_path = os.path.join(main, 'temp', str(prefix), f'{prefix}_regulators.txt')
         pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
 
         # set parameters seed and p-value
@@ -65,7 +65,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         exe = os.path.join('dist','aracne.jar')
         thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --calculateThreshold'
         subprocess.run(thresholdCommand, shell=True)
-        command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --nobootstrap'# --nobonferroni'
+        command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --nobootstrap'
         subprocess.run(command, shell=True)
         os.chdir(cur)
 

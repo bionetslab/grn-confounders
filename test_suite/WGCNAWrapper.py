@@ -12,7 +12,7 @@ sys.path.append(test_suite)
 
 class WGCNAWrapper(NetworkInferenceWrapper):
 
-    def _infer_network(self, expression_data):
+    def _infer_network(self, expression_data, rank):
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -29,7 +29,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
             Fr directed networks, these columns are named 'source' and 'target'.
         """
         main = os.path.join(test_suite, '..')
-        prefix = 'wgcna'
+        prefix = 'wgcna'+str(rank)
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
         expression_data.to_csv(data_path, sep='\t')
@@ -44,6 +44,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
+        network['type'] = 'undirected'
 
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)

@@ -15,7 +15,7 @@ size = comm.Get_size()
 
 def get_parser():
     """Return parser for command line argument processing.
-    E.g.: python run_tests.py -ct BLCA -conf age -alg ARACNE -k 5  seq -n 1000 -m 100 """
+    E.g.: python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500  par -N_from 0 -N_to 1000 -M_from 0 -M_to 100 """
     parser = argparse.ArgumentParser('Assessing effect of sex, age, and ethnicity confounders on GRN and co-expression network inference.')
     mode_parser = parser.add_subparsers(dest='mode', required=True, help='run test sequentially or in parallel.')
 
@@ -61,14 +61,14 @@ def run_tests(args, verbose=True):
 
         if rank == 0 and verbose:
             print('loading data ...')
-        test_runner = TestRunner(n_from, n_to, m_from, m_to, args.k)
+        test_runner = TestRunner(n_from, n_to, m_from, m_to, args.k, rank)
         if rank == 0 and verbose:
             print('running the tests ...')
         test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
     else:
         if verbose:
             print('loading data ...')
-        test_runner = TestRunner(0, args.n, 0, args.m, args.k)
+        test_runner = TestRunner(0, args.n, 0, args.m, args.k, 0)
         if verbose:
             print('running the tests ...')
         test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
