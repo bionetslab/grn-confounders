@@ -23,6 +23,7 @@ class TestRunner(object):
         self.pheno_datasets = {sel: Selectors.get_pheno_data(sel) for sel in self.cancer_type_selectors}
         self.preprocessData()
         self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
+        
         self.conf_partitions = {ct_sel: {conf_sel: Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_sel) for conf_sel in self.confounder_selectors}
             for ct_sel in self.cancer_type_selectors}
         self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel]['submitter_id.samples'], self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)
@@ -31,7 +32,7 @@ class TestRunner(object):
         self.cancer_type_names = []
         self.algorithm_names = []
         self.confounder_names = []
-        self.conf_results = {ct_sel: {conf_sel: {alg_sel: list([]) for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors} # a list of length n per cancer_type and confounder
+        self.conf_results = {ct_sel: {conf_sel: {alg_sel: {j: list([]) for j in range(self.m_from, self.m_to)} for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors} # a list of length n per cancer_type and confounder
         self.rnd_results = {ct_sel: {conf_sel: {alg_sel: {i: list([]) for i in range(self.n_from, self.n_to)} for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
         self.outfile = ''
         
@@ -119,12 +120,12 @@ class TestRunner(object):
                 index=[]
                 for k in range(10, self.k, 10):
                     try:
-                        self.conf_results[ct_sel][conf_sel][alg_sel].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
+                        self.conf_results[ct_sel][conf_sel][alg_sel][j].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
                         index.append(k)
                     except IndexError:
-                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(-1)
+                        self.rnd_results[ct_sel][conf_sel][alg_sel][j].append(-1)
                         index.append(k)
-                pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
+                pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
     def preprocessData(self):
         """Data preprocessing. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa. Removes all 
@@ -143,6 +144,12 @@ class TestRunner(object):
             print('Remove gene where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[:, (self.expression_datasets[sel].std() != 0)]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
+            """
+            print('Only leave protein-coding genes in expression data set for cohort ' + str(sel) + '...')
+            pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
+            mask = self.expression_datasets[sel].columns.intersection(pcg['ensembl_gene_id'].values)
+            self.expression_datasets[sel] = self.expression_datasets[sel][mask]
+            """
 
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel):
         """Saves the inferred networks to csv.

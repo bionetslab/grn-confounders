@@ -2,7 +2,6 @@ from enum import Enum
 from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
-from .LSCONWrapper import LSCONWrapper
 from .CEMiWrapper import CEMiWrapper
 import pandas as pd
 import numpy as np
@@ -131,11 +130,11 @@ def get_pheno_data(cancer_type_selector):
     cwd = os.getcwd()
     try:
         pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
-        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': int, 'submitter_id.samples': str})
+        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
     except FileNotFoundError:
         download_TCGA_phenotype_data(cancer_type_selector)
         pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
-        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': int, 'submitter_id.samples': str})
+        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
     return pheno_data
 
 
