@@ -8,6 +8,7 @@ class TestRunner(object):
 
     def __init__(self, n_from, n_to, m_from, m_to, k, rank):
         """Constructs TestRunner object."""
+        
         self.rank = rank
         self.n_from = n_from
         self.n_to = n_to
@@ -116,15 +117,14 @@ class TestRunner(object):
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
                 algorithm_wrapper.infer_networks(self.rank)
-                self.save_networks(algorithm_wrapper._inferred_networks, 0, 'conf', alg_sel, ct_sel, conf_sel)
+                self.save_networks(algorithm_wrapper._inferred_networks, j, 'conf', alg_sel, ct_sel, conf_sel)
                 index=[]
                 for k in range(10, self.k, 10):
                     try:
                         self.conf_results[ct_sel][conf_sel][alg_sel][j].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
-                        index.append(k)
                     except IndexError:
-                        self.rnd_results[ct_sel][conf_sel][alg_sel][j].append(-1)
-                        index.append(k)
+                        self.conf_results[ct_sel][conf_sel][alg_sel][j].append(-1)
+                    index.append(k)
                 pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
     def preprocessData(self):
@@ -135,21 +135,22 @@ class TestRunner(object):
             self.pheno_datasets[sel] =  self.pheno_datasets[sel][self.pheno_datasets[sel]['sample_type.samples'] == 'Primary Tumor']
             print('Remove version identifiers from gene symbols in expression data for cohort ' + str(sel) + '...')
             self.expression_datasets[sel].columns = self.expression_datasets[sel].columns.str.split('.').str[0].tolist()
+            
+            print('Only leave protein-coding genes in expression data set for cohort ' + str(sel) + '...')
+            pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
+            mask = self.expression_datasets[sel].columns.intersection(pcg['ensembl_gene_id'].values)
+            self.expression_datasets[sel] = self.expression_datasets[sel][mask]
+
             print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
             keep = self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)
             self.pheno_datasets[sel] = self.pheno_datasets[sel][keep]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
             samples = self.pheno_datasets[sel]['submitter_id.samples']            
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[samples]
+            
             print('Remove gene where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[:, (self.expression_datasets[sel].std() != 0)]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
-            """
-            print('Only leave protein-coding genes in expression data set for cohort ' + str(sel) + '...')
-            pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
-            mask = self.expression_datasets[sel].columns.intersection(pcg['ensembl_gene_id'].values)
-            self.expression_datasets[sel] = self.expression_datasets[sel][mask]
-            """
 
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel):
         """Saves the inferred networks to csv.
