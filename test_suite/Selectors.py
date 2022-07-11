@@ -144,7 +144,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
 
     Parameters
     ----------
-    pheno_data : pd.DataFrame
+    pheno_data_orig : pd.DataFrame
         Data frame containing phenotypic information. One row per sample, one column per attribute.
 
     confounder_selector : ConfounderSelector
@@ -170,7 +170,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         lower = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.25)
         upper = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.75)
         low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] <= lower]['submitter_id.samples']
-        high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] >= upper]['submitter_id.samples']
+        high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > upper]['submitter_id.samples']
         blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples.tolist(), high_age_samples.tolist()]
     return conf_partition
 
@@ -206,9 +206,9 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 begin += len(conf_partition[i])
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
-            #for i in range(len(conf_partition)):
-                #block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
-                #block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
-                #cur.append(block)
+            for i in range(len(conf_partition)):
+                block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
+                block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                cur.append(block)
         partitions.append(cur)
     return partitions
