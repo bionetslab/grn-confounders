@@ -10,7 +10,7 @@ test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
 
-class WGCNAWrapper(NetworkInferenceWrapper):
+class CEMiWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data):
         """Method to infer a network from expression data using the GENIE3 algorithm.
@@ -28,18 +28,18 @@ class WGCNAWrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = os.path.join(test_suite, '..')
+        #main = os.path.join(test_suite, '..')
         prefix = 'cemi'
 
         expression_data = expression_data.T
-        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
+        data_path = os.path.join(os.getcwd(), 'temp', f'{prefix}_expression_data.csv')
         expression_data.to_csv(data_path, sep='\t')
 
-        out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
+        out_path = os.path.join(os.getcwd(), 'temp', f'{prefix}_edge_list.csv')
 
         cur = os.getcwd()
-        os.chdir(os.path.join(main, 'algorithms', 'CEMi'))
-        command = f'Rscript CEMi.R {prefix}'
+        os.chdir(os.path.join(os.getcwd(), 'algorithms', 'CEMi'))
+        command = f'Rscript CEMi.R {cur}'
         ret = subprocess.run(command, shell=True)
         os.chdir(cur)
 
@@ -47,8 +47,8 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         network = pd.read_csv(out_path, sep='\t', index_col=0)
 
         # remove temporary files
-        subprocess.call('rm ' + str(out_path), shell=True)
-        subprocess.call('rm ' + str(data_path), shell=True)
+        #subprocess.call('rm ' + str(out_path), shell=True)
+        #subprocess.call('rm ' + str(data_path), shell=True)
 
         return network
 

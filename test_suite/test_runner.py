@@ -101,7 +101,7 @@ class TestRunner(object):
             if str(alg_sel) == 'GENIE3':
                 algorithm_wrapper.expression_data = self.expression_datasets[ct_sel].iloc[:, :5000]
             else:
-                algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
+                algorithm_wrapper.expression_data = self.expression_datasets[ct_sel].iloc[:, :5000]
             
             print('running on random partitions...')
             for ct_sel in self.cancer_type_selectors:
@@ -117,7 +117,7 @@ class TestRunner(object):
                         except IndexError:
                             print('no more edges')
                             break
-                    pd.DataFrame({'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
+                    pd.DataFrame({'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join(os.getcwd(),'results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
             
             print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
@@ -132,7 +132,7 @@ class TestRunner(object):
                     except IndexError:
                         print('no more edges')
                         break
-                pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
+                pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel]}).to_csv(os.path.join(os.getcwd(),'results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
     def preprocessData(self):
         """Data preprocessing. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa. Removes all 
@@ -174,6 +174,7 @@ class TestRunner(object):
         cwd = os.getcwd()
         for block_nb in range(len(inferred_networks)):
             path = os.path.join(cwd, 'results', 'networks', f'{mode}_part{part_nb}_block{block_nb}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
+           #print("inferred_net",inferred_networks[block_nb])
             inferred_networks[block_nb].to_csv(path, index = False)
 
     def clear(self):
@@ -184,3 +185,4 @@ class TestRunner(object):
         self.rnd_results = None
         self.conf_results = None
         self.outfile = ''
+

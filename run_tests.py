@@ -36,23 +36,25 @@ def run_tests(args, verbose=True):
     verbose : bool
         Print progress to stdout.
     """
-    if args.mode == 'parallel':
-        n_from = (int(args.n/size))*rank
-        n_to = n_from + int(args.n/size)
-        if rank == size-1:
-            n_to = args.n
-        m_from = (int(args.m/size))*rank
-        m_to = m_from + int(args.m/size)
-        if rank == size-1:
-            m_to = args.m
 
-        if rank == 0 and verbose:
-            print('loading data ...')
-        #test_runner = TestRunner(args.n, args.m, args.k)
-        test_runner = TestRunner(n_from, n_to, m_from, m_to, args.k)
-        if rank == 0 and verbose:
-            print('running the tests ...')
-        test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
+    if args.mode == 'parallel':
+        return
+    #    n_from = (int(args.n/size))*rank
+    #    n_to = n_from + int(args.n/size)
+    #    if rank == size-1:
+    #        n_to = args.n
+    #    m_from = (int(args.m/size))*rank
+    #    m_to = m_from + int(args.m/size)
+    #    if rank == size-1:
+    #        m_to = args.m
+
+    #    if rank == 0 and verbose:
+    #        print('loading data ...')
+    #    #test_runner = TestRunner(args.n, args.m, args.k)
+    #    test_runner = TestRunner(n_from, n_to, m_from, m_to, args.k)
+    #    if rank == 0 and verbose:
+    #        print('running the tests ...')
+    #    test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
     else:
         if verbose:
             print('loading data ...')

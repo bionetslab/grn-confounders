@@ -2,6 +2,7 @@ from enum import Enum
 from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
+from .CEMiWrapper import CEMiWrapper
 from .LSCONWrapper import LSCONWrapper
 import pandas as pd
 import numpy as np
@@ -12,6 +13,7 @@ class AlgorithmSelector(Enum):
     ARACNE = 'ARACNE'
     GENIE3 = 'GENIE3'
     WGCNA = 'WGCNA'
+    CEMi = 'CEMi'
     def __str__(self):
         return self.value
 
@@ -45,6 +47,8 @@ def get_algorithm_wrapper(algorithm_selector):
         return ARACNEWrapper()
     elif algorithm_selector == AlgorithmSelector.WGCNA:
         return WGCNAWrapper()
+    elif algorithm_selector == AlgorithmSelector.CEMi:
+        return CEMiWrapper()
     #elif algorithm_selector == AlgorithmSelector.LSCON:
         #return LSCONWrapper()
 
@@ -192,7 +196,7 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
     for k in range(n_from, n_to):
         cur = []
         try:
-            part = pd.read_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
+            part = pd.read_csv(os.path.join(os.getcwd(),'partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
             begin = 0
             for i in range(len(conf_partition)):
                 cur.append([item for sublist in part[begin:len(conf_partition[i])] for item in sublist])
@@ -200,7 +204,7 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
         except FileNotFoundError:
             for i in range(len(conf_partition)):
                 block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
-                block.to_csv(os.path.join('partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                block.to_csv(os.path.join(os.getcwd(),'partitions', f'rnd_part{k+1}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
                 cur.append(block)
         partitions.append(cur)
     return partitions

@@ -28,17 +28,18 @@ class WGCNAWrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = os.path.join(test_suite, '..')
+        #main = os.path.join(test_suite, '..')
         prefix = 'wgcna'
 
-        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
+        data_path = os.path.join(os.getcwd(), 'temp', f'{prefix}_expression_data.csv')
         expression_data.to_csv(data_path, sep='\t')
 
-        out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
+        out_path = os.path.join(os.getcwd(), 'temp', f'{prefix}_edge_list.csv')
 
+        #print("arg1", arg1)
         cur = os.getcwd()
-        os.chdir(os.path.join(main, 'algorithms', 'WGCNA'))
-        command = f'Rscript WGNCA.R {prefix}'
+        os.chdir(os.path.join(os.getcwd(), 'algorithms', 'WGCNA'))
+        command = f'Rscript WGCNA.R {cur}'
         ret = subprocess.run(command, shell=True)
         os.chdir(cur)
 
@@ -46,8 +47,8 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         network = pd.read_csv(out_path, sep='\t', index_col=0)
 
         # remove temporary files
-        subprocess.call('rm ' + str(out_path), shell=True)
-        subprocess.call('rm ' + str(data_path), shell=True)
+        #subprocess.call('rm ' + str(out_path), shell=True)
+        #subprocess.call('rm ' + str(data_path), shell=True)
 
         return network
 
@@ -73,5 +74,8 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         for j in range(k):
             gene_1 = block.iloc[j, 0]
             gene_2 = block.iloc[j, 1]
-            top_k_edges.append((gene_1, gene_2))
+            if gene_1 < gene_2:
+                top_k_edges.append((gene_1, gene_2))
+            else:
+                top_k_edges.append((gene_2, gene_1))
         return set(top_k_edges)

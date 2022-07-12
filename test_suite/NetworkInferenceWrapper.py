@@ -71,12 +71,10 @@ class NetworkInferenceWrapper(ABC):
             top_k_edges_i = self._get_top_k_edges(i, k)
             top_k_edges_j = self._get_top_k_edges(j, k)
             size_intersection = len(top_k_edges_i.intersection(top_k_edges_j))
-            size_union = len(top_k_edges_i.union(top_k_edges_j)) # TODO: this was union of j and j, but it is supposed to be i and j?
-            if size_union > 0:
-                sum_jaccard_indices += size_intersection / size_union # TODO: size_union could be zero, too; union empty --> intersection empty --> = 0?
-            else:
-                sum_jaccard_indices += 0
+            size_union = len(top_k_edges_i.union(top_k_edges_j))
+            sum_jaccard_indices += size_intersection / size_union
             num_comparisons += 1
+        #print("J_I", sum_jaccard_indices / num_comparisons)
         return sum_jaccard_indices / num_comparisons
     
     @staticmethod
