@@ -64,12 +64,29 @@ class NetworkInferenceWrapper(ABC):
         mean_jaccard_index : float
             The mean Jaccard index across of pairwise comparisons of the top k edges in the 
             networks inferred for the blocks of the partition.
+
+        state_k: str
+            indicating which networks contained at least k edges.
+
+        size_intersection: int
+            Size of the intersection at k.
+        
+        size_union: int
+            Size of the union at k.
         """
         sum_jaccard_indices = 0.0
         num_comparisons = 0
+        state_k = ''
         for i, j in itt.combinations(range(len(self._inferred_networks)), 2):
-            top_k_edges_i = self._get_top_k_edges(i, k)
-            top_k_edges_j = self._get_top_k_edges(j, k)
+            top_k_edges_i, state_i = self._get_top_k_edges(i, k)
+            top_k_edges_j, state_j = self._get_top_k_edges(j, k)
+            if 'empty'+str(i) in state_i:
+                state_k += 'empty'+str(i) + '_'
+            if 'empty'+str(j) in state_j:
+                state_k += 'empty'+str(j) + '_'
+            if not ('empty'+str(i) in state_i or 'empty'+str(j) in state_j):
+                state_k += 'filled'+str(i)+str(j)+'_'
+
             size_intersection = len(top_k_edges_i.intersection(top_k_edges_j))
             size_union = len(top_k_edges_i.union(top_k_edges_j))
             if size_union > 0:
@@ -77,7 +94,7 @@ class NetworkInferenceWrapper(ABC):
             else:
                 sum_jaccard_indices += 0
             num_comparisons += 1
-        return sum_jaccard_indices / num_comparisons
+        return sum_jaccard_indices / num_comparisons, state_k, size_intersection, size_union
     
     @staticmethod
     @abstractmethod        

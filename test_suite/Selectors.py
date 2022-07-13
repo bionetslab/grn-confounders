@@ -19,12 +19,12 @@ class AlgorithmSelector(Enum):
 
 class CancerTypeSelector(Enum):
     """Enum specifying which cancer type should be investigated."""
-    BLCA = 'BLCA'
+    #BLCA = 'BLCA'
     COAD = 'COAD'
-    BRCA = 'BRCA'
-    LUAD = 'LUAD'
-    PRAD = 'PRAD'
-    SKCM = 'SKCM'
+    #BRCA = 'BRCA'
+    #LUAD = 'LUAD'
+    #PRAD = 'PRAD'
+    #SKCM = 'SKCM'
 
     def __str__(self):
         return self.value
@@ -158,20 +158,27 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
     pheno_data = pheno_data_orig.copy()
     indices = None
     if confounder_selector == ConfounderSelector.SEX:
-        female_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'female']['submitter_id.samples']
-        male_samples = pheno_data.loc[pheno_data['gender.demographic'] == 'male']['submitter_id.samples']
+        female_samples = pheno_data.loc[pheno_data['gender.demographic'].str.strip() == 'female']['submitter_id.samples']
+        male_samples = pheno_data.loc[pheno_data['gender.demographic'].str.strip() == 'male']['submitter_id.samples']
         blocks, conf_partition = ['female', 'male'], [female_samples.tolist(), male_samples.tolist()]
     if confounder_selector == ConfounderSelector.RACE:
-        asian_samples = pheno_data.loc[pheno_data['race.demographic'] == 'asian']['submitter_id.samples']
-        african_samples = pheno_data.loc[pheno_data['race.demographic'] == 'black or african american']['submitter_id.samples']
-        white_samples = pheno_data.loc[pheno_data['race.demographic'] == 'white']['submitter_id.samples']
+        asian_samples = pheno_data.loc[pheno_data['race.demographic'].str.strip() == 'asian']['submitter_id.samples']
+        african_samples = pheno_data.loc[pheno_data['race.demographic'].str.strip() == 'black or african american']['submitter_id.samples']
+        white_samples = pheno_data.loc[pheno_data['race.demographic'].str.strip() == 'white']['submitter_id.samples']            
         blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples.tolist(), african_samples.tolist(), white_samples.tolist()]
+        if len(asian_samples) < 0.1*(len(white_samples)+len(african_samples)+len(asian_samples)):
+            blocks, conf_partition = ['african', 'white'], [african_samples.tolist(), white_samples.tolist()]
+        elif len(african_samples) < 0.1*(len(white_samples)+len(african_samples)+len(asian_samples)):
+            blocks, conf_partition = ['asian', 'white'], [asian_samples.tolist(), white_samples.tolist()]
     if confounder_selector == ConfounderSelector.AGE:
         lower = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.25)
         upper = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.75)
         low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] <= lower]['submitter_id.samples']
         high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > upper]['submitter_id.samples']
         blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples.tolist(), high_age_samples.tolist()]
+    with open('blocks_'+str(confounder_selector), 'a') as f:
+        for i in range(len(blocks)):
+            f.write(blocks[i]+','+str(len(conf_partition[i])))
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
@@ -194,21 +201,29 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
     partitions : list
         List of random partitions.
     """
-    samples_cpy = samples.copy()
     partitions=[]
     for k in range(n_from, n_to):
+        samples_cpy = samples.copy()
         cur = []
         try:
             part = pd.read_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
             begin = 0
+            end = 0
             for i in range(len(conf_partition)):
-                cur.append([item for sublist in part[begin:len(conf_partition[i])] for item in sublist])
+                end += len(conf_partition[i])
+                cur.append([item for sublist in part[begin:end] for item in sublist])
                 begin += len(conf_partition[i])
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
             for i in range(len(conf_partition)):
-                block = samples_cpy.sample(n=len(conf_partition[i]), replace=True)
+                block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
+                samples_cpy = samples_cpy[~samples_cpy.isin(block)]
+                cur.append(block.values)
                 block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
-                cur.append(block)
         partitions.append(cur)
+        with open('block_specs', 'a') as f:
+            f.write(str(ct_sel)+'_'+str(conf_sel)+'_'+str(len(samples_cpy))+'\n')
+            for i in range(len(conf_partition)):
+                f.write(str(len(cur[i]))+'\n')
+            f.write('\n')
     return partitions

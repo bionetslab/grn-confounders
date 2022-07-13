@@ -74,8 +74,8 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         inv_gene_dict = {v: k for k, v in gene_dict.items()}
         network['Regulator'] = [inv_gene_dict[i] for i in network['Regulator']]
         network['Target'] = [inv_gene_dict[i] for i in network['Target']]
-        network = network.sort_values(by=['MI'], axis=0, ascending=False)
-
+        network = network.sort_values(by=['MI', 'Regulator', 'Target'], axis=0, ascending=False)
+        
         network = network.rename({'Regulator': 'source', 'Target': 'target', 'MI': 'score'}, axis='columns')
         network['type'] = 'directed'
         
@@ -89,7 +89,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             Parameters
             ----------
             i : int
-                ID of partion block. Must fall in range(0, len(self.partition)).
+                Index of the block. Must fall in range(0, len(self.partition)).
             k : Maximal number of edges to be returned.
             
             Returns
@@ -102,8 +102,14 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             """
             block = self._inferred_networks[i]
             top_k_edges = []
+            state = []
+            j = 0
             for j in range(k):
-                source = block.iloc[j, 0]
-                target = block.iloc[j, 1]
-                top_k_edges.append((source, target))
-            return set(top_k_edges)
+                try:
+                    source = block.iloc[j, 0]
+                    target = block.iloc[j, 1]
+                    state.append('filled')
+                    top_k_edges.append((source, target))
+                except:
+                    state.append('empty'+str(i))
+            return set(top_k_edges), state

@@ -104,14 +104,17 @@ class TestRunner(object):
                 algorithm_wrapper.infer_networks(self.rank)
                 self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
                 index = []
+                network_state = []
+                intersections = []
+                unions = []
                 for k in range(10, self.k, 10):
-                    try:
-                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
-                        index.append(k)
-                    except IndexError:
-                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(-1)
-                        index.append(k)
-                pd.DataFrame({'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
+                    ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
+                    self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(ji)
+                    index.append(k)
+                    unions.append(s_un)
+                    intersections.append(s_int)
+                    network_state.append(state)
+                pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
         
             print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
@@ -119,13 +122,17 @@ class TestRunner(object):
                 algorithm_wrapper.infer_networks(self.rank)
                 self.save_networks(algorithm_wrapper._inferred_networks, j, 'conf', alg_sel, ct_sel, conf_sel)
                 index=[]
+                network_state = []
+                intersections = []
+                unions = []
                 for k in range(10, self.k, 10):
-                    try:
-                        self.conf_results[ct_sel][conf_sel][alg_sel][j].append(algorithm_wrapper.mean_jaccard_index_at_k(k))
-                    except IndexError:
-                        self.conf_results[ct_sel][conf_sel][alg_sel][j].append(-1)
+                    ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
+                    self.conf_results[ct_sel][conf_sel][alg_sel][j].append(ji)
                     index.append(k)
-                pd.DataFrame({'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
+                    unions.append(s_un)
+                    intersections.append(s_int)
+                    network_state.append(state)
+                pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
     def preprocessData(self):
         """Data preprocessing. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa. Removes all 
