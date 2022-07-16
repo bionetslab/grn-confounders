@@ -84,10 +84,17 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
                 correlation), use tuples of form (<gene_1>, <gene_2>, <sense>), where <sense> is either -1 or 1.
                 For undirected edges, ensure that <gene_1> <= <gene_2> for all tuples contained in edge set.
             """
-            block = self._inferred_networks[i]
+            block = self._inferred_networks[i].copy()
+            block = block.dropna()
             top_k_edges = []
+            state = []
+            j = 0
             for j in range(k):
-                source = block.iloc[j, 0]
-                target = block.iloc[j, 1]
-                top_k_edges.append((source, target))
-            return set(top_k_edges)
+                try:
+                    source = block.iloc[j, 0]
+                    target = block.iloc[j, 1]
+                    state.append('filled')
+                    top_k_edges.append((source, target))
+                except:
+                    state.append('empty'+str(i))
+            return set(top_k_edges), state

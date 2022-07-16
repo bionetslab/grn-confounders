@@ -100,7 +100,8 @@ class ARACNEWrapper(NetworkInferenceWrapper):
                 correlation), use tuples of form (<gene_1>, <gene_2>, <sense>), where <sense> is either -1 or 1.
                 For undirected edges, ensure that <gene_1> <= <gene_2> for all tuples contained in edge set.
             """
-            block = self._inferred_networks[i]
+            block = self._inferred_networks[i].copy()
+            block = block.dropna()
             top_k_edges = []
             state = []
             j = 0
