@@ -6,6 +6,7 @@ import os
 import sys
 import preprocessing as prp
 import csv
+import random
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
@@ -56,16 +57,16 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
 
         # set parameters seed and p-value
-        p = '1E-4'
-        seed = '1'
+        p = '1E-4'        
+        seed = random.randint(0, 1000000)
 
         # run ARACNe:
         cur = os.getcwd()
         os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP'))
         exe = os.path.join('dist','aracne.jar')
-        thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --calculateThreshold'
+        thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --seed {seed} --pvalue {p} --calculateThreshold'
         subprocess.run(thresholdCommand, shell=True)
-        command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --seed {seed} --nobootstrap'
+        command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --nobootstrap'
         subprocess.run(command, shell=True)
         os.chdir(cur)
 
