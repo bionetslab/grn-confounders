@@ -1,15 +1,10 @@
 
 cemi <- getwd()
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("CEMiTool")
-install.packages("igraph")
+library("WGCNA")
 library("CEMiTool")
 library(igraph)
-enableWGCNAThreads()
 
-main <- file.path(wgcna, '..', '..')
+main <- file.path(cemi, '..', '..')
 args <- commandArgs(trailingOnly=TRUE)
 prefix <- args[1]
 

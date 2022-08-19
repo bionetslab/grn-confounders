@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
+import igraph
 import csv
 
 test_suite = os.path.join(os.path.dirname(__file__))
@@ -35,16 +36,17 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         expression_data.to_csv(data_path, sep='\t')
 
         out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
+       #adjacency_path = os.path.join(main, 'temp', f'{prefix}_adjacency.csv')
 
+        #print("arg1", arg1)
         cur = os.getcwd()
-        os.chdir(os.path.join(main, 'algorithms', 'WGCNA'))
-        command = f'Rscript WGNCA.R {prefix}'
+        os.chdir(os.path.join(os.getcwd(), 'algorithms', 'WGCNA'))
+        command = f'Rscript WGCNA_dem.R {prefix}'
         ret = subprocess.run(command, shell=True)
         os.chdir(cur)
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
-        network['type'] = 'undirected'
 
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)
@@ -71,8 +73,16 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         """
         block = self._inferred_networks[i]
         top_k_edges = []
+        state = []
         for j in range(k):
-            gene_1 = block.iloc[j, 0]
-            gene_2 = block.iloc[j, 1]
-            top_k_edges.append((gene_1, gene_2))
-        return set(top_k_edges)
+            try:
+                gene_1 = block.iloc[j, 0]
+                gene_2 = block.iloc[j, 1]
+                state.append('filled')
+                if(gene_1 < gene_2):
+                    top_k_edges.append((gene_1, gene_2))
+                else:
+                    top_k_edges.append((gene_2, gene_1))
+            except:
+                state.append('empty' + str(i))
+        return set(top_k_edges), state

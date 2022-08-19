@@ -12,7 +12,7 @@ sys.path.append(test_suite)
 
 class CEMiWrapper(NetworkInferenceWrapper):
 
-    def _infer_network(self, expression_data):
+    def _infer_network(self, expression_data, rank):
         """Method to infer a network from expression data using the GENIE3 algorithm.
 
         Parameters
@@ -29,7 +29,7 @@ class CEMiWrapper(NetworkInferenceWrapper):
             Fr directed networks, these columns are named 'source' and 'target'.
         """
         main = os.path.join(test_suite, '..')
-        prefix = 'cemi'
+        prefix = 'cemi'+str(rank)
 
         expression_data = expression_data.T
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
@@ -45,7 +45,7 @@ class CEMiWrapper(NetworkInferenceWrapper):
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
-        network['type'] = 'undirected'
+       # network['type'] = 'undirected'
         
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)
@@ -72,8 +72,17 @@ class CEMiWrapper(NetworkInferenceWrapper):
         """
         block = self._inferred_networks[i]
         top_k_edges = []
+        state = []
         for j in range(k):
-            gene_1 = block.iloc[j, 0]
-            gene_2 = block.iloc[j, 1]
-            top_k_edges.append((gene_1, gene_2))
-        return set(top_k_edges)
+            try:
+                gene_1 = block.iloc[j, 0]
+                gene_2 = block.iloc[j, 1]
+                state.append('filled')
+                if (gene_1 < gene_2):
+                    top_k_edges.append((gene_1, gene_2))
+                else:
+                    top_k_edges.append((gene_2, gene_1))
+            except:
+                state.append('empty' + str(i))
+        return set(top_k_edges), state
+

@@ -19,8 +19,8 @@ class AlgorithmSelector(Enum):
 
 class CancerTypeSelector(Enum):
     """Enum specifying which cancer type should be investigated."""
-    #BLCA = 'BLCA'
-    COAD = 'COAD'
+    BLCA = 'BLCA'
+    #COAD = 'COAD'
     #BRCA = 'BRCA'
     #LUAD = 'LUAD'
     #PRAD = 'PRAD'
