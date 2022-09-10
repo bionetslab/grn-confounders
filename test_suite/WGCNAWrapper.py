@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
-import igraph
 import csv
 
 test_suite = os.path.join(os.path.dirname(__file__))
@@ -41,7 +40,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         #print("arg1", arg1)
         cur = os.getcwd()
         os.chdir(os.path.join(os.getcwd(), 'algorithms', 'WGCNA'))
-        command = f'Rscript WGCNA_dem.R {prefix}'
+        command = f'Rscript WGCNA.R {prefix}'
         ret = subprocess.run(command, shell=True)
         os.chdir(cur)
 
