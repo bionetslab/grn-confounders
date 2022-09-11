@@ -57,13 +57,12 @@ class ARACNEWrapper(NetworkInferenceWrapper):
 
         # set parameters seed and p-value
         p = '1E-4'        
-        seed = random.randint(0, 1000000)
 
         # run ARACNe:
         cur = os.getcwd()
         os.chdir(os.path.join(main, 'algorithms', 'ARACNe-AP'))
         exe = os.path.join('dist','aracne.jar')
-        thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --seed {seed} --pvalue {p} --calculateThreshold'
+        thresholdCommand = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --calculateThreshold'
         subprocess.run(thresholdCommand, shell=True)
         command = f'java -Xmx5G -jar {exe} -e {data_path}  -o {out_dir} --tfs {regulator_path} --pvalue {p} --nobootstrap'
         subprocess.run(command, shell=True)
