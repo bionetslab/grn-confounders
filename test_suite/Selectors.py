@@ -55,37 +55,6 @@ def get_algorithm_wrapper(algorithm_selector):
     elif algorithm_selector == AlgorithmSelector.CEMI:
         return CEMiWrapper()
 
-def download_TCGA_expression_data(cancer_type_selector):
-    """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
-
-    Parameters
-    ----------
-    cancer_type_selector : CancerTypeSelector
-        Specifies the cohort that the phenotype file is to be downloaded for.
-    """
-    cwd = os.getcwd()
-    url = ""
-    if cancer_type_selector in list(CancerTypeSelector):
-        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
-        df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
-        df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
-
-def download_TCGA_phenotype_data(cancer_type_selector):
-    """Saves TCGA phenotype data for the specifies @cancer_type obtained from UCSC Xena in /data.
-
-    Parameters
-    ----------
-    cancer_type_selector : CancerTypeSelector
-        Specifies the cohort that the phenotype file is to be downloaded for.
-    """
-    cwd = os.getcwd()
-    url = ""
-    if cancer_type_selector in list(CancerTypeSelector):
-        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.GDC_phenotype.tsv.gz'
-        pheno_data = pd.read_csv(url, delimiter='\t')
-        pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
-        pheno_data.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
-
 def download_known_tfs():
     """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
     """
@@ -93,7 +62,7 @@ def download_known_tfs():
     df = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', delimiter='\t', index_col=0)
     df.to_csv(os.path.join(cwd, 'data', 'regulators.csv'), sep='\t')
 
-def get_expression_data(cancer_type_selector):
+def get_expression_data(cancer_type_selector): # TODO align file names
     """Loads the expression data for the selected cancer type.
 
     Parameters
@@ -114,7 +83,7 @@ def get_expression_data(cancer_type_selector):
         expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
     return expression_data
 
-def get_pheno_data(cancer_type_selector):
+def get_pheno_data(cancer_type_selector): # TODO align file names
     """Loads the phenotype data for the selected cancer type.
 
     Parameters
@@ -138,7 +107,7 @@ def get_pheno_data(cancer_type_selector):
     return pheno_data
 
 
-def get_conf_partition(pheno_data_orig, confounder_selector):
+def get_conf_partition(pheno_data_orig, confounder_selector): # TODO adjust field names TODO check block sizes properly
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
     and the second containing the sample ids corresponding to the blocks.
 
@@ -227,3 +196,13 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 f.write(str(len(cur[i]))+'\n')
             f.write('\n')
     return partitions
+
+"""
+def download_TCGA_expression_data(cancer_type_selector):
+    cwd = os.getcwd()
+    url = ""
+    if cancer_type_selector in list(CancerTypeSelector):
+        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
+        df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
+        df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
+"""

@@ -134,7 +134,7 @@ class TestRunner(object):
                     network_state.append(state)
                 pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
-    def preprocessData(self):
+    def preprocessData(self): # TODO perform tissue type filtering either manually in advance (if variable), or in conf based partitioning (if confounder)
         """Data preprocessing. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa. Removes all 
         samples of type other than 'Primary Tumor from pheno_data. Removes version identifiers from the gene symbols in expression_data."""
         for sel in self.cancer_type_selectors:
