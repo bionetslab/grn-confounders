@@ -23,15 +23,16 @@ def get_parser():
     parser.add_argument('-conf', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.ConfounderSelector)])
     parser.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
     parser.add_argument('-k', required=True, type=int)
+    parser.add_argument('-combine', action='store_true', help='run tests additionally on combined datasets.')
     
     seq = mode_parser.add_parser('seq', help='run tests sequentially.')
     seq.add_argument('-n', required=True, type=int)
     seq.add_argument('-m', required=True, type=int)
 
     par = mode_parser.add_parser('par', help='run tests in parallel.')
-    par.add_argument('-N_from', required=True, type=int) # 0 to run full batch of partitions in parallel
+    par.add_argument('-N_from', required=True, type=int) # starting at 0
     par.add_argument('-N_to', required=True, type=int)
-    par.add_argument('-M_from', required=True, type=int) # 0 to run full batch of partitions in parallel
+    par.add_argument('-M_from', required=True, type=int) # starting at 0
     par.add_argument('-M_to', required=True, type=int)
 
     return parser
@@ -61,17 +62,17 @@ def run_tests(args, verbose=True):
 
         if rank == 0 and verbose:
             print('loading data ...')
-        test_runner = TestRunner(n_from, n_to, m_from, m_to, args.k, rank)
+        test_runner = TestRunner(args.ct, args.conf, args.alg, n_from, n_to, m_from, m_to, args.k, combine, rank)
         if rank == 0 and verbose:
             print('running the tests ...')
-        test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
+        test_runner.run_on_cancer_types_confounders(args.combine, True)
     else:
         if verbose:
             print('loading data ...')
-        test_runner = TestRunner(0, args.n, 0, args.m, args.k, 0)
+        test_runner = TestRunner(args.ct, args.conf, args.alg, 0, args.n, 0, args.m, args.k, args.combine, 0)
         if verbose:
             print('running the tests ...')
-        test_runner.run_on_cancer_types_confounders(args.ct, args.conf, args.alg, True)
+        test_runner.run_on_cancer_types_confounders(args.combine, True)
     return
 
 if __name__ == '__main__':
