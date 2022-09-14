@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
-import igraph
 import csv
 
 test_suite = os.path.join(os.path.dirname(__file__))

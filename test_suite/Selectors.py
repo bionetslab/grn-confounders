@@ -20,8 +20,10 @@ class AlgorithmSelector(Enum):
 class CancerTypeSelector(Enum):
     """Enum specifying which cancer type should be investigated."""
     BLCA = 'BLCA'
+    PCPG = 'PCPG'
+    GBM = 'GBM'
     #COAD = 'COAD'
-    #BRCA = 'BRCA'
+    BRCA = 'BRCA'
     #LUAD = 'LUAD'
     #PRAD = 'PRAD'
     #SKCM = 'SKCM'
@@ -34,6 +36,8 @@ class ConfounderSelector(Enum):
     SEX = 'sex'
     RACE = 'race'
     AGE = 'age'
+    STAGE = 'stage'
+    TYPE = 'type'
 
     def __str__(self):
         return self.value
@@ -94,7 +98,8 @@ def download_known_tfs():
     df.to_csv(os.path.join(cwd, 'data', 'regulators.csv'), sep='\t')
 
 def get_expression_data(cancer_type_selector):
-    """Loads the expression data for the selected cancer type.
+    """Loads the expression data for the selected cancer type. Only leaves columns of protein-codeing genes, provided
+    in the file protein-coding_gene.csv, in expression_data.
 
     Parameters
     ----------
@@ -112,10 +117,14 @@ def get_expression_data(cancer_type_selector):
     except FileNotFoundError:
         download_TCGA_expression_data(cancer_type_selector)
         expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
+    print('Only leave protein-coding genes in expression data set for cohort ' + str(cancer_type_selector) + '...')
+    pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
+    mask = expression_data.columns.intersection(pcg['ensembl_gene_id'].values)
+    expression_data = expression_data[mask]
     return expression_data
 
 def get_pheno_data(cancer_type_selector):
-    """Loads the phenotype data for the selected cancer type.
+    """Loads the phenotype data for the selected cancer type and adds a column containing cancer_type_selector.
 
     Parameters
     ----------
@@ -135,8 +144,8 @@ def get_pheno_data(cancer_type_selector):
         download_TCGA_phenotype_data(cancer_type_selector)
         pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
         dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
+    pheno_data['cohort'] = str(cancer_type_selector)
     return pheno_data
-
 
 def get_conf_partition(pheno_data_orig, confounder_selector):
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
@@ -157,28 +166,32 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
     """
     pheno_data = pheno_data_orig.copy()
     indices = None
+    blocks = []
+    conf_partition = []    
     if confounder_selector == ConfounderSelector.SEX:
-        female_samples = pheno_data.loc[pheno_data['gender.demographic'].str.strip() == 'female']['submitter_id.samples']
-        male_samples = pheno_data.loc[pheno_data['gender.demographic'].str.strip() == 'male']['submitter_id.samples']
-        blocks, conf_partition = ['female', 'male'], [female_samples.tolist(), male_samples.tolist()]
-    if confounder_selector == ConfounderSelector.RACE:
-        asian_samples = pheno_data.loc[pheno_data['race.demographic'].str.strip() == 'asian']['submitter_id.samples']
-        african_samples = pheno_data.loc[pheno_data['race.demographic'].str.strip() == 'black or african american']['submitter_id.samples']
-        white_samples = pheno_data.loc[pheno_data['race.demographic'].str.strip() == 'white']['submitter_id.samples']            
-        blocks, conf_partition = ['asian', 'african', 'white'], [asian_samples.tolist(), african_samples.tolist(), white_samples.tolist()]
-        if len(asian_samples) < 0.1*(len(white_samples)+len(african_samples)+len(asian_samples)):
-            blocks, conf_partition = ['african', 'white'], [african_samples.tolist(), white_samples.tolist()]
-        elif len(african_samples) < 0.1*(len(white_samples)+len(african_samples)+len(asian_samples)):
-            blocks, conf_partition = ['asian', 'white'], [asian_samples.tolist(), white_samples.tolist()]
-    if confounder_selector == ConfounderSelector.AGE:
-        lower = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.25)
-        upper = pheno_data['age_at_initial_pathologic_diagnosis'].quantile(0.75)
-        low_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] <= lower]['submitter_id.samples']
-        high_age_samples = pheno_data.loc[pheno_data['age_at_initial_pathologic_diagnosis'] > upper]['submitter_id.samples']
-        blocks, conf_partition = ['low_age', 'high_age'], [low_age_samples.tolist(), high_age_samples.tolist()]
+        pheno_field = 'gender.demographic'
+    elif confounder_selector == ConfounderSelector.RACE:
+        pheno_field = 'race.demographic'
+    elif confounder_selector == ConfounderSelector.AGE:
+        pheno_field = 'age_at_initial_pathologic_diagnosis'
+    elif confounder_selector == ConfounderSelector.STAGE:
+        pheno_field = 'tumor_stage.diagnoses'
+    elif confounder_selector == ConfounderSelector.TYPE:
+        pheno_field = 'cohort'
+    if confounder_selector != ConfounderSelector.AGE:
+        blocks = list(set(pheno_data[pheno_field].str.strip().values))
+        for block_attr in blocks:
+            samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
+            conf_partition.append(samples)
+    elif confounder_selector == ConfounderSelector.AGE:
+        lower, upper = pheno_data[pheno_field].quantile(0.25), pheno_data[pheno_field].quantile(0.75)
+        blocks = ['age_less_equal_'+str(lower), 'high_age_greater_'+str(upper)]
+        conf_partition.append(pheno_data.loc[pheno_data[pheno_field] <= lower]['submitter_id.samples'].tolist())
+        conf_partition.append(pheno_data.loc[pheno_data[pheno_field] > upper]['submitter_id.samples'].tolist())
+
     with open('blocks_'+str(confounder_selector), 'a') as f:
         for i in range(len(blocks)):
-            f.write(blocks[i]+','+str(len(conf_partition[i])))
+            f.write(str(blocks[i])+','+str(len(conf_partition[i])))
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):

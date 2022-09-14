@@ -55,7 +55,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         regulator_path = os.path.join(main, 'temp', str(prefix), f'{prefix}_regulators.txt')
         pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
 
-        # set parameters seed and p-value
+        # set p-value
         p = '1E-4'        
 
         # run ARACNe:
