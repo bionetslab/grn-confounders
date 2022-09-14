@@ -35,12 +35,10 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         expression_data.to_csv(data_path, sep='\t')
 
         out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
-       #adjacency_path = os.path.join(main, 'temp', f'{prefix}_adjacency.csv')
 
-        #print("arg1", arg1)
         cur = os.getcwd()
         os.chdir(os.path.join(os.getcwd(), 'algorithms', 'WGCNA'))
-        command = f'Rscript WGCNA_dem.R {prefix}'
+        command = f'Rscript WGCNA.R {prefix}'
         ret = subprocess.run(command, shell=True)
         os.chdir(cur)
 

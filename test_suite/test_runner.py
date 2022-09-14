@@ -96,7 +96,7 @@ class TestRunner(object):
             self.cancer_type_names.append(str(ct_sel))
             for conf_sel in self.confounder_selectors:
                 self.confounder_names.append(str(conf_sel))
-                if len(self.rnd_partitions[ct_sel][conf_sel][self.n_from]) > 1:
+                if len(self.rnd_partitions[ct_sel][conf_sel][0]) > 1:
                     self.run_on_all_cancer_types_confounders_partitions(ct_sel, conf_sel, combine, verbose)
 
     def run_on_all_cancer_types_confounders_partitions(self, ct_sel, conf_sel, combine, verbose=False):
