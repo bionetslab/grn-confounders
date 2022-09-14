@@ -99,7 +99,7 @@ def download_known_tfs():
 
 def get_expression_data(cancer_type_selector):
     """Loads the expression data for the selected cancer type. Only leaves columns of protein-codeing genes, provided
-    in the file protein-coding_gene.csv, in expression_data.
+    in the file protein-coding_gene.csv, in expression_data. Removes gene version identifiers from gene ensembl IDs.
 
     Parameters
     ----------
@@ -117,6 +117,8 @@ def get_expression_data(cancer_type_selector):
     except FileNotFoundError:
         download_TCGA_expression_data(cancer_type_selector)
         expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
+    print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
+    expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
     print('Only leave protein-coding genes in expression data set for cohort ' + str(cancer_type_selector) + '...')
     pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
     mask = expression_data.columns.intersection(pcg['ensembl_gene_id'].values)
@@ -124,7 +126,9 @@ def get_expression_data(cancer_type_selector):
     return expression_data
 
 def get_pheno_data(cancer_type_selector):
-    """Loads the phenotype data for the selected cancer type and adds a column containing cancer_type_selector.
+    """Loads the phenotype data for the selected cancer type and adds a column containing cancer_type_selector. Only leave
+    rows (samples) in pheno_data that have non-NaN values in the columns gender.demographic, race.demographic, 
+    age_at_initial_pathologic_diagnosis and tumor_stage.diagnoses.
 
     Parameters
     ----------
@@ -145,6 +149,11 @@ def get_pheno_data(cancer_type_selector):
         pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
         dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
     pheno_data['cohort'] = str(cancer_type_selector)
+    pheno_data = pheno_data[pheno_data['gender.demographic'].notna()]
+    pheno_data = pheno_data[pheno_data['race.demographic'].notna()]
+    pheno_data = pheno_data[pheno_data['age_at_initial_pathologic_diagnosis'].notna()]
+    pheno_data = pheno_data[pheno_data['tumor_stage.diagnoses'].notna()]
+
     return pheno_data
 
 def get_conf_partition(pheno_data_orig, confounder_selector):
@@ -167,17 +176,19 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
     pheno_data = pheno_data_orig.copy()
     indices = None
     blocks = []
-    conf_partition = []    
-    if confounder_selector == ConfounderSelector.SEX:
+    conf_partition = []
+    pheno_field = ''  
+    if confounder_selector == str(ConfounderSelector.SEX):
         pheno_field = 'gender.demographic'
-    elif confounder_selector == ConfounderSelector.RACE:
+    elif str(confounder_selector) == str(ConfounderSelector.RACE):
         pheno_field = 'race.demographic'
-    elif confounder_selector == ConfounderSelector.AGE:
+    elif confounder_selector == str(ConfounderSelector.AGE):
         pheno_field = 'age_at_initial_pathologic_diagnosis'
-    elif confounder_selector == ConfounderSelector.STAGE:
+    elif confounder_selector == str(ConfounderSelector.STAGE):
         pheno_field = 'tumor_stage.diagnoses'
-    elif confounder_selector == ConfounderSelector.TYPE:
+    elif confounder_selector == str(ConfounderSelector.TYPE):
         pheno_field = 'cohort'
+    
     if confounder_selector != ConfounderSelector.AGE:
         blocks = list(set(pheno_data[pheno_field].str.strip().values))
         for block_attr in blocks:
@@ -191,7 +202,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
 
     with open('blocks_'+str(confounder_selector), 'a') as f:
         for i in range(len(blocks)):
-            f.write(str(blocks[i])+','+str(len(conf_partition[i])))
+            f.write(str(blocks[i])+' '+str(len(conf_partition[i]))+',')
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):

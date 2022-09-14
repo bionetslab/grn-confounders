@@ -40,8 +40,8 @@ class TestRunner(object):
         self.m_to = m_to
         self.k = k
 
-        self.cancer_type_selectors = [Selectors.CancerTypeSelector(val) for val in cancer_types]
-        self.confounder_selectors = [Selectors.ConfounderSelector(val) for val in confounders]
+        self.cancer_type_selectors = [str(Selectors.CancerTypeSelector(val)) for val in cancer_types]
+        self.confounder_selectors = [str(Selectors.ConfounderSelector(val)) for val in confounders]
         self.algorithm_selectors = [Selectors.AlgorithmSelector(val) for val in algorithms]
 
         self.expression_datasets = {sel: Selectors.get_expression_data(sel) for sel in self.cancer_type_selectors}
@@ -49,12 +49,13 @@ class TestRunner(object):
         self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
 
         if combine:
-            self.confounder_selectors.append('cancer_type')
-            self.cancer_type_selectors.append('-'.join(list(Selectors.CancerTypeSelector)))
-            self.expression_datasets.update({str('-'.join(list(Selectors.CancerTypeSelector))): pd.concat(self.expression_datasets.values())})
-            self.expression_datasets[str('-'.join(list(Selectors.CancerTypeSelector)))].to_csv(os.path.join(cwd, 'data', 'TCGA-'+str('-'.join(list(Selectors.CancerTypeSelector)))+'.htseq_fpkm.tsv'), sep='\t')
-            self.pheno_datasets.update({str('-'.join(list(Selectors.CancerTypeSelector))): Selectors.concat_pheno_datasets(self.pheno_datasets.values())})
-            self.pheno_datasets[str('-'.join(list(Selectors.CancerTypeSelector)))].to_csv(os.path.join(cwd, 'data', 'TCGA-'+str('-'.join(list(Selectors.CancerTypeSelector)))+'.GDC_phenotype.tsv'), sep='\t')
+            comb_name = '-'.join(self.cancer_type_selectors)
+            self.confounder_selectors.append(str(Selectors.ConfounderSelector.TYPE))
+            self.cancer_type_selectors.append(comb_name)
+            self.expression_datasets.update({comb_name: pd.concat(self.expression_datasets.values())})
+            self.expression_datasets[comb_name].to_csv(os.path.join('data', 'TCGA-'+comb_name+'.htseq_fpkm.tsv'), sep='\t')
+            self.pheno_datasets.update({comb_name: pd.concat(self.pheno_datasets.values())})
+            self.pheno_datasets[comb_name].to_csv(os.path.join('data', 'TCGA-'+comb_name+'.GDC_phenotype.tsv'), sep='\t')
 
         self.preprocessData()
         
@@ -121,13 +122,13 @@ class TestRunner(object):
         for alg_sel in self.algorithm_selectors:
             self.algorithm_names.append(str(alg_sel))
             prefix = f'{str(alg_sel)}'
-            if verbose:
-                print(f'\t\talgorithm = {str(alg_sel)}')
-            
             algorithm_wrapper = self.algorithm_wrappers[alg_sel]
             algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
-            
-            print('running on random partitions...')
+            if verbose:
+                print(f'\t\talgorithm = {str(alg_sel)}')
+
+            if verbose:
+                print('running on random partitions...')
             for i in range(self.n_from, self.n_to):
                 algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
                 algorithm_wrapper.infer_networks(self.rank)
@@ -144,8 +145,8 @@ class TestRunner(object):
                     intersections.append(s_int)
                     network_state.append(state)
                 pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': index, 'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
-        
-            print('running on confounder-based partitions...')
+            if verbose:
+                print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
                 algorithm_wrapper.infer_networks(self.rank)
@@ -164,7 +165,8 @@ class TestRunner(object):
                 pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
                 
             if combine:
-                print('starting tests on the combination of all datasets...')
+                if verbose:
+                    print('starting tests on the combination of all datasets...')
                 self.run_cancer_type_as_confounder()
 
     def run_cancer_type_as_confounder(self):
@@ -176,8 +178,8 @@ class TestRunner(object):
         for sel in self.cancer_type_selectors:
             print('Filter Primary Tumor samples in pheno data for cohort ' + str(sel) + '...')
             self.pheno_datasets[sel] =  self.pheno_datasets[sel][self.pheno_datasets[sel]['sample_type.samples'] == 'Primary Tumor']
-            print('Remove version identifiers from gene symbols in expression data for cohort ' + str(sel) + '...')
-            self.expression_datasets[sel].columns = self.expression_datasets[sel].columns.str.split('.').str[0].tolist()
+            #print('Remove version identifiers from gene symbols in expression data for cohort ' + str(sel) + '...')
+            #self.expression_datasets[sel].columns = self.expression_datasets[sel].columns.str.split('.').str[0].tolist()
             
             #print('Only leave protein-coding genes in expression data set for cohort ' + str(sel) + '...')
             #pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
@@ -191,7 +193,7 @@ class TestRunner(object):
             samples = self.pheno_datasets[sel]['submitter_id.samples']            
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[samples]
             
-            print('Remove gene where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
+            print('Remove genes where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[:, (self.expression_datasets[sel].std() != 0)]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
 
