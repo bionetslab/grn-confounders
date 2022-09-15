@@ -40,8 +40,8 @@ class TestRunner(object):
         self.m_to = m_to
         self.k = k
 
-        self.cancer_type_selectors = [str(Selectors.CancerTypeSelector(val)) for val in cancer_types]
-        self.confounder_selectors = [str(Selectors.ConfounderSelector(val)) for val in confounders]
+        self.cancer_type_selectors = [Selectors.CancerTypeSelector(val) for val in cancer_types]
+        self.confounder_selectors = [Selectors.ConfounderSelector(val) for val in confounders]
         self.algorithm_selectors = [Selectors.AlgorithmSelector(val) for val in algorithms]
 
         self.expression_datasets = {sel: Selectors.get_expression_data(sel) for sel in self.cancer_type_selectors}
@@ -49,13 +49,11 @@ class TestRunner(object):
         self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
 
         if combine:
-            comb_name = '-'.join(self.cancer_type_selectors)
-            self.confounder_selectors.append(str(Selectors.ConfounderSelector.TYPE))
+            comb_name = '-'.join([str(el) for el in self.cancer_type_selectors])
+            self.confounder_selectors.append(Selectors.ConfounderSelector.TYPE)
             self.cancer_type_selectors.append(comb_name)
             self.expression_datasets.update({comb_name: pd.concat(self.expression_datasets.values())})
-            self.expression_datasets[comb_name].to_csv(os.path.join('data', 'TCGA-'+comb_name+'.htseq_fpkm.tsv'), sep='\t')
             self.pheno_datasets.update({comb_name: pd.concat(self.pheno_datasets.values())})
-            self.pheno_datasets[comb_name].to_csv(os.path.join('data', 'TCGA-'+comb_name+'.GDC_phenotype.tsv'), sep='\t')
 
         self.preprocessData()
         
@@ -64,12 +62,8 @@ class TestRunner(object):
         self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel]['submitter_id.samples'], self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
         
-        self.cancer_type_names = []
-        self.algorithm_names = []
-        self.confounder_names = []
         self.conf_results = {ct_sel: {conf_sel: {alg_sel: {j: list([]) for j in range(self.m_from, self.m_to)} for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors} # a list of length n per cancer_type and confounder
         self.rnd_results = {ct_sel: {conf_sel: {alg_sel: {i: list([]) for i in range(self.n_from, self.n_to)} for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
-        self.outfile = ''
         
     def run_on_cancer_types_confounders(self, combine, verbose):
         """Runs the tests for a given cancer_type and confounder on all algorithms. Test is only performed if the partition induced
@@ -77,15 +71,6 @@ class TestRunner(object):
 
         Parameters
         ----------
-        cancer_types : list
-            List of strings that specify the cohorts that should be investigated.
-
-        confounders : list
-            List of strings that specify the confounders that should be investigated.
-
-        algorithms: list
-            List of strings that specify the algorithms that should be investigated.
-
         combine : bool
             Perform tests on combination of all cancer type datasets and additionally, run the tests for the variable "cancer type" as a confounder.
 
@@ -93,14 +78,12 @@ class TestRunner(object):
             Print progress to stdout.
         """
         for ct_sel in self.cancer_type_selectors:
-            self.cancer_type_names.append(str(ct_sel))
             for conf_sel in self.confounder_selectors:
-                self.confounder_names.append(str(conf_sel))
                 if len(self.rnd_partitions[ct_sel][conf_sel][0]) > 1:
                     self.run_on_all_cancer_types_confounders_partitions(ct_sel, conf_sel, combine, verbose)
 
     def run_on_all_cancer_types_confounders_partitions(self, ct_sel, conf_sel, combine, verbose=False):
-        """Runs the tests for a given cancer_type and confounder on all algorithm.
+        """Runs the tests for a given cancer type and confounder with all specified algorithms.
 
         Parameters
         ----------
@@ -109,9 +92,6 @@ class TestRunner(object):
 
         conf_sel : ConfounderSelector
             Confounder that should be investigated.
-            
-        algorithms: list
-            List of strings that specify the algorithms that should be investigated.
 
         combine : bool
             Perform tests on combination of all cancer type datasets and additionally, run the tests for the variable "cancer type" as a confounder.
@@ -120,7 +100,6 @@ class TestRunner(object):
             Print progress to stdout.
         """
         for alg_sel in self.algorithm_selectors:
-            self.algorithm_names.append(str(alg_sel))
             prefix = f'{str(alg_sel)}'
             algorithm_wrapper = self.algorithm_wrappers[alg_sel]
             algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
@@ -176,23 +155,12 @@ class TestRunner(object):
         """Data preprocessing. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa. Removes all 
         samples of type other than 'Primary Tumor from pheno_data. Removes version identifiers from the gene symbols in expression_data."""
         for sel in self.cancer_type_selectors:
-            print('Filter Primary Tumor samples in pheno data for cohort ' + str(sel) + '...')
-            self.pheno_datasets[sel] =  self.pheno_datasets[sel][self.pheno_datasets[sel]['sample_type.samples'] == 'Primary Tumor']
-            #print('Remove version identifiers from gene symbols in expression data for cohort ' + str(sel) + '...')
-            #self.expression_datasets[sel].columns = self.expression_datasets[sel].columns.str.split('.').str[0].tolist()
-            
-            #print('Only leave protein-coding genes in expression data set for cohort ' + str(sel) + '...')
-            #pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
-            #mask = self.expression_datasets[sel].columns.intersection(pcg['ensembl_gene_id'].values)
-            #self.expression_datasets[sel] = self.expression_datasets[sel][mask]
-
             print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
             keep = self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)
             self.pheno_datasets[sel] = self.pheno_datasets[sel][keep]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
             samples = self.pheno_datasets[sel]['submitter_id.samples']            
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[samples]
-            
             print('Remove genes where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
             self.expression_datasets[sel] = self.expression_datasets[sel].loc[:, (self.expression_datasets[sel].std() != 0)]
             self.pheno_datasets[sel] = self.pheno_datasets[sel][self.pheno_datasets[sel]['submitter_id.samples'].isin(self.expression_datasets[sel].index)]
@@ -227,10 +195,6 @@ class TestRunner(object):
             inferred_networks[block_nb].to_csv(path, index = False)
 
     def clear(self):
-        """Clears the results of the last previous run."""
-        self.cancer_type_names = []
-        self.algorithm_names = []
-        self.confounder_names = []
+        """Clears the results of the previous run."""
         self.rnd_results = None
         self.conf_results = None
-        self.outfile = ''

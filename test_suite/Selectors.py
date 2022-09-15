@@ -22,11 +22,11 @@ class CancerTypeSelector(Enum):
     BLCA = 'BLCA'
     PCPG = 'PCPG'
     GBM = 'GBM'
-    #COAD = 'COAD'
+    COAD = 'COAD'
     BRCA = 'BRCA'
-    #LUAD = 'LUAD'
-    #PRAD = 'PRAD'
-    #SKCM = 'SKCM'
+    LUAD = 'LUAD'
+    PRAD = 'PRAD'
+    SKCM = 'SKCM'
 
     def __str__(self):
         return self.value
@@ -69,6 +69,7 @@ def download_TCGA_expression_data(cancer_type_selector):
     """
     cwd = os.getcwd()
     url = ""
+    print('hello')
     if cancer_type_selector in list(CancerTypeSelector):
         url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
         df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
@@ -153,6 +154,8 @@ def get_pheno_data(cancer_type_selector):
     pheno_data = pheno_data[pheno_data['race.demographic'].notna()]
     pheno_data = pheno_data[pheno_data['age_at_initial_pathologic_diagnosis'].notna()]
     pheno_data = pheno_data[pheno_data['tumor_stage.diagnoses'].notna()]
+    print('Filter Primary Tumor samples in pheno data for cohort ' + str(sel) + '...')
+    pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
 
     return pheno_data
 
@@ -178,15 +181,15 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
     blocks = []
     conf_partition = []
     pheno_field = ''  
-    if confounder_selector == str(ConfounderSelector.SEX):
+    if confounder_selector == ConfounderSelector.SEX:
         pheno_field = 'gender.demographic'
-    elif str(confounder_selector) == str(ConfounderSelector.RACE):
+    elif str(confounder_selector) == ConfounderSelector.RACE:
         pheno_field = 'race.demographic'
-    elif confounder_selector == str(ConfounderSelector.AGE):
+    elif confounder_selector == ConfounderSelector.AGE:
         pheno_field = 'age_at_initial_pathologic_diagnosis'
-    elif confounder_selector == str(ConfounderSelector.STAGE):
+    elif confounder_selector == ConfounderSelector.STAGE:
         pheno_field = 'tumor_stage.diagnoses'
-    elif confounder_selector == str(ConfounderSelector.TYPE):
+    elif confounder_selector == ConfounderSelector.TYPE:
         pheno_field = 'cohort'
     
     if confounder_selector != ConfounderSelector.AGE:
