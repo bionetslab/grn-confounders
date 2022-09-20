@@ -70,6 +70,8 @@ python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500 seq -n 100 -m 1
 # -m stands for random procedures. For GENIE3 select -m as 100. For other algorithms -m is 1.
 ```
 
+NOTE: The user should be connected to the internet for downloading the gene dataset(TCGA). If the user is not connected to the network, the gene dataset has to be manually added by the user in the data folder. 
+
 ## Result Plots
                                            ARACNe result plot
 ![Screenshot (111)](https://user-images.githubusercontent.com/106863105/191177650-a46fb3c7-9194-4f4d-9622-052b8e4fcb8a.png)
