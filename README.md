@@ -1,6 +1,6 @@
 # Investigating algorithmic bias in computational systems biology tools
 
-This project is about assessing to what extent are high computational systems biology methods robust w.r.t data biases induced by the confounders such as age, sex, ethnicity.
+This project is about assessing to what extent are high computational systems biology methods robust w.r.t data biases induced by the confounders such as age, sex, ethnicity. Moreover, investigating the effects the confounders have on the Gene Regulatory Network and Co-expression network. Which results in the conclusion that, if there are major differences induced by a confounder, the data for these groups should be studied or at looked at separately.
 
 ## Systems Biology Tools
 
