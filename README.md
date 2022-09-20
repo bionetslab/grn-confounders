@@ -38,7 +38,7 @@ The jar will be placed in ``dist/aracne.jar``. The documentation can be found in
 
 For more information on using ARACNe-AP check this [Readme](https://github.com/bionetslab/grn-confounders/tree/main/algorithms/ARACNe-AP) 
 
-**Installation of Co-Expression Tools**
+**Installation of Co-Expression Network Tools**
 
  WGCNA Tool: Run these commands in the R terminal 
 ```bash
@@ -57,15 +57,17 @@ BiocManager::install("CEMiTool")
 ## Running the framework
 
 After the tools are installed, clone the framework on your local machine.
-Open terminal in the project folder and run the command:
+Open terminal in the project folder and run the following command:
 
 ```python
-python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500 seq -n 100 -m 2 
+python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500 seq -n 100 -m 1
 
 # -ct stands for disease (You may select: PCPG, GBM, COAD, BRCA, LUAD, PRAD, SKCM)
 # -conf stands for confounders (You may select: SEX, RACE, AGE, STAGE, TYPE)
 # -alg stands for algorithm (You may select: ARACNE, GENIE3, WGCNA, CEMI)
 # -k stands for the top k edges of the network (You may select k value between 1 and 1000)
+# -n stands for the number of partitions (You may select n between 1 and 1000)
+# -m stands for random procedures. For GENIE3 select -m as 100. For other algorithms -m is 1.
 
 ```
 
