@@ -63,13 +63,18 @@ Open terminal in the project folder and run the following command:
 python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500 seq -n 100 -m 1
 
 # -ct stands for disease (You may select: PCPG, GBM, COAD, BRCA, LUAD, PRAD, SKCM)
-# -conf stands for confounders (You may select: SEX, RACE, AGE, STAGE, TYPE)
+# -conf stands for confounders (You may select: sex, race, age, stage, type)
 # -alg stands for algorithm (You may select: ARACNE, GENIE3, WGCNA, CEMI)
 # -k stands for the top k edges of the network (You may select k value between 1 and 1000)
 # -n stands for the number of partitions (You may select n between 1 and 1000)
 # -m stands for random procedures. For GENIE3 select -m as 100. For other algorithms -m is 1.
-
 ```
+
+## Result Plots
+
+
+
+
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
