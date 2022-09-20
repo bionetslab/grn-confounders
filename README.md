@@ -1,10 +1,10 @@
 # Investigating algorithmic bias in computational systems biology tools
 
-This project is about assessing to which extent are high computational systems biology methods robust w.r.t data biases induced by the confounders such as age, sex, ethnicity.
+This project is about assessing to what extent are high computational systems biology methods robust w.r.t data biases induced by the confounders such as age, sex, ethnicity.
 
 ## Systems Biology Tools
 
-We focused on tools which uses gene data to create networks such as Gene Regulatory Network and Gene Co-Expression Network. 
+We focused on tools which uses gene data to create networks such as Gene Regulatory Network (Directed Network Graph)  and Gene Co-Expression Network (Undirected Network Graph). 
 
 - **Gene Regulatory Network**
 
