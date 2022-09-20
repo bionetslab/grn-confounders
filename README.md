@@ -74,10 +74,12 @@ NOTE: The user should be connected to the internet for downloading the gene data
 
 ## Result Plots
                                            ARACNe result plot
-![Screenshot (111)](https://user-images.githubusercontent.com/106863105/191177650-a46fb3c7-9194-4f4d-9622-052b8e4fcb8a.png)
+![ARACNE(111)](https://user-images.githubusercontent.com/106863105/191177650-a46fb3c7-9194-4f4d-9622-052b8e4fcb8a.png)
 
                                             WGCNA result plot
-![WGCNA_1](https://user-images.githubusercontent.com/106863105/191177823-72779b8a-f295-4758-b3ec-022b2c20d4e4.png)
+![WGCNA_1](https://user-images.githubusercontent.com/106863105/191212093-54a66e60-4614-47cd-bc3e-52733aa6ec83.png)
+
+
 
 
 ## Contributing
