@@ -19,14 +19,25 @@ class AlgorithmSelector(Enum):
 
 class CancerTypeSelector(Enum):
     """Enum specifying which cancer type should be investigated."""
-    BLCA = 'BLCA'
+    #BLCA = 'BLCA'
     PCPG = 'PCPG'
     GBM = 'GBM'
     COAD = 'COAD'
+    STAD = 'STAD'
+    READ = 'READ'
     BRCA = 'BRCA'
-    LUAD = 'LUAD'
-    PRAD = 'PRAD'
-    SKCM = 'SKCM'
+    #LUAD = 'LUAD'
+    LUSC = 'LUSC'
+    HNSC = 'HNSC'
+    CESC = 'CESC'
+    KIRP = 'KIRP'
+    KIRC = 'KIRC'
+    CHOL = 'CHOL'
+    LIHC = 'LIHC'
+    KICH = 'KICH'
+    ACC = 'ACC'
+    #PRAD = 'PRAD'
+    #SKCM = 'SKCM'
 
     def __str__(self):
         return self.value
@@ -154,7 +165,7 @@ def get_pheno_data(cancer_type_selector):
     pheno_data = pheno_data[pheno_data['race.demographic'].notna()]
     pheno_data = pheno_data[pheno_data['age_at_initial_pathologic_diagnosis'].notna()]
     pheno_data = pheno_data[pheno_data['tumor_stage.diagnoses'].notna()]
-    print('Filter Primary Tumor samples in pheno data for cohort ' + str(sel) + '...')
+    print('Filter Primary Tumor samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
     pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
 
     return pheno_data
@@ -183,7 +194,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
     pheno_field = ''  
     if confounder_selector == ConfounderSelector.SEX:
         pheno_field = 'gender.demographic'
-    elif str(confounder_selector) == ConfounderSelector.RACE:
+    elif confounder_selector == ConfounderSelector.RACE:
         pheno_field = 'race.demographic'
     elif confounder_selector == ConfounderSelector.AGE:
         pheno_field = 'age_at_initial_pathologic_diagnosis'
