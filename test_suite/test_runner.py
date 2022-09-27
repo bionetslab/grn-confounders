@@ -134,7 +134,7 @@ class TestRunner(object):
                 network_state = []
                 intersections = []
                 unions = []
-                for k in range(10, self.k, 10):
+                for k in range(10, self.k, 50):
                     ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
                     self.conf_results[ct_sel][conf_sel][alg_sel][j].append(ji)
                     index.append(k)

@@ -3,6 +3,7 @@ from . import GENIE3Wrapper
 from . import ARACNEWrapper
 from . import WGCNAWrapper
 from . import CEMiWrapper
-import selectors
+from . import GRNBOOST2Wrapper
+import Selectors
 import preprocessing
 from . import NetworkInferenceWrapper

@@ -3,6 +3,7 @@ from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
+from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
 import pandas as pd
 import numpy as np
 import os
@@ -13,6 +14,7 @@ class AlgorithmSelector(Enum):
     GENIE3 = 'GENIE3'
     WGCNA = 'WGCNA'
     CEMI = 'CEMI'
+    GRNBOOST2 = 'GRNBOOST2'
     
     def __str__(self):
         return self.value
@@ -69,6 +71,8 @@ def get_algorithm_wrapper(algorithm_selector):
         return WGCNAWrapper()
     elif algorithm_selector == AlgorithmSelector.CEMI:
         return CEMiWrapper()
+    elif algorithm_selector == AlgorithmSelector.GRNBOOST2:
+        return GRNBOOST2Wrapper()
 
 def download_TCGA_expression_data(cancer_type_selector):
     """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
@@ -80,7 +84,6 @@ def download_TCGA_expression_data(cancer_type_selector):
     """
     cwd = os.getcwd()
     url = ""
-    print('hello')
     if cancer_type_selector in list(CancerTypeSelector):
         url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
         df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
@@ -211,6 +214,9 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
             if len(samples) >= 20:
                 conf_partition.append(samples)
+            else:
+                blocks.remove(block_attr)
+
     elif confounder_selector == ConfounderSelector.AGE:
         lower, upper = pheno_data[pheno_field].quantile(0.25), pheno_data[pheno_field].quantile(0.75)
         blocks = ['age_less_equal_'+str(lower), 'high_age_greater_'+str(upper)]
@@ -219,10 +225,15 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         if len(samples_lower) >= 20 and len(samples_upper) >= 20:
             conf_partition.append(samples_lower)
             conf_partition.append(samples_upper)
+        else:
+            blocks = []
 
     with open('blocks_'+str(confounder_selector), 'a') as f:
         for i in range(len(blocks)):
-            f.write(str(blocks[i])+': '+str(len(conf_partition[i]))+'\n')
+            try:
+                f.write(str(blocks[i])+': '+str(len(conf_partition[i]))+'\n')
+            except IndexError:
+                continue
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
