@@ -209,12 +209,16 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         blocks = list(set(pheno_data[pheno_field].str.strip().values))
         for block_attr in blocks:
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
-            conf_partition.append(samples)
+            if len(samples) >= 20:
+                conf_partition.append(samples)
     elif confounder_selector == ConfounderSelector.AGE:
         lower, upper = pheno_data[pheno_field].quantile(0.25), pheno_data[pheno_field].quantile(0.75)
         blocks = ['age_less_equal_'+str(lower), 'high_age_greater_'+str(upper)]
-        conf_partition.append(pheno_data.loc[pheno_data[pheno_field] <= lower]['submitter_id.samples'].tolist())
-        conf_partition.append(pheno_data.loc[pheno_data[pheno_field] > upper]['submitter_id.samples'].tolist())
+        samples_lower = pheno_data.loc[pheno_data[pheno_field] <= lower]['submitter_id.samples'].tolist()
+        samples_upper = pheno_data.loc[pheno_data[pheno_field] > upper]['submitter_id.samples'].tolist()
+        if len(samples_lower) >= 20 and len(samples_upper) >= 20:
+            conf_partition.append(samples_lower)
+            conf_partition.append(samples_upper)
 
     with open('blocks_'+str(confounder_selector), 'a') as f:
         for i in range(len(blocks)):
