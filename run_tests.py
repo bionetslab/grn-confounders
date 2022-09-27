@@ -62,7 +62,7 @@ def run_tests(args, verbose=True):
 
         if rank == 0 and verbose:
             print('loading data ...')
-        test_runner = TestRunner(args.ct, args.conf, args.alg, n_from, n_to, m_from, m_to, args.k, combine, rank)
+        test_runner = TestRunner(args.ct, args.conf, args.alg, n_from, n_to, m_from, m_to, args.k, args.combine, rank)
         if rank == 0 and verbose:
             print('running the tests ...')
         test_runner.run_on_cancer_types_confounders(args.combine, True)
