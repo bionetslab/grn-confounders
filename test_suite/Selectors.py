@@ -199,7 +199,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         pheno_data = pheno_data[pheno_data[pheno_field] != 'stage x']
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic'])] = 'stage i'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic'])] = 'stage ii'
-        pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iva', 'stage ivb', 'stage ivc'])] = 'stage iii'
+        pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc'])] = 'stage iii'
     elif confounder_selector == ConfounderSelector.TYPE:
         pheno_field = 'cohort'
     pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
