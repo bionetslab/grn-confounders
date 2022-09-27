@@ -32,6 +32,7 @@ class CEMiWrapper(NetworkInferenceWrapper):
         prefix = 'cemi'+str(rank)
 
         expression_data = expression_data.T
+        print(expression_data)
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
         expression_data.to_csv(data_path, sep='\t')
 
@@ -45,7 +46,8 @@ class CEMiWrapper(NetworkInferenceWrapper):
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
-       # network['type'] = 'undirected'
+        network['type'] = 'undirected'
+        network = network.sort_values(by=['score', 'source', 'target'], axis=0, ascending=False)
         
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)

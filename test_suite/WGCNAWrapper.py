@@ -44,6 +44,8 @@ class WGCNAWrapper(NetworkInferenceWrapper):
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
+        network = network.sort_values(by=['score', 'source', 'target'], axis=0, ascending=False)
+        network['type'] = 'undirected'
 
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)

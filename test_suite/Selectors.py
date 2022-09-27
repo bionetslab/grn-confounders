@@ -161,10 +161,6 @@ def get_pheno_data(cancer_type_selector):
         pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
         dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
     pheno_data['cohort'] = str(cancer_type_selector)
-    pheno_data = pheno_data[pheno_data['gender.demographic'].notna()]
-    pheno_data = pheno_data[pheno_data['race.demographic'].notna()]
-    pheno_data = pheno_data[pheno_data['age_at_initial_pathologic_diagnosis'].notna()]
-    pheno_data = pheno_data[pheno_data['tumor_stage.diagnoses'].notna()]
     print('Filter Primary Tumor samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
     pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
 
@@ -200,9 +196,15 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         pheno_field = 'age_at_initial_pathologic_diagnosis'
     elif confounder_selector == ConfounderSelector.STAGE:
         pheno_field = 'tumor_stage.diagnoses'
+        pheno_data = pheno_data[pheno_data[pheno_field] != 'stage x']
+        pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic'])] = 'stage i'
+        pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic'])] = 'stage ii'
+        pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iva', 'stage ivb', 'stage ivc'])] = 'stage iii'
     elif confounder_selector == ConfounderSelector.TYPE:
         pheno_field = 'cohort'
-    
+    pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
+    pheno_data = pheno_data[pheno_data[pheno_field].notna()]
+
     if confounder_selector != ConfounderSelector.AGE:
         blocks = list(set(pheno_data[pheno_field].str.strip().values))
         for block_attr in blocks:
@@ -216,7 +218,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
 
     with open('blocks_'+str(confounder_selector), 'a') as f:
         for i in range(len(blocks)):
-            f.write(str(blocks[i])+' '+str(len(conf_partition[i]))+',')
+            f.write(str(blocks[i])+': '+str(len(conf_partition[i]))+'\n')
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
