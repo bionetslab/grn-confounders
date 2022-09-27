@@ -21,7 +21,9 @@ diag(adjacency)<-NA
 edges<-melt(adjacency)
 colnames(edges)<-c("source","target","score")
 edges<-edges[!is.na(edges$score),]
-edges<-edges[(edges$score > 0.01),]
+# reduce storage complexity.
+# Save to sort out edges with a smaller weight for our purpose, because these won't be in the top 5000 of weighted edges anyways
+edges<-edges[(edges$score > 0.001),]
 edges$score<-as.numeric(as.character(edges$score))
 
 write.table(edges, out_path, sep='\t')
