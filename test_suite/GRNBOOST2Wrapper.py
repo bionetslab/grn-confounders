@@ -38,19 +38,14 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
 
         # get regulators and remove such genes that are not present in expression_data
         ktf_path = os.path.join(main, 'data', 'regulators.csv')
-        #regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
-        regulators = load_tf_names(ktf_path)
-        regulators = regulators[np.isin(regulators, expression_data.index)]
-        print(regulators)
+        regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
+        regulators = regulators[np.isin(regulators, expression_data.columns.values)].tolist()
 
         # run GRNBOOST2
         network = grnboost2(expression_data=expression_data, tf_names=regulators)
 
         # get results
-        #network = network.sort_values(by=['MI', 'Regulator', 'Target'], axis=0, ascending=False)
-        #network = network.rename({'Regulator': 'source', 'Target': 'target', 'MI': 'score'}, axis='columns')
         network['type'] = 'directed'
-        print(network.head())
         
         return network
 

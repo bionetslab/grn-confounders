@@ -61,7 +61,7 @@ for ct_sel in list(Selectors.CancerTypeSelector):
         k.write('pheno shape: ' + str(pheno.shape)+'\n')
         for conf_sel in list(Selectors.ConfounderSelector):
             k.write('CONFOUNDER: ' + str(conf_sel)+'\n')
-            conf_partition, blocks = Selectors.get_conf_partition(pheno, conf_sel)
+            conf_partition, blocks = Selectors.get_conf_partition(pheno, conf_sel, 0)
             i = 0
             for block in conf_partition:
                 k.write(f'{str(blocks[i])}: ' + str(len(block))+'\n')

@@ -21,25 +21,17 @@ class AlgorithmSelector(Enum):
 
 class CancerTypeSelector(Enum):
     """Enum specifying which cancer type should be investigated."""
-    #BLCA = 'BLCA'
     PCPG = 'PCPG'
     GBM = 'GBM'
     COAD = 'COAD'
     STAD = 'STAD'
     READ = 'READ'
     BRCA = 'BRCA'
-    #LUAD = 'LUAD'
     LUSC = 'LUSC'
     HNSC = 'HNSC'
     CESC = 'CESC'
     KIRP = 'KIRP'
     KIRC = 'KIRC'
-    CHOL = 'CHOL'
-    LIHC = 'LIHC'
-    KICH = 'KICH'
-    ACC = 'ACC'
-    #PRAD = 'PRAD'
-    #SKCM = 'SKCM'
 
     def __str__(self):
         return self.value
@@ -169,7 +161,7 @@ def get_pheno_data(cancer_type_selector):
 
     return pheno_data
 
-def get_conf_partition(pheno_data_orig, confounder_selector):
+def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
     and the second containing the sample ids corresponding to the blocks.
 
@@ -189,6 +181,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
     pheno_data = pheno_data_orig.copy()
     indices = None
     blocks = []
+    blocks_fin = []
     conf_partition = []
     pheno_field = ''  
     if confounder_selector == ConfounderSelector.SEX:
@@ -207,16 +200,13 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         pheno_field = 'cohort'
     pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
     pheno_data = pheno_data[pheno_data[pheno_field].notna()]
-
     if confounder_selector != ConfounderSelector.AGE:
         blocks = list(set(pheno_data[pheno_field].str.strip().values))
         for block_attr in blocks:
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
             if len(samples) >= 20:
                 conf_partition.append(samples)
-            else:
-                blocks.remove(block_attr)
-
+                blocks_fin.append(block_attr)
     elif confounder_selector == ConfounderSelector.AGE:
         lower, upper = pheno_data[pheno_field].quantile(0.25), pheno_data[pheno_field].quantile(0.75)
         blocks = ['age_less_equal_'+str(lower), 'high_age_greater_'+str(upper)]
@@ -225,15 +215,11 @@ def get_conf_partition(pheno_data_orig, confounder_selector):
         if len(samples_lower) >= 20 and len(samples_upper) >= 20:
             conf_partition.append(samples_lower)
             conf_partition.append(samples_upper)
-        else:
-            blocks = []
-
-    with open('blocks_'+str(confounder_selector), 'a') as f:
-        for i in range(len(blocks)):
-            try:
-                f.write(str(blocks[i])+': '+str(len(conf_partition[i]))+'\n')
-            except IndexError:
-                continue
+            blocks_fin = blocks
+    if rank == 0:
+        with open('blocks_'+str(confounder_selector), 'a') as f:
+            for i in range(len(blocks_fin)):
+                f.write(str(blocks_fin[i]) + ': '+str(len(conf_partition[i])) + '\n')
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
@@ -276,9 +262,4 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 cur.append(block.values)
                 block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)
-        with open('block_specs', 'a') as f:
-            f.write(str(ct_sel)+'_'+str(conf_sel)+'_'+str(len(samples_cpy))+'\n')
-            for i in range(len(conf_partition)):
-                f.write(str(len(cur[i]))+'\n')
-            f.write('\n')
     return partitions

@@ -57,7 +57,7 @@ class TestRunner(object):
 
         self.preprocessData()
         
-        self.conf_partitions = {ct_sel: {conf_sel: Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_sel) for conf_sel in self.confounder_selectors}
+        self.conf_partitions = {ct_sel: {conf_sel: Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_sel, self.rank) for conf_sel in self.confounder_selectors}
             for ct_sel in self.cancer_type_selectors}
         self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel]['submitter_id.samples'], self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
@@ -79,7 +79,7 @@ class TestRunner(object):
         """
         for ct_sel in self.cancer_type_selectors:
             for conf_sel in self.confounder_selectors:
-                if len(self.rnd_partitions[ct_sel][conf_sel][0]) > 1:
+                if len(self.conf_partitions[ct_sel][conf_sel]) > 1:
                     self.run_on_all_cancer_types_confounders_partitions(ct_sel, conf_sel, combine, verbose)
 
     def run_on_all_cancer_types_confounders_partitions(self, ct_sel, conf_sel, combine, verbose=False):
@@ -142,14 +142,6 @@ class TestRunner(object):
                     intersections.append(s_int)
                     network_state.append(state)
                 pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': index, 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
-                
-            if combine:
-                if verbose:
-                    print('starting tests on the combination of all datasets...')
-                self.run_cancer_type_as_confounder()
-
-    def run_cancer_type_as_confounder(self):
-        pass
 
     def preprocessData(self):
         """Data preprocessing. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa. Removes all 
