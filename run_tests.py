@@ -7,12 +7,12 @@ import os
 import itertools as itt
 import traceback
 from test_suite import Selectors
-"""
+
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
 rank= comm.Get_rank()
 size = comm.Get_size()
-"""
+
 def get_parser():
     """Return parser for command line argument processing.
     E.g.: python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500  par -N_from 0 -N_to 1000 -M_from 0 -M_to 100 """

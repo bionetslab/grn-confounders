@@ -4,6 +4,5 @@ from . import ARACNEWrapper
 from . import WGCNAWrapper
 from . import CEMiWrapper
 from . import GRNBOOST2Wrapper
-import Selectors
 import preprocessing
 from . import NetworkInferenceWrapper
