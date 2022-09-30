@@ -1,9 +1,9 @@
 from enum import Enum
-from .GENIE3Wrapper import GENIE3Wrapper
+"""from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
-from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
+from .GRNBOOST2Wrapper import GRNBOOST2Wrapper"""
 import pandas as pd
 import numpy as np
 import os
@@ -163,7 +163,8 @@ def get_pheno_data(cancer_type_selector):
 
 def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
-    and the second containing the sample ids corresponding to the blocks.
+    and the second containing the sample ids corresponding to the blocks. For the age confounder, the lower and upper quartiles are
+    computed separately per cohort and are then combined into the resulting upper and lower fragments.
 
     Parameters
     ----------
@@ -181,7 +182,6 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     pheno_data = pheno_data_orig.copy()
     indices = None
     blocks = []
-    blocks_fin = []
     conf_partition = []
     pheno_field = ''  
     if confounder_selector == ConfounderSelector.SEX:
@@ -201,25 +201,23 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
     pheno_data = pheno_data[pheno_data[pheno_field].notna()]
     if confounder_selector != ConfounderSelector.AGE:
-        blocks = list(set(pheno_data[pheno_field].str.strip().values))
+        blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
         for block_attr in blocks:
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
             if len(samples) >= 20:
                 conf_partition.append(samples)
-                blocks_fin.append(block_attr)
     elif confounder_selector == ConfounderSelector.AGE:
-        lower, upper = pheno_data[pheno_field].quantile(0.25), pheno_data[pheno_field].quantile(0.75)
-        blocks = ['age_less_equal_'+str(lower), 'high_age_greater_'+str(upper)]
-        samples_lower = pheno_data.loc[pheno_data[pheno_field] <= lower]['submitter_id.samples'].tolist()
-        samples_upper = pheno_data.loc[pheno_data[pheno_field] > upper]['submitter_id.samples'].tolist()
+        samples_lower = []
+        samples_upper = []
+        for cohort in set(pheno_data['cohort'].str.strip().values):
+            pheno_cohort = pheno_data[pheno_data['cohort'] == cohort]
+            lower, upper = pheno_cohort[pheno_field].quantile(0.25), pheno_cohort[pheno_field].quantile(0.75)
+            samples_lower.extend(pheno_cohort.loc[pheno_cohort[pheno_field] <= lower]['submitter_id.samples'].tolist())
+            samples_upper.extend(pheno_cohort.loc[pheno_cohort[pheno_field] > upper]['submitter_id.samples'].tolist())
         if len(samples_lower) >= 20 and len(samples_upper) >= 20:
             conf_partition.append(samples_lower)
+            printer.append((samples_lower, real_lower))
             conf_partition.append(samples_upper)
-            blocks_fin = blocks
-    if rank == 0:
-        with open('blocks_'+str(confounder_selector), 'a') as f:
-            for i in range(len(blocks_fin)):
-                f.write(str(blocks_fin[i]) + ': '+str(len(conf_partition[i])) + '\n')
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
