@@ -1,9 +1,9 @@
 from enum import Enum
-"""from .GENIE3Wrapper import GENIE3Wrapper
+from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
-from .GRNBOOST2Wrapper import GRNBOOST2Wrapper"""
+from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
 import pandas as pd
 import numpy as np
 import os
@@ -216,7 +216,6 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
             samples_upper.extend(pheno_cohort.loc[pheno_cohort[pheno_field] > upper]['submitter_id.samples'].tolist())
         if len(samples_lower) >= 20 and len(samples_upper) >= 20:
             conf_partition.append(samples_lower)
-            printer.append((samples_lower, real_lower))
             conf_partition.append(samples_upper)
     return conf_partition
 

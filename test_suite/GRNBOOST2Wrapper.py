@@ -34,6 +34,7 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
         prefix = 'grnboost2'+str(rank)
 
         # remove columns with zero standard deviation, save expression data
+        expression_data = prp.normalizeToUnitVariance(expression_data)
         expression_data = expression_data.loc[:, (expression_data.std() != 0)]
 
         # get regulators and remove such genes that are not present in expression_data

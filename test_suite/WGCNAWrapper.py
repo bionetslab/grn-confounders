@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
+from . import preprocessing as prp
 import csv
 
 test_suite = os.path.join(os.path.dirname(__file__))
@@ -32,6 +33,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         prefix = 'wgcna'+str(rank)
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
+        expression_data = prp.normalizeToUnitVariance(expression_data)
         expression_data.to_csv(data_path, sep='\t')
 
         out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
