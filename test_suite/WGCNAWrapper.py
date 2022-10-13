@@ -14,7 +14,7 @@ sys.path.append(test_suite)
 class WGCNAWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data, rank):
-        """Method to infer a network from expression data using the GENIE3 algorithm.
+        """Method to infer a network from expression data using the WGCNA library.
 
         Parameters
         ----------
@@ -33,7 +33,6 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         prefix = 'wgcna'+str(rank)
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
-        expression_data = prp.normalizeToUnitVariance(expression_data)
         expression_data.to_csv(data_path, sep='\t')
 
         out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')

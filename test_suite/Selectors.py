@@ -1,9 +1,9 @@
 from enum import Enum
-from .GENIE3Wrapper import GENIE3Wrapper
+"""from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
-from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
+from .GRNBOOST2Wrapper import GRNBOOST2Wrapper"""
 import pandas as pd
 import numpy as np
 import os
@@ -32,6 +32,12 @@ class CancerTypeSelector(Enum):
     CESC = 'CESC'
     KIRP = 'KIRP'
     KIRC = 'KIRC'
+    BRCABasal = 'BRCABasal'
+    BRCAHer2 = 'BRCAHer2'
+    BRCALumA = 'BRCALumA'
+    BRCALumB = 'BRCALumB'
+    BRCANormal = 'BRCANormal'
+    BRCAUnknown = 'BRCAUnknown'
 
     def __str__(self):
         return self.value

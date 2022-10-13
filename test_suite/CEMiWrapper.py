@@ -32,7 +32,6 @@ class CEMiWrapper(NetworkInferenceWrapper):
         prefix = 'cemi'+str(rank)
 
         expression_data = expression_data.T
-        print(expression_data)
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
         expression_data.to_csv(data_path, sep='\t')
 
