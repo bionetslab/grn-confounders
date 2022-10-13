@@ -15,7 +15,10 @@ geneData <- read.table(data_path, row.names=1, header = TRUE, sep='\t', as.is=TR
 
 #apply_vst recommended by authors for high-throughput mRNAseq data
 cem <- new_cem(geneData, filter=TRUE, apply_vst=TRUE)
-cem <- get_adj(cem, beta=8)
+beta <- get_beta_data(cem)
+beta <- beta$powerEstimate
+cem <- get_adj(cem, beta=beta)
+#cem <- get_adj(cem, beta=8)
 adj <- adj_data(cem)
 
 Edges<<-graph_from_adjacency_matrix(adj, weighted=TRUE, diag=FALSE, mode = "undirected")

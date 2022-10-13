@@ -1,5 +1,6 @@
 wgcna <- getwd()
 library(WGCNA, warn.conflicts=FALSE)
+enableWGCNAThreads(nThreads = 20)
 library(reshape2, warn.conflicts=FALSE)
 main <- file.path(wgcna, '..', '..')
 args <- commandArgs(trailingOnly=TRUE)
@@ -8,11 +9,26 @@ prefix <- args[1]
 data_path <- paste(main, '/temp/', prefix, '_expression_data.csv', sep= "")
 out_path <- paste(main, '/temp/', prefix,  '_edge_list.csv', sep = "")
 
-geneData <- read.csv(data_path, header = TRUE, sep='\t', as.is=TRUE)
-geneData <- geneData[-c(1)]
+datExpr <- read.csv(data_path, header = TRUE, sep='\t', as.is=TRUE)
+datExpr <- datExpr[-c(1)]
+
+datExpr <- as.data.frame(t(datExpr))
+datExpr$variance = apply(datExpr, 1, mean)
+datExpr2 = datExpr[datExpr$variance >= quantile(datExpr$variance, c(.50)), ] #50% most variable genes
+datExpr2$variance <- NULL
+datExpr <- as.data.frame(t(datExpr2))
 
 # https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/Simulated-05-NetworkConstruction.pdf
-adjacency=abs(cor(geneData,use="p"))^6
+powers = c(c(1:10), seq(from = 10, to=20, by=2))
+# Call the network topology analysis function
+sft = pickSoftThreshold(datExpr, powerVector = powers, verbose = 5)
+softPower <- sft$powerEstimate
+if(is.na(softPower)){
+softPower <- 6 # recommended by authors
+}
+line = paste('softPower for ', prefix, ': ', as.character(softPower), ', ', as.character(Sys.time()))
+write(line,file="softPowers.txt",append=TRUE)
+adjacency <-  adjacency(datExpr, power = softPower)
 
 # Obtaining the edge list from the correlation matrix
 adjacency<-as.matrix(adjacency)
@@ -27,4 +43,4 @@ edges<-edges[(edges$score > 0.001),]
 edges$score<-as.numeric(as.character(edges$score))
 
 write.table(edges, out_path, sep='\t')
-
+                                              
