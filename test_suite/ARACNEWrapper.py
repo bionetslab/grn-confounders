@@ -37,6 +37,9 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             os.mkdir(out_dir)
         out_path = os.path.join(out_dir, 'nobootstrap_network.txt')
 
+        # paper preprocessing
+        expression_data = expression_data.loc[:, (expression_data != 0).any(axis=0)]
+
         # -e: save expression_data to csv
         expression_data = expression_data.T # ARACNe expects gene x sample data set
         gene_dict = dict(zip(expression_data.index, range(len(expression_data.index)))) # ARACNe expects numeric gene identifiers in first column

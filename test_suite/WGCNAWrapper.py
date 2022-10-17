@@ -33,6 +33,17 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         prefix = 'wgcna'+str(rank)
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
+
+        # Author faq preprocessing of FPKM data
+        expression_data = expression_data.loc[:, (expression_data != 0).any(axis=0)]
+        expression_data = expression_data.T
+        rank_mean = expression_data.stack().groupby(expression_data.rank(method='first').stack().astype(int)).mean()
+        expression_data = expression_data.rank(method='min').stack().astype(int).map(rank_mean).unstack()
+        expression_data = expression_data.T
+        qtls = expression_data.quantile(0.25, axis=1)
+
+        assert (qtls == qtls.mean(axis=1)).all()
+
         expression_data.to_csv(data_path, sep='\t')
 
         out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
