@@ -1,9 +1,10 @@
 from enum import Enum
-"""from .GENIE3Wrapper import GENIE3Wrapper
+from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
-from .GRNBOOST2Wrapper import GRNBOOST2Wrapper"""
+from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
+from .sdcorGCNWrapper import sdcorGCNWrapper
 import pandas as pd
 import numpy as np
 import os
@@ -15,6 +16,7 @@ class AlgorithmSelector(Enum):
     WGCNA = 'WGCNA'
     CEMI = 'CEMI'
     GRNBOOST2 = 'GRNBOOST2'
+    SDCORGCN = 'SDCORGCN'
     
     def __str__(self):
         return self.value
@@ -71,6 +73,8 @@ def get_algorithm_wrapper(algorithm_selector):
         return CEMiWrapper()
     elif algorithm_selector == AlgorithmSelector.GRNBOOST2:
         return GRNBOOST2Wrapper()
+    elif algorithm_selector == AlgorithmSelector.SDCORGCN:
+        return sdcorGCNWrapper()
 
 def download_TCGA_expression_data(cancer_type_selector):
     """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
@@ -259,10 +263,10 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 begin += len(conf_partition[i])
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
-            for i in range(len(conf_partition)):
-                block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
-                samples_cpy = samples_cpy[~samples_cpy.isin(block)]
-                cur.append(block.values)
-                block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+            #for i in range(len(conf_partition)):
+                #block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
+                #samples_cpy = samples_cpy[~samples_cpy.isin(block)]
+                #cur.append(block.values)
+                #block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)
     return partitions
