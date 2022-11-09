@@ -192,6 +192,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     pheno_data = pheno_data_orig.copy()
     indices = None
     blocks = []
+    printer = []
     conf_partition = []
     pheno_field = ''  
     if confounder_selector == ConfounderSelector.SEX:
@@ -216,6 +217,7 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
             if len(samples) >= 20:
                 conf_partition.append(samples)
+                printer.append((samples, block_attr))
     elif confounder_selector == ConfounderSelector.AGE:
         samples_lower = []
         samples_upper = []
@@ -227,7 +229,10 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
         if len(samples_lower) >= 20 and len(samples_upper) >= 20:
             conf_partition.append(samples_lower)
             conf_partition.append(samples_upper)
-    return conf_partition
+            printer.append((samples_lower, 'lower'))
+            printer.append((samples_upper, 'upper'))
+
+    return printer
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
     """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
@@ -263,10 +268,10 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 begin += len(conf_partition[i])
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
-            #for i in range(len(conf_partition)):
-                #block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
-                #samples_cpy = samples_cpy[~samples_cpy.isin(block)]
-                #cur.append(block.values)
-                #block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+            for i in range(len(conf_partition)):
+                block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
+                samples_cpy = samples_cpy[~samples_cpy.isin(block)]
+                cur.append(block.values)
+                block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)
     return partitions
