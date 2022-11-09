@@ -35,7 +35,7 @@ thrs=c(0.3,0.4,0.45,0.5,0.51,0.52,0.53,0.54,0.55,0.56,0.57,0.58,0.59,0.6,0.61,0.
 # FUNCTIONS
 # PREPROCESSING FUNCTIONS
 
-preprocessing=function(em){
+preprocessing_orig=function(em){
   # Sets the 20% of the lowest expressed values from each sample to the lowest value in the original dataset, and quantile-normalises the data
   # It first calculates the minumum value in the original dataset and identifies which entries need to be modified
   # Arguments: em (expression matrix where rows are genes and columns different samples)
@@ -49,6 +49,36 @@ preprocessing=function(em){
   # Lastly, it sets the identified values to the minimum gene expression value in the original dataset
   em_qnorm[which(genes_remove==T)]=min_val
   return(em_qnorm)
+}
+
+preprocessing=function(em){
+  # Sets the 20% of the lowest expressed values from each sample to the lowest value in the original dataset, and quantile-normalises the data
+  # It first calculates the minumum value in the original dataset and identifies which entries need to be modified
+  # Arguments: em (expression matrix where rows are genes and columns different samples)
+  em_qnorm=normalize.quantiles(em)
+  min_val=min(em_qnorm,na.rm = T)
+  max_val=max(em_qnorm,na.rm = T)
+  diff=max_val-min_val
+  med=median(diff)
+  genes_remove=apply(em_qnorm,2,function(x) get_genes_to_remove(x,med))
+  # It then removes those genes from the dataset and performs the quantile normalisation
+  em_qnorm=em_qnorm[,which(genes_remove==F)]
+  print(dim(em_qnorm))
+  return(em_qnorm)
+}
+
+get_genes_to_remove=function(column,med){
+  # "non-changing genes”: difference between highest and lowest expression value (“expression difference”) is lower than the 
+  # median of all expression differences calculated for each gene AND mean expression signal between samples is lower than 
+  # median of all the expression signals calculated for each gene.
+  # (btab_041_supplementary_data of Pardo-Diaz et al.: 'Robust gene coexpression networks using signed distance correlation')
+  col_mean=mean(column)
+  col_median=median(column)
+  min_val=min(column,na.rm = T)
+  max_val=max(column,na.rm = T)
+  diff=max_val-min_val
+  v=diff<med&col_mean<col_median
+  return(v)
 }
 
 get_lowest_values=function(column,p){
@@ -349,8 +379,7 @@ NSdS=graph_from_adjacency_matrix(A,mode="upper") # Network
 V(NSdS)$name=rownames(M)
 
 out_path = TODO
-write.table(NSdS, out_path, )
-#save(NSdS, file=paste(name,"_NSdS.RData",sep=""))
+save(NSdS, file=out_path)
 
 # Generate Pearson correlation matrix (with all the samples in the dataset)
 
