@@ -12,11 +12,11 @@ out_path <- paste(main, '/temp/', prefix,  '_edge_list.csv', sep = "")
 datExpr <- read.csv(data_path, header = TRUE, sep='\t', as.is=TRUE)
 datExpr <- datExpr[-c(1)]
 
-datExpr <- as.data.frame(t(datExpr))
-datExpr$variance = apply(datExpr, 1, mean)
-datExpr2 = datExpr[datExpr$variance >= quantile(datExpr$variance, c(.50)), ] #50% most variable genes
-datExpr2$variance <- NULL
-datExpr <- as.data.frame(t(datExpr2))
+#datExpr <- as.data.frame(t(datExpr))
+#datExpr$variance = apply(datExpr, 1, mean)
+#datExpr2 = datExpr[datExpr$variance >= quantile(datExpr$variance, c(.50)), ] #50% most variable genes
+#datExpr2$variance <- NULL
+#datExpr <- as.data.frame(t(datExpr2))
 
 # https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/Simulated-05-NetworkConstruction.pdf
 powers = c(c(1:10), seq(from = 10, to=20, by=2))

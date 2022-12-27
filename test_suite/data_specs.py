@@ -61,11 +61,25 @@ for ct_sel in list(Selectors.CancerTypeSelector):
         k.write('pheno shape: ' + str(pheno.shape)+'\n')
         for conf_sel in list(Selectors.ConfounderSelector):
             k.write('CONFOUNDER: ' + str(conf_sel)+'\n')
-            conf_partition, blocks = Selectors.get_conf_partition(pheno, conf_sel, 0)
+            conf_partition, printer = Selectors.get_conf_partition(pheno, conf_sel, 0)
             i = 0
-            for block in conf_partition:
-                k.write(f'{str(blocks[i])}: ' + str(len(block))+'\n')
+            for el in printer:
+                #k.write(f'{str(blocks[i])}: ' + str(len(block))+'\n')
+                k.write(str(el[1]) + ': '+str(len(el[0])) + '\n')
+                if str(conf_sel) == 'stage':
+                    k.write('Partitions on stage blocks:'+'\n')
+                    stage_conf_partition, stage_printer = Selectors.get_conf_partition(pheno[pheno['submitter_id.samples'].isin(el[0])], Selectors.ConfounderSelector.AGE, 0)
+                    for il in stage_printer:
+                        k.write(str(il[1])+': '+str(len(il[0]))+'\n')
+                    stage_conf_partition, stage_printer = Selectors.get_conf_partition(pheno[pheno['submitter_id.samples'].isin(el[0])], Selectors.ConfounderSelector.SEX, 0)
+                    for il in stage_printer:
+                        k.write(str(il[1])+': '+str(len(il[0]))+'\n')
+                    stage_conf_partition, stage_printer = Selectors.get_conf_partition(pheno[pheno['submitter_id.samples'].isin(el[0])], Selectors.ConfounderSelector.RACE, 0)
+                    for il in stage_printer:
+                        k.write(str(il[1])+': '+str(len(il[0]))+'\n')
+                    
                 i += 1
+
 
         k.write('-----------------------------------\n')
 

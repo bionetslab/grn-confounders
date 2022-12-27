@@ -1,28 +1,43 @@
 from enum import Enum
+"""
 from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
-from .WGCNAWrapper import WGCNAWrapper
+"""
+from WGCNAWrapper import WGCNAWrapper
+"""
 from .CEMiWrapper import CEMiWrapper
 from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
 from .sdcorGCNWrapper import sdcorGCNWrapper
+"""
 import pandas as pd
 import numpy as np
 import os
 
-class AlgorithmSelector(Enum):
-    """Enum specifying which network inference algorithm should be used."""
-    ARACNE = 'ARACNE'
-    GENIE3 = 'GENIE3'
-    WGCNA = 'WGCNA'
-    CEMI = 'CEMI'
-    GRNBOOST2 = 'GRNBOOST2'
-    SDCORGCN = 'SDCORGCN'
-    
-    def __str__(self):
-        return self.value
+class TCGACancerTypeSelector(Enum):
+    """Enum listing TCGA cancer type selectors by study abbreviations."""
 
-class CancerTypeSelector(Enum):
-    """Enum specifying which cancer type should be investigated."""
+    ACC = 'ACC'
+    LAML = 'LAML'
+    CHOL = 'CHOL'
+    BLCA = 'BLCA'
+    UCEC = 'UCEC'
+    ESCA = 'ESCA'
+    KICH = 'KICH'
+    DLBC = 'DLBC'
+    LIHC = 'LIHC'
+    LGG = 'LGG'
+    LUAD = 'LUAD'
+    SKCM = 'SKCM'
+    MESO = 'MESO'
+    UVM = 'UVM'
+    OV = 'OV'
+    PAAD = 'PAAD'
+    PRAD = 'PRAD'
+    SARC = 'SARC'
+    TGCT = 'TGCT'
+    THYM = 'THYM'
+    THCA = 'THCA'
+    UCS = 'UCS'
     PCPG = 'PCPG'
     GBM = 'GBM'
     COAD = 'COAD'
@@ -34,24 +49,39 @@ class CancerTypeSelector(Enum):
     CESC = 'CESC'
     KIRP = 'KIRP'
     KIRC = 'KIRC'
-    BRCABasal = 'BRCABasal'
-    BRCAHer2 = 'BRCAHer2'
-    BRCALumA = 'BRCALumA'
-    BRCALumB = 'BRCALumB'
-    BRCANormal = 'BRCANormal'
-    BRCAUnknown = 'BRCAUnknown'
 
     def __str__(self):
         return self.value
 
 class ConfounderSelector(Enum):
-    """Enum specifying the confounder whose effect is to be examined."""
-    SEX = 'sex'
-    RACE = 'race'
-    AGE = 'age'
-    STAGE = 'stage'
-    TYPE = 'type'
+    """Enum listing predefined confounder selectors to avoid confusing custom string confounders and predefined confounders."""
 
+    TYPE = 'TYPE'
+    NONE = 'NONE'
+
+    def __str__(self):
+        return self.value
+
+class AlgorithmSelector(Enum):
+    """Enum specifying which network inference algorithm should be used."""
+    ARACNE = 'ARACNE'
+    GENIE3 = 'GENIE3'
+    WGCNA = 'WGCNA'
+    CEMI = 'CEMI'
+    GRNBOOST2 = 'GRNBOOST2'
+    SDCORGCN = 'SDCORGCN'
+    CUSTOMGRN = 'CUSTOMGRN'
+    CUSTOMGCN = 'CUSTOMGCN'
+    
+    def __str__(self):
+        return self.value
+
+class BlockType(Enum):
+    """Enum listing possible block types of confounders."""
+    QUARTILE = 'QUARTILE'
+    CATEGORY = 'CATEGORY'
+    All = 'ALL'
+    
     def __str__(self):
         return self.value
 
@@ -75,53 +105,22 @@ def get_algorithm_wrapper(algorithm_selector):
         return GRNBOOST2Wrapper()
     elif algorithm_selector == AlgorithmSelector.SDCORGCN:
         return sdcorGCNWrapper()
+    elif algorithm_selector == AlgorithmSelector.CUSTOMGRN:
+        return CUSTOMGRNWrapper()
+    elif algorithm_selector == AlgorithmSelector.CUSTOMGCN:
+        return CUSTOMGCNWrapper()
 
-def download_TCGA_expression_data(cancer_type_selector):
-    """Saves TCGA gene expression RNAseq - HTSeq - FPKM data for the specifies @cancer_type obtained from UCSC Xena in /data.
-
-    Parameters
-    ----------
-    cancer_type_selector : CancerTypeSelector
-        Specifies the cohort that the phenotype file is to be downloaded for.
-    """
-    cwd = os.getcwd()
-    url = ""
-    if cancer_type_selector in list(CancerTypeSelector):
-        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
-        df = pd.read_csv(url, delimiter='\t', index_col='Ensembl_ID').T
-        df.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t')
-
-def download_TCGA_phenotype_data(cancer_type_selector):
-    """Saves TCGA phenotype data for the specifies @cancer_type obtained from UCSC Xena in /data.
-
-    Parameters
-    ----------
-    cancer_type_selector : CancerTypeSelector
-        Specifies the cohort that the phenotype file is to be downloaded for.
-    """
-    cwd = os.getcwd()
-    url = ""
-    if cancer_type_selector in list(CancerTypeSelector):
-        url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.GDC_phenotype.tsv.gz'
-        pheno_data = pd.read_csv(url, delimiter='\t')
-        pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
-        pheno_data.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t')
-
-def download_known_tfs():
-    """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
-    """
-    cwd = os.getcwd()
-    df = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', delimiter='\t', index_col=0)
-    df.to_csv(os.path.join(cwd, 'data', 'regulators.csv'), sep='\t')
-
-def get_expression_data(cancer_type_selector):
+def get_expression_data(cancer_type_selector, ged, sep='\t'):
     """Loads the expression data for the selected cancer type. Only leaves columns of protein-codeing genes, provided
     in the file protein-coding_gene.csv, in expression_data. Removes gene version identifiers from gene ensembl IDs.
 
     Parameters
     ----------
-    cancer_type_selector : CancerTypeSelector
+    cancer_type_selector : str
         Specifies for which cancer type the phenotypes should be loaded.
+
+    ged : str
+        String describing file name of gene expression data file in data directory. 
         
     Returns
     -------
@@ -129,11 +128,7 @@ def get_expression_data(cancer_type_selector):
         Expression data (indices are sample IDs, column names are gene IDs).
     """
     cwd = os.getcwd()
-    try:
-        expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
-    except FileNotFoundError:
-        download_TCGA_expression_data(cancer_type_selector)
-        expression_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.htseq_fpkm.tsv'), sep='\t', header=0, index_col=0)
+    expression_data = pd.read_csv(os.path.join(cwd, 'data', ged), sep=sep, header=0, index_col=0)
     print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
     expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
     print('Only leave protein-coding genes in expression data set for cohort ' + str(cancer_type_selector) + '...')
@@ -142,14 +137,14 @@ def get_expression_data(cancer_type_selector):
     expression_data = expression_data[mask]
     return expression_data
 
-def get_pheno_data(cancer_type_selector):
+def get_pheno_data(cancer_type_selector, pt, sep='\t'):
     """Loads the phenotype data for the selected cancer type and adds a column containing cancer_type_selector. Only leave
     rows (samples) in pheno_data that have non-NaN values in the columns gender.demographic, race.demographic, 
     age_at_initial_pathologic_diagnosis and tumor_stage.diagnoses.
 
     Parameters
     ----------
-    cancer_type_selector : CancerTypeSelector
+    cancer_type_selector : str
         Specifies for which cancer type the phenotypes should be loaded.
 
     Returns
@@ -158,20 +153,15 @@ def get_pheno_data(cancer_type_selector):
         Expression data (indices are sample IDs, column names are gene IDs).
     """
     cwd = os.getcwd()
-    try:
-        pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
-        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
-    except FileNotFoundError:
-        download_TCGA_phenotype_data(cancer_type_selector)
-        pheno_data = pd.read_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep='\t', header=0, index_col=0,
-        dtype = {'gender.demographic': str,'race.demographic': str, 'age_at_initial_pathologic_diagnosis': float, 'submitter_id.samples': str})
+    pheno_data = pd.read_csv(os.path.join(cwd, 'data', pt), sep=sep, header=0, index_col=0)
+    assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
+    pheno_data = pheno_data.set_index(pheno_data.columns[0])
     pheno_data['cohort'] = str(cancer_type_selector)
     print('Filter Primary Tumor samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
     pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
-
     return pheno_data
 
-def get_conf_partition(pheno_data_orig, confounder_selector, rank):
+def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_block_size=20):
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
     and the second containing the sample ids corresponding to the blocks. For the age confounder, the lower and upper quartiles are
     computed separately per cohort and are then combined into the resulting upper and lower fragments.
@@ -181,8 +171,11 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     pheno_data_orig : pd.DataFrame
         Data frame containing phenotypic information. One row per sample, one column per attribute.
 
-    confounder_selector : ConfounderSelector
-        Confounder attribute that is to be used to build the partition.
+    pheno_field : str
+        Field in pheno type file to be used to induce the partition.
+
+    block_type : BlockType
+        QUARTILE or CATEGORY; defines how to create the partition.
 
     Returns
     -------
@@ -192,47 +185,35 @@ def get_conf_partition(pheno_data_orig, confounder_selector, rank):
     pheno_data = pheno_data_orig.copy()
     indices = None
     blocks = []
-    printer = []
     conf_partition = []
-    pheno_field = ''  
-    if confounder_selector == ConfounderSelector.SEX:
-        pheno_field = 'gender.demographic'
-    elif confounder_selector == ConfounderSelector.RACE:
-        pheno_field = 'race.demographic'
-    elif confounder_selector == ConfounderSelector.AGE:
-        pheno_field = 'age_at_initial_pathologic_diagnosis'
-    elif confounder_selector == ConfounderSelector.STAGE:
-        pheno_field = 'tumor_stage.diagnoses'
+    pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
+    pheno_data = pheno_data[pheno_data[pheno_field].notna()]
+    if pheno_field == 'tumor_stage.diagnoses':
         pheno_data = pheno_data[pheno_data[pheno_field] != 'stage x']
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic']), pheno_field] = 'stage i'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic']), pheno_field] = 'stage ii'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc']), pheno_field] = 'stage iii'
-    elif confounder_selector == ConfounderSelector.TYPE:
-        pheno_field = 'cohort'
-    pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
-    pheno_data = pheno_data[pheno_data[pheno_field].notna()]
-    if confounder_selector != ConfounderSelector.AGE:
+    if pheno_field == ConfounderSelector.NONE:
+        samples = pheno_data.index.tolist()
+        conf_partition.append(('all', samples))
+    elif block_type == BlockType.CATEGORY:
         blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
         for block_attr in blocks:
-            samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr]['submitter_id.samples'].tolist()
-            if len(samples) >= 20:
-                conf_partition.append(samples)
-                printer.append((samples, block_attr))
-    elif confounder_selector == ConfounderSelector.AGE:
+            samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr].index.tolist()
+            if len(samples) >= min_block_size:
+                conf_partition.append((block_attr, samples))
+    elif block_type == BlockType.QUARTILE:
         samples_lower = []
         samples_upper = []
         for cohort in set(pheno_data['cohort'].str.strip().values):
             pheno_cohort = pheno_data[pheno_data['cohort'] == cohort]
             lower, upper = pheno_cohort[pheno_field].quantile(0.25), pheno_cohort[pheno_field].quantile(0.75)
-            samples_lower.extend(pheno_cohort.loc[pheno_cohort[pheno_field] <= lower]['submitter_id.samples'].tolist())
-            samples_upper.extend(pheno_cohort.loc[pheno_cohort[pheno_field] > upper]['submitter_id.samples'].tolist())
-        if len(samples_lower) >= 20 and len(samples_upper) >= 20:
-            conf_partition.append(samples_lower)
-            conf_partition.append(samples_upper)
-            printer.append((samples_lower, 'lower'))
-            printer.append((samples_upper, 'upper'))
-
-    return printer
+            samples_lower.extend(pheno_cohort.loc[pheno_cohort[pheno_field] <= lower].index.tolist())
+            samples_upper.extend(pheno_cohort.loc[pheno_cohort[pheno_field] > upper].index.tolist())
+        if len(samples_lower) >= min_block_size and len(samples_upper) >= min_block_size:
+            conf_partition.append(('lower', samples_lower))
+            conf_partition.append(('upper', samples_upper))
+    return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
     """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
@@ -255,8 +236,11 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
         List of random partitions.
     """
     partitions=[]
+    if conf_sel == ConfounderSelector.NONE:
+        partitions.append(samples)
+        return partitions
     for k in range(n_from, n_to):
-        samples_cpy = samples.copy()
+        samples_cpy = pd.DataFrame(samples.copy())
         cur = []
         try:
             part = pd.read_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
@@ -275,3 +259,16 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
                 block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)
     return partitions
+
+def align_data(expression_datasets, pheno_datasets):
+    """Data alignment. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa.
+    Remove all genes where standard deviation is 0."""
+    for sel in expression_datasets.keys():
+        print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
+        pheno_datasets[sel] = pheno_datasets[sel][pheno_datasets[sel].index.isin(expression_datasets[sel].index)]
+        samples = pheno_datasets[sel].index.values        
+        expression_datasets[sel] = expression_datasets[sel].loc[samples]
+        print('Remove genes where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
+        expression_datasets[sel] = expression_datasets[sel].loc[:, (expression_datasets[sel].std() != 0)]
+        pheno_datasets[sel] = pheno_datasets[sel][pheno_datasets[sel].index.isin(expression_datasets[sel].index)]
+    return expression_datasets, pheno_datasets

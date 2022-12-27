@@ -1,5 +1,3 @@
-# script by David B. Blumenthal
-
 from abc import ABC, abstractmethod
 import itertools as itt
 import os

@@ -60,24 +60,24 @@ preprocessing=function(em){
   max_val=max(em_qnorm,na.rm = T)
   diff=max_val-min_val
   med=median(diff)
-  genes_remove=apply(em_qnorm,2,function(x) get_genes_to_remove(x,med))
+  genes_remove=apply(em_qnorm,1,function(x) get_genes_to_remove(x,med))
   # It then removes those genes from the dataset and performs the quantile normalisation
-  em_qnorm=em_qnorm[,which(genes_remove==F)]
+  em_qnorm=em_qnorm[which(genes_remove==T)]=NA
   print(dim(em_qnorm))
   return(em_qnorm)
 }
 
-get_genes_to_remove=function(column,med){
+get_genes_to_remove=function(row,med){
   # "non-changing genes”: difference between highest and lowest expression value (“expression difference”) is lower than the 
   # median of all expression differences calculated for each gene AND mean expression signal between samples is lower than 
   # median of all the expression signals calculated for each gene.
   # (btab_041_supplementary_data of Pardo-Diaz et al.: 'Robust gene coexpression networks using signed distance correlation')
-  col_mean=mean(column)
-  col_median=median(column)
-  min_val=min(column,na.rm = T)
-  max_val=max(column,na.rm = T)
+  gene_mean=mean(row)
+  gene_median=median(row)
+  min_val=min(row,na.rm = T)
+  max_val=max(row,na.rm = T)
   diff=max_val-min_val
-  v=diff<med&col_mean<col_median
+  v=diff<med&gene_mean<gene_median
   return(v)
 }
 

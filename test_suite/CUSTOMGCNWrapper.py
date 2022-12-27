@@ -4,18 +4,17 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
-import preprocessing as prp
+from . import preprocessing as prp
 import csv
-import qnorm
 
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
 
-class WGCNAWrapper(NetworkInferenceWrapper):
+class CUSTOMGCNWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data, rank):
-        """Method to infer a network from expression data using the WGCNA library.
+        """Method to infer a network from expression data using a custom GCN inference method.
 
         Parameters
         ----------
@@ -31,31 +30,19 @@ class WGCNAWrapper(NetworkInferenceWrapper):
             Fr directed networks, these columns are named 'source' and 'target'.
         """
         main = os.path.join(test_suite, '..')
-        prefix = 'wgcna'+str(rank)
+        prefix = 'customgcn'+str(rank)
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
-        
-        # Quantile normalization of samples
-        expression_data = expression_data.loc[:, (expression_data != 0).any(axis=0)]
-        expression_data = qnorm.quantile_normalize(expression_data, axis=0)
-        qtls = expression_data.quantile(0.25, axis=1)
 
-        # Only use 50% most variable genes. Transformation for simplicity
-        expression_data = expression_data.T
-        expression_data['var'] = expression_data.var(axis=1)
-        quantile_var = expression_data['var'].quantile(0.5)
-        expression_data = expression_data[expression_data['var'] >= quantile_var]
-        expression_data = expression_data.drop(['var'], axis=1)
-        expression_data = expression_data.T
+        # add preprocessing, if required
+
+        # save expression data
         expression_data.to_csv(data_path, sep='\t')
 
         out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
 
-        cur = os.getcwd()
-        os.chdir(os.path.join(os.getcwd(), 'algorithms', 'WGCNA'))
-        command = f'Rscript WGCNA.R {prefix}'
-        ret = subprocess.run(command, shell=True)
-        os.chdir(cur)
+        command = f'call_method_here {prefix}'
+        subprocess.run(command, shell=True)
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
