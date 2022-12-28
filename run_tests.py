@@ -20,7 +20,7 @@ def get_parser():
     tcga.add_argument('-N_to', required=False, type=int, nargs='?', const=20, default=20)
     tcga.add_argument('-M_to', required=False, type=int, nargs='?', const=20, default=20)
 
-    tcga.add_argument('-conf', required=True, nargs='+')
+    tcga.add_argument('-conf', required=False, nargs='*')
     tcga.add_argument('-block_types', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.BlockType)])
     tcga.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
     tcga.add_argument('-k', required=False, type=int, nargs='?', const=5000, default=5000)
@@ -41,8 +41,8 @@ def get_parser():
     custom.add_argument('-N_to', required=False, type=int, nargs='?', const=20, default=20)
     custom.add_argument('-M_to', required=False, type=int, nargs='?', const=20, default=20)
 
-    custom.add_argument('-conf', required=True, nargs='+')
-    custom.add_argument('-block_types', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.BlockType)])
+    custom.add_argument('-conf', required=False, nargs='*')
+    custom.add_argument('-block_types', required=False, nargs='+', choices=[str(sel) for sel in list(Selectors.BlockType)])
     custom.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
     custom.add_argument('-k', required=False, type=int, nargs='?', const=5000, default=5000)
     custom.add_argument('-combine', action='store_true', help='run tests additionally on combined datasets.')
@@ -62,12 +62,12 @@ def run_tests(args):
     args: argparse.Namespace
         Namespace object populated with user command line arguments.
     """
-    assert args.N_from < args.N_to, 'N_from must be smaller than N_to'
-    assert args.M_from < args.M_to, 'M_from must be smaller than M_to'
-    assert len(args.block_types) == len(args.conf)
-    #assert len(args.ct) == len(args.ged) == len(args.pt)
+    assert args.N_from <= args.N_to, 'N_from must be smaller than or equal to N_to'
+    assert args.M_from <= args.M_to, 'M_from must be smaller than or equal to M_to'
+    assert len(args.block_types) == len(args.conf) if args.conf is not None else True
     assert all([el in args.conf for el in args.chi]) if args.chi is not None else True
-
+    assert args.g_all or len(list(args.conf)) > 0, 'If no confounders specified, -g_all flag must be set to infer network from entire data.'
+    
     # create data_dict with paths to gene expression data and phenotype data
     data_dict = {c:{} for c in args.ct}
     types = list(args.ct)
@@ -84,6 +84,7 @@ def run_tests(args):
             data_dict[types[i]] = {'ged': ged[i], 'pt': pt[i]}
 
     # create conf_dict with confounders and corresponding block types (needed for generation of confounder-induced partition)
+    args.conf = {} if args.conf is None else args.conf
     conf_dict = {c:'' for c in args.conf}
     for i in range(len(args.conf)):
         conf_dict[args.conf[i]] = Selectors.BlockType(args.block_types[i])

@@ -87,7 +87,7 @@ class TestRunner(object):
         # = random partition = entire data
         self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_dict[conf_sel], conf_sel, self.rank)}) 
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
-        self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel].index, list(self.conf_partitions[ct_sel][conf_sel].values()), ct_sel, conf_sel)
+        self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel], list(self.conf_partitions[ct_sel][conf_sel].values()), ct_sel, conf_sel)
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
         
         # initialize container dicts for results
@@ -132,6 +132,8 @@ class TestRunner(object):
                 network_state = []
                 intersections = []
                 unions = []
+                if conf_sel == Selectors.ConfounderSelector.NONE:
+                    continue
                 for k in self.rep_k:
                     ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
                     self.conf_results[ct_sel][conf_sel][alg_sel][j].append(ji)
@@ -143,15 +145,15 @@ class TestRunner(object):
                 f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
 
             print('running on random partitions...')
-            for i in range(self.n_from, self.n_to):
-                algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
-                algorithm_wrapper.infer_networks(self.rank)
-                self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
-                network_state = []
-                intersections = []
-                unions = []
-                # skip random partition for G_all, since for G_all, random partition = confounder partition
-                if conf_sel != Selectors.ConfounderSelector.NONE:
+            if conf_sel != Selectors.ConfounderSelector.NONE:
+                for i in range(self.n_from, self.n_to):
+                    algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
+                    algorithm_wrapper.infer_networks(self.rank)
+                    self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
+                    network_state = []
+                    intersections = []
+                    unions = []
+                    # skip random partition for G_all, since for G_all, random partition = confounder partition
                     for k in self.rep_k:
                         ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
                         self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(ji)
@@ -228,4 +230,4 @@ class TestRunner(object):
         if self.rank == 0:
             with open(self.logfile, mode) as f:
                 for msg in messages:
-                    f.write(msg)
+                    f.write(msg + '\n')

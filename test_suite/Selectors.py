@@ -234,11 +234,9 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
         List of random partitions.
     """
     partitions=[]
-    if conf_sel == ConfounderSelector.NONE:
-        partitions.append(samples)
-        return partitions
     for k in range(n_from, n_to):
-        samples_cpy = pd.DataFrame(samples.copy())
+        #samples_cpy = pd.DataFrame(samples.copy())
+        samples_cpy = samples.copy()
         cur = []
         try:
             part = pd.read_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
@@ -252,8 +250,11 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
             print(f'rnd_partition {k} not found. Create new partitions.')
             for i in range(len(conf_partition)):
                 block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
-                samples_cpy = samples_cpy[~samples_cpy.isin(block)]
-                cur.append(block.values)
+                print(block)
+                #samples_cpy = samples_cpy[~samples_cpy.isin(block[0])]
+                samples_cpy = samples_cpy.drop(block.index.values)
+                #print(block[0].values)
+                cur.append(block.index.values)
                 block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)
     return partitions

@@ -15,7 +15,7 @@ def run_wilcoxon_tests(ct_sel, conf_sels, alg_sels, fro, to, k, block_ids):
     for conf_sel in conf_sels:
         for alg_sel in alg_sels:
             if conf_sel != Selectors.ConfounderSelector.NONE:
-                wilcox_fractions = pd.concat(wilcox_fractions, run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_ids))
+                wilcox_fractions = pd.concat([wilcox_fractions, run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_ids)])
     wilcox_fractions.to_csv(os.path.join('results', ct_sel + '_wilcox_fractions.csv'))
 
 def run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_ids):
@@ -25,7 +25,7 @@ def run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_id
     networks_blocks_conf = {bl: pd.DataFrame(columns=['size intersection', 'size union', 'state', 'k', 'mean JI', 'partID']) for bl in block_ids}
     conf_results = {l:{bl:[] for bl in block_ids} for l in range(fro, to)}
     for j in range(fro, to):
-        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_blockall_'+alg_sel+'_'+ct_sel+'_none_gene_list.csv'), header=0)
+        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_blockall_'+alg_sel+'_'+ct_sel+'_NONE_gene_list.csv'), header=0)
         for bl in block_ids:
             block_network = os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_block'+bl+'_'+alg_sel+'_'+ct_sel+'_'+conf_sel+'_gene_list.csv')
             algorithm_wrapper._inferred_networks = [plain, pd.read_csv(block_network, header=0)]
@@ -33,13 +33,13 @@ def run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_id
                 ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
                 conf_results[j][bl].append(ji)
             JI_conf = pd.DataFrame({'k': rep_k, 'mean JI': conf_results[j][bl], 'partID':j,'confounder':conf_sel, 'method':alg_sel, 'cohort':ct_sel})
-            networks_blocks_conf[bl] = pd.concat(networks_blocks_conf[bl], JI_conf)
+            networks_blocks_conf[bl] = pd.concat([networks_blocks_conf[bl], JI_conf])
 
     print('Compute mean JIs for G_all and random networks...')
     networks_blocks_rnd = {bl: pd.DataFrame(columns=['size intersection', 'size union', 'state', 'k', 'mean JI', 'partID']) for bl in block_ids}
     rnd_results = {l:{bl:[] for bl in block_ids} for l in range(fro, to)}
     for j in range(fro, to):
-        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_blockall_'+alg_sel+'_'+ct_sel+'_none_gene_list.csv'), header=0)
+        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_blockall_'+alg_sel+'_'+ct_sel+'_NONE_gene_list.csv'), header=0)
         for bl in block_ids:
             block_network = os.path.join(os.getcwd(), 'results', 'networks', 'rnd_part'+str(j)+'_block'+bl+'_'+alg_sel+'_'+ct_sel+'_'+conf_sel+'_gene_list.csv')
             algorithm_wrapper._inferred_networks = [plain, pd.read_csv(block_network, header=0)]
@@ -48,7 +48,7 @@ def run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_id
                 rnd_results[j][bl].append(ji)
             JI_rnd = pd.DataFrame({'k': rep_k, 'mean JI': rnd_results[j][bl], 'partID':j, 'confounder':conf_sel,
                                     'method':alg_sel, 'cohort':ct_sel})
-            networks_blocks_rnd[bl] = pd.concat(networks_blocks_rnd[bl], JI_rnd)
+            networks_blocks_rnd[bl] = pd.concat([networks_blocks_rnd[bl], JI_rnd])
 
     for bl in block_ids:
         visualize_JIs(networks_blocks_conf[bl], networks_blocks_rnd[bl], bl)
@@ -107,6 +107,5 @@ if __name__ == '__main__':
     parser.add_argument('-block_ids', required=True, nargs='+')
     args = parser.parse_args()
     assert args.fro < args.to
-
     run_wilcoxon_tests(args.ct, args.conf, args.alg, args.fro, args.to, args.k, args.block_ids)
     
