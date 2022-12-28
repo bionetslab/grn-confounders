@@ -4,7 +4,7 @@ import pickle
 import pandas as pd
 import csv
 from sklearn.preprocessing import Normalizer
-import Selectors
+#from . import Selectors
 
 def normalizeToUnitVariance(df):
     # normalize gene expression data for each gene vector (col) to unit length
@@ -16,7 +16,7 @@ def normalizeToUnitVariance(df):
             print('df contains column '+str(col) + ' with std()==0. Normalization would produce nan value. Remove column ' + str(col) + ' before normalization.')
     pd.options.mode.chained_assignment = 'warn'
     return df
-
+"""
 def _var_conf_chi(pheno, conf_sel, var, conf_dict):
     conf_partition = Selectors.get_conf_partition(pheno, conf_dict[conf_sel], conf_sel)
     confusion_table = pd.DataFrame()
@@ -31,3 +31,4 @@ def _var_conf_chi(pheno, conf_sel, var, conf_dict):
         print('no chi^2 test possible.')
         p = 10000000000
     return p, confusion_table
+"""

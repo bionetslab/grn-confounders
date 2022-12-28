@@ -1,14 +1,11 @@
 from enum import Enum
-"""
 from .GENIE3Wrapper import GENIE3Wrapper
 from .ARACNEWrapper import ARACNEWrapper
-"""
-from WGCNAWrapper import WGCNAWrapper
-"""
+from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
 from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
 from .sdcorGCNWrapper import sdcorGCNWrapper
-"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -80,7 +77,7 @@ class BlockType(Enum):
     """Enum listing possible block types of confounders."""
     QUARTILE = 'QUARTILE'
     CATEGORY = 'CATEGORY'
-    All = 'ALL'
+    ALL = 'ALL'
     
     def __str__(self):
         return self.value
@@ -186,6 +183,10 @@ def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_blo
     indices = None
     blocks = []
     conf_partition = []
+    if block_type == BlockType.ALL:
+        samples = pheno_data.index.tolist()
+        conf_partition.append(('all', samples))
+        return conf_partition
     pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
     pheno_data = pheno_data[pheno_data[pheno_field].notna()]
     if pheno_field == 'tumor_stage.diagnoses':
@@ -193,10 +194,7 @@ def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_blo
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic']), pheno_field] = 'stage i'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic']), pheno_field] = 'stage ii'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc']), pheno_field] = 'stage iii'
-    if pheno_field == ConfounderSelector.NONE:
-        samples = pheno_data.index.tolist()
-        conf_partition.append(('all', samples))
-    elif block_type == BlockType.CATEGORY:
+    if block_type == BlockType.CATEGORY:
         blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
         for block_attr in blocks:
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr].index.tolist()

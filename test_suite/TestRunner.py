@@ -1,5 +1,5 @@
-import Selectors
-import preprocessing
+from . import Selectors
+from . import preprocessing
 import pandas as pd
 import numpy as np
 import os
@@ -11,7 +11,7 @@ from collections import OrderedDict
 class TestRunner(object):
     """Runs the tests."""
 
-    def __init__(self, data_dict, conf_dict, algorithms, n_from, n_to, m_from, m_to, k, combine=False, sep='\t', g_all=False, chi=['tumor_stage.diagnoses'], rank=0, logfile='logfile.txt'):
+    def __init__(self, data_dict, conf_dict, algorithms, n_from, n_to, m_from, m_to, k, combine=False, sep='\t', g_all=False, chi_variables=['tumor_stage.diagnoses'], rank=0, logfile='logfile.txt'):
         """Constructs TestRunner object on the requested parameters.
         
         Parameters
@@ -62,7 +62,7 @@ class TestRunner(object):
         # if g_all flag is set, add 'NONE' to confounders
         if self.g_all:
             self.conf_dict[Selectors.ConfounderSelector.NONE] = Selectors.BlockType.ALL
-        self.chi = chi
+        self.chi = chi_variables if chi_variables is not None else []
 
         # initialize and empty logfile
         self.logfile = logfile
@@ -204,9 +204,25 @@ class TestRunner(object):
     def _run_chi2_tests(self, conf_sel, ct_sel):
         if self.rank == 0:
             for var in self.chi:
-                p, table = preprocessing._var_conf_chi(self.pheno_datasets[ct_sel], conf_sel, var, self.conf_dict)
+                p, table = TestRunner._var_conf_chi(self.pheno_datasets[ct_sel], conf_sel, var, self.conf_dict)
                 sign = ('**' if p < 0.01 else '*') if p < 0.05 else 'ns'
                 self._log(['chi^2 test ' + str(conf_sel) +' and ' + var + ' significant: ' + str(p) + f'{sign}'])
+
+    @staticmethod
+    def _var_conf_chi(pheno, conf_sel, var, conf_dict):
+        conf_partition = Selectors.get_conf_partition(pheno, conf_dict[conf_sel], conf_sel)
+        confusion_table = pd.DataFrame()
+        for block in conf_partition:
+            var_partition = Selectors.get_conf_partition(pheno.loc[block[1]], conf_dict[var], var, min_block_size=0)
+            for var_block in var_partition:
+                confusion_table.loc[var_block[0], block[0]] = len(var_block[1])
+        try:
+            confusion_table = confusion_table.dropna()
+            chi2, p, dof, ex = chi2_contingency(confusion_table, correction=False)
+        except:
+            print('no chi^2 test possible.')
+            p = 10000000000
+        return p, confusion_table
 
     def _log(self, messages, mode='a'):
         if self.rank == 0:

@@ -4,7 +4,7 @@ import numpy as np
 import subprocess
 import os
 import sys
-import preprocessing as prp
+from . import preprocessing as prp
 import csv
 import random
 test_suite = os.path.join(os.path.dirname(__file__))

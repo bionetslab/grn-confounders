@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import test_suite
-from test_suite import TestRunner
+from test_suite.TestRunner import TestRunner
 import argparse
 import os
 import itertools as itt
@@ -12,24 +12,45 @@ def get_parser():
     parser = argparse.ArgumentParser('Assessing effect of sex, age, and ethnicity confounders on GRN and co-expression network inference.')
     data_parser = parser.add_subparsers(dest='data', required=True, help='Use TCGA data or custom data.')
 
-    parser.add_argument('-conf', required=True, nargs='+')
-    parser.add_argument('-block_types', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.BlockType)])
-    parser.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
-    parser.add_argument('-k', required=True, type=int)
-    parser.add_argument('-combine', action='store_true', help='run tests additionally on combined datasets.')
-    parser.add_argument('par', action='store_true', help='If set, run tests in parallel, else, run tests sequentially.')
-    parser.add_argument('g_all', action='store_true', help='If set, run method on entire dataset and infer g_all.')
-    parser.add_argument('-sep', required=False, const='\t', type=str, help='Separator in pt and ged files. Default is \'\\t\'.')
-    parser.add_argument('-chi', nargs='+')
-
     tcga = data_parser.add_parser('tcga', help='Use TCGA data. Specify study abbreviation of TCGA studies as cancer types in -ct.')
-    tcga.add_argument('-ct', required=True, nargs='+')
+    tcga.add_argument('-ct', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.TCGACancerTypeSelector)])
+
+    tcga.add_argument('-N_from', required=False, type=int, nargs='?', const=0, default=0)
+    tcga.add_argument('-M_from', required=False, type=int, nargs='?', const=0, default=0)
+    tcga.add_argument('-N_to', required=False, type=int, nargs='?', const=20, default=20)
+    tcga.add_argument('-M_to', required=False, type=int, nargs='?', const=20, default=20)
+
+    tcga.add_argument('-conf', required=True, nargs='+')
+    tcga.add_argument('-block_types', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.BlockType)])
+    tcga.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
+    tcga.add_argument('-k', required=False, type=int, nargs='?', const=5000, default=5000)
+    tcga.add_argument('-combine', action='store_true', help='run tests additionally on combined datasets.')
+    tcga.add_argument('-par', action='store_true', help='If set, run tests in parallel, else, run tests sequentially.')
+    tcga.add_argument('-g_all', action='store_true', help='If set, run method on entire dataset and infer g_all.')
+    tcga.add_argument('-sep', required=False, nargs='?', const='\t', default='\t', type=str, help='Separator in pt and ged files. Default is \'\\t\'.')
+    tcga.add_argument('-chi', nargs='+')
 
     custom = data_parser.add_parser('custom', help='Use own data. Place data in data directory and specify filenames in -ged and -pt.\
          Order of files in -ged must match order of files in -pt, i.e. the ct, ged, and pt at index 0 correspond to each other.')
     custom.add_argument('-ct', required=True, nargs='+', help='Define cohort names for the filenames in ged and pt.')
     custom.add_argument('-ged', required=True, nargs='+', help='Specify filename of gene expression data.')
     custom.add_argument('-pt', required=True, nargs='+', help='Specify filename of pheno type data.')
+
+    custom.add_argument('-N_from', required=False, type=int, nargs='?', const=0, default=0)
+    custom.add_argument('-M_from', required=False, type=int, nargs='?', const=0, default=0)
+    custom.add_argument('-N_to', required=False, type=int, nargs='?', const=20, default=20)
+    custom.add_argument('-M_to', required=False, type=int, nargs='?', const=20, default=20)
+
+    custom.add_argument('-conf', required=True, nargs='+')
+    custom.add_argument('-block_types', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.BlockType)])
+    custom.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
+    custom.add_argument('-k', required=False, type=int, nargs='?', const=5000, default=5000)
+    custom.add_argument('-combine', action='store_true', help='run tests additionally on combined datasets.')
+    custom.add_argument('-par', action='store_true', help='If set, run tests in parallel, else, run tests sequentially.')
+    custom.add_argument('-g_all', action='store_true', help='If set, run method on entire dataset and infer g_all.')
+    custom.add_argument('-sep', required=False, nargs='?', const='\t', default='\t', type=str, help='Separator in pt and ged files. Default is \'\\t\'.')
+    custom.add_argument('-chi', nargs='+')
+
 
     return parser
 
@@ -44,19 +65,23 @@ def run_tests(args):
     assert args.N_from < args.N_to, 'N_from must be smaller than N_to'
     assert args.M_from < args.M_to, 'M_from must be smaller than M_to'
     assert len(args.block_types) == len(args.conf)
-    assert len(args.ct) == len(args.ged) == len(args.pt)
-    assert all([el in args.conf for el in args.chi])
+    #assert len(args.ct) == len(args.ged) == len(args.pt)
+    assert all([el in args.conf for el in args.chi]) if args.chi is not None else True
 
     # create data_dict with paths to gene expression data and phenotype data
     data_dict = {c:{} for c in args.ct}
+    types = list(args.ct)
     if args.data == 'tcga':
         sep = '\t'
-        for i in range(len(args.ct)):
-            data_path[args.ct[i]] = {'ged': 'TCGA-{ct[i]}.htseq_fpkm.csv', 'pt': 'TCGA-{ct[i]}.GDC_phenotype.csv'}
+        for i in range(len(types)):
+            data_dict[types[i]] = {'ged': f'TCGA-{types[i]}.htseq_fpkm.tsv', 'pt': f'TCGA-{types[i]}.GDC_phenotype.tsv'}
     elif args.data == 'custom':
+        ged = list(args.ged)
+        pt = list(args.pt)
+        assert len(types) == len(ged) == len(pt)
         sep = args.sep
-        for i in range(len(args.ct)):
-            data_dict[args.ct[i]] = {'ged': args.ged[i], 'pt': args.pt[i]}
+        for i in range(len(types)):
+            data_dict[types[i]] = {'ged': ged[i], 'pt': pt[i]}
 
     # create conf_dict with confounders and corresponding block types (needed for generation of confounder-induced partition)
     conf_dict = {c:'' for c in args.conf}
@@ -89,9 +114,9 @@ def run_tests(args):
         m_to = args.M_to
 
     # start tests
-    test_runner = TestRunner(data_dict, args.conf, args.alg, n_from, n_to, m_from, m_to, args.k, combine=args.combine, sep=sep, 
+    test_runner = TestRunner(data_dict, conf_dict, args.alg, n_from, n_to, m_from, m_to, args.k, combine=args.combine, sep=sep, 
                             g_all=args.g_all, chi_variables=args.chi, rank=rank)
-    test_runner.run_on_cancer_types_confounders(args.combine, True)
+    test_runner.run_on_cancer_types_confounders()
     return
 
 if __name__ == '__main__':
