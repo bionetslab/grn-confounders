@@ -11,13 +11,13 @@ from collections import OrderedDict
 class TestRunner(object):
     """Runs the tests."""
 
-    def __init__(self, data_dict, conf_dict, algorithms, n_from, n_to, m_from, m_to, k, combine=False, sep='\t', g_all=False, chi_variables=['tumor_stage.diagnoses'], rank=0, logfile='logfile.txt'):
+    def __init__(self, data_dict, conf_dict, algorithms, n_from, n_to, m_from, m_to, k, combine=False, g_all=False, rank=0, logfile='logfile.txt'):
         """Constructs TestRunner object on the requested parameters.
         
         Parameters
         ----------
         data_dict : dict
-            Dict of cancer types to be investigated with corresponding gene expression file names and phenotype file names.
+            Dict of cancer types to be investigated with corresponding gene expression file names, phenotype file names, and separator character.
 
         conf_dict : dict
             Dict of confounders to be investigated with corresponding block types.
@@ -37,9 +37,6 @@ class TestRunner(object):
 
         rank : int
             Rank identifier of the process.
-
-        sep : str
-            Character symbol specifying the separator used in the gene expression files and phenotype files.
 
         g_all : bool
             Boolean indicating whether a network should be inferred from the entire gene expression data or not.
@@ -62,7 +59,7 @@ class TestRunner(object):
         # if g_all flag is set, add 'NONE' to confounders
         if self.g_all:
             self.conf_dict[Selectors.ConfounderSelector.NONE] = Selectors.BlockType.ALL
-        self.chi = chi_variables if chi_variables is not None else []
+        self.chi = [key for key in conf_dict.keys() if conf_dict[key]['role'] == 'variable']
 
         # initialize and empty logfile
         self.logfile = logfile
@@ -75,8 +72,8 @@ class TestRunner(object):
         self.algorithm_selectors = [Selectors.AlgorithmSelector(val) for val in algorithms]
 
         # get data
-        self.expression_datasets = {sel: Selectors.get_expression_data(sel, data_dict[sel]['ged'], sep) for sel in self.cancer_type_selectors}
-        self.pheno_datasets = {sel: Selectors.get_pheno_data(sel, data_dict[sel]['pt'], sep) for sel in self.cancer_type_selectors}
+        self.expression_datasets = {sel: Selectors.get_expression_data(sel, data_dict[sel]['ged'], data_dict[sel]['sep']) for sel in self.cancer_type_selectors}
+        self.pheno_datasets = {sel: Selectors.get_pheno_data(sel, data_dict[sel]['pt'], data_dict[sel]['sep']) for sel in self.cancer_type_selectors}
         self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
 
         # align data, remove 0-std genes, add combined data, if required
@@ -84,8 +81,8 @@ class TestRunner(object):
         self._add_if_combined()
 
         # induce partitions for all tests. If G_ALL is set, G_all is only run on confounder partition, since confounder partition
-        # = random partition = entire data
-        self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_dict[conf_sel], conf_sel, self.rank)}) 
+        # = random partition entire data
+        self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_dict[conf_sel]['type'], conf_sel, self.rank)}) 
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
         self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel], list(self.conf_partitions[ct_sel][conf_sel].values()), ct_sel, conf_sel)
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
@@ -190,7 +187,7 @@ class TestRunner(object):
         cwd = os.getcwd()
         for block_nb in range(len(inferred_networks)):
             block_id = str(list(self.conf_partitions[ct_sel][conf_sel].keys())[block_nb])
-            path = os.path.join(cwd, 'results', 'networks', f'{mode}_part{part_nb}_block{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
+            path = os.path.join(cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
             inferred_networks[block_nb].to_csv(path, index = False)
 
     def _add_if_combined(self):
@@ -212,14 +209,18 @@ class TestRunner(object):
 
     @staticmethod
     def _var_conf_chi(pheno, conf_sel, var, conf_dict):
-        conf_partition = Selectors.get_conf_partition(pheno, conf_dict[conf_sel], conf_sel)
+        conf_partition = Selectors.get_conf_partition(pheno, conf_dict[conf_sel]['type'], conf_sel)
         confusion_table = pd.DataFrame()
+        print(len(conf_partition))
         for block in conf_partition:
-            var_partition = Selectors.get_conf_partition(pheno.loc[block[1]], conf_dict[var], var, min_block_size=0)
+            var_partition = Selectors.get_conf_partition(pheno.loc[block[1]], conf_dict[var]['type'], var, min_block_size=0)
+            print(len(var))
             for var_block in var_partition:
                 confusion_table.loc[var_block[0], block[0]] = len(var_block[1])
         try:
             confusion_table = confusion_table.dropna()
+            print(conf_sel)
+            print(confusion_table)
             chi2, p, dof, ex = chi2_contingency(confusion_table, correction=False)
         except:
             print('no chi^2 test possible.')

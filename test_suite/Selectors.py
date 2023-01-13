@@ -152,9 +152,6 @@ def get_pheno_data(cancer_type_selector, pt, sep=','):
     cwd = os.getcwd()
     pheno_data = pd.read_csv(os.path.join(cwd, 'data', pt), sep=sep, header=0, index_col=0)
     assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
-    #print(pheno_data.columns[0])
-    #pheno_data = pheno_data.set_index(pheno_data.columns[0])
-    print(pheno_data.index)
     pheno_data['cohort'] = str(cancer_type_selector)
     print('Filter Primary Tumor samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
     pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
@@ -216,7 +213,7 @@ def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_blo
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
-    """Returns n random partitions each containing blocks of the same size as the corresponding blocks in the
+    """Returns n random partitions each containing blocks of the same size as in the corresponding
     confounder based partition.
 
     Parameters
@@ -236,11 +233,12 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
         List of random partitions.
     """
     partitions=[]
+    cwd = os.getcwd()
     for k in range(n_from, n_to):
         samples_cpy = samples.copy()
         cur = []
         try:
-            part = pd.read_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
+            part = pd.read_csv(os.path.join(cwd, 'partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
             begin = 0
             end = 0
             for i in range(len(conf_partition)):
@@ -250,11 +248,10 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
             for i in range(len(conf_partition)):
-                print(i)
                 block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
                 samples_cpy = samples_cpy.drop(block.index.values)
                 cur.append(block.index.values)
-                block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+                block.to_csv(os.path.join(cwd, 'partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)
     return partitions
 
