@@ -25,9 +25,9 @@ def run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_id
     networks_blocks_conf = {bl: pd.DataFrame(columns=['size intersection', 'size union', 'state', 'k', 'mean JI', 'partID']) for bl in block_ids}
     conf_results = {l:{bl:[] for bl in block_ids} for l in range(fro, to)}
     for j in range(fro, to):
-        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_blockall_'+alg_sel+'_'+ct_sel+'_NONE_gene_list.csv'), header=0)
+        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_all_'+alg_sel+'_'+ct_sel+'_NONE_gene_list.csv'), header=0)
         for bl in block_ids:
-            block_network = os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_block'+bl+'_'+alg_sel+'_'+ct_sel+'_'+conf_sel+'_gene_list.csv')
+            block_network = os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_'+bl+'_'+alg_sel+'_'+ct_sel+'_'+conf_sel+'_gene_list.csv')
             algorithm_wrapper._inferred_networks = [plain, pd.read_csv(block_network, header=0)]
             for k in rep_k:
                 ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
@@ -39,9 +39,9 @@ def run_wilcoxon_test_single(ct_sel, conf_sel, alg_sel, fro, to, rep_k, block_id
     networks_blocks_rnd = {bl: pd.DataFrame(columns=['size intersection', 'size union', 'state', 'k', 'mean JI', 'partID']) for bl in block_ids}
     rnd_results = {l:{bl:[] for bl in block_ids} for l in range(fro, to)}
     for j in range(fro, to):
-        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_blockall_'+alg_sel+'_'+ct_sel+'_NONE_gene_list.csv'), header=0)
+        plain = pd.read_csv(os.path.join(os.getcwd(), 'results', 'networks', 'conf_part'+str(j)+'_all_'+alg_sel+'_'+ct_sel+'_NONE_gene_list.csv'), header=0)
         for bl in block_ids:
-            block_network = os.path.join(os.getcwd(), 'results', 'networks', 'rnd_part'+str(j)+'_block'+bl+'_'+alg_sel+'_'+ct_sel+'_'+conf_sel+'_gene_list.csv')
+            block_network = os.path.join(os.getcwd(), 'results', 'networks', 'rnd_part'+str(j)+'_'+bl+'_'+alg_sel+'_'+ct_sel+'_'+conf_sel+'_gene_list.csv')
             algorithm_wrapper._inferred_networks = [plain, pd.read_csv(block_network, header=0)]
             for k in rep_k:
                 ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)

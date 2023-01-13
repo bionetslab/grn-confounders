@@ -64,7 +64,7 @@ class AlgorithmSelector(Enum):
     ARACNE = 'ARACNE'
     GENIE3 = 'GENIE3'
     WGCNA = 'WGCNA'
-    CEMI = 'CEMI'
+    CEMITOOL = 'CEMITOOL'
     GRNBOOST2 = 'GRNBOOST2'
     SDCORGCN = 'SDCORGCN'
     CUSTOMGRN = 'CUSTOMGRN'
@@ -96,7 +96,7 @@ def get_algorithm_wrapper(algorithm_selector):
         return ARACNEWrapper()
     elif algorithm_selector == AlgorithmSelector.WGCNA:
         return WGCNAWrapper()
-    elif algorithm_selector == AlgorithmSelector.CEMI:
+    elif algorithm_selector == AlgorithmSelector.CEMITOOL:
         return CEMiWrapper()
     elif algorithm_selector == AlgorithmSelector.GRNBOOST2:
         return GRNBOOST2Wrapper()
@@ -107,7 +107,7 @@ def get_algorithm_wrapper(algorithm_selector):
     elif algorithm_selector == AlgorithmSelector.CUSTOMGCN:
         return CUSTOMGCNWrapper()
 
-def get_expression_data(cancer_type_selector, ged, sep='\t'):
+def get_expression_data(cancer_type_selector, ged, sep=','):
     """Loads the expression data for the selected cancer type. Only leaves columns of protein-codeing genes, provided
     in the file protein-coding_gene.csv, in expression_data. Removes gene version identifiers from gene ensembl IDs.
 
@@ -134,7 +134,7 @@ def get_expression_data(cancer_type_selector, ged, sep='\t'):
     expression_data = expression_data[mask]
     return expression_data
 
-def get_pheno_data(cancer_type_selector, pt, sep='\t'):
+def get_pheno_data(cancer_type_selector, pt, sep=','):
     """Loads the phenotype data for the selected cancer type and adds a column containing cancer_type_selector. Only leave
     rows (samples) in pheno_data that have non-NaN values in the columns gender.demographic, race.demographic, 
     age_at_initial_pathologic_diagnosis and tumor_stage.diagnoses.
@@ -152,7 +152,9 @@ def get_pheno_data(cancer_type_selector, pt, sep='\t'):
     cwd = os.getcwd()
     pheno_data = pd.read_csv(os.path.join(cwd, 'data', pt), sep=sep, header=0, index_col=0)
     assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
-    pheno_data = pheno_data.set_index(pheno_data.columns[0])
+    #print(pheno_data.columns[0])
+    #pheno_data = pheno_data.set_index(pheno_data.columns[0])
+    print(pheno_data.index)
     pheno_data['cohort'] = str(cancer_type_selector)
     print('Filter Primary Tumor samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
     pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
@@ -235,7 +237,6 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
     """
     partitions=[]
     for k in range(n_from, n_to):
-        #samples_cpy = pd.DataFrame(samples.copy())
         samples_cpy = samples.copy()
         cur = []
         try:
@@ -249,11 +250,9 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
         except FileNotFoundError:
             print(f'rnd_partition {k} not found. Create new partitions.')
             for i in range(len(conf_partition)):
+                print(i)
                 block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
-                print(block)
-                #samples_cpy = samples_cpy[~samples_cpy.isin(block[0])]
                 samples_cpy = samples_cpy.drop(block.index.values)
-                #print(block[0].values)
                 cur.append(block.index.values)
                 block.to_csv(os.path.join('partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
         partitions.append(cur)

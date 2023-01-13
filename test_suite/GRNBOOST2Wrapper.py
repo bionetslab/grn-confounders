@@ -7,8 +7,8 @@ import sys
 from . import preprocessing as prp
 import csv
 import random
-from arboreto.algo import grnboost2, genie3
-from arboreto.utils import load_tf_names
+#from arboreto.algo import grnboost2, genie3
+#from arboreto.utils import load_tf_names
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
