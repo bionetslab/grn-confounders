@@ -170,19 +170,24 @@ def get_pheno_data(cancer_type_selector, pt, sep=',', tissue_type_field=None, ti
     pheno_data : pd.DataFrame
         Expression data (indices are sample IDs, column names are gene IDs).
     """
+    if logger:
+        logger.info(cancer_type_selector + ' - Reading pheno type data from file: ' + pt)
     cwd = os.getcwd()
     pheno_data = pd.read_csv(os.path.join(cwd, 'data', pt), sep=sep, header=0, index_col=0)
     assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
     pheno_data['cohort'] = str(cancer_type_selector)
     if tissue_type is not None and tissue_type_field is not None:
-        print('Filter for ' + str(tissue_type) + ' samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
-        pheno_data =  pheno_data[pheno_data[tissue_type_field] == tissue_type]
+        try:
+            if logger:
+                logger.info('Filter pheno type data for ' + tissue_type + ' accrding to field ' + tissue_type_field + '\n')
+            pheno_data =  pheno_data[pheno_data[tissue_type_field] == tissue_type]
+        except KeyError:
+            print('Filtering failed: ' + tissue_type_field + ' not in pheno data. Continue with unfiltered pheno data.')
+            if logger:
+                logger.info('Filtering failed: ' + tissue_type_field + ' not in pheno data. Continue with unfiltered data.\n')
     if logger:
-        logger.info(cancer_type_selector + ' - pheno type data from file: ' + pt + ' - data shape: ')
-        logger.info(expression_data.shape)
-        logger.info('\n')
-        if tissue_type is not None and tissue_type_field is not None:
-            logger.info('Pheno type data were filtered for ' + tissue_type + ' accrding to field ' + tissue_type_field + '\n')    
+        logger.info('Pheno data shape: ')
+        logger.info(str(pheno_data.shape) + '\n')
     return pheno_data
 
 def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_block_size=20, logger=None):

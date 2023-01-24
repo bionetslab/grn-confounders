@@ -66,6 +66,9 @@ def dump_config(args):
     params = {'algorithms': args.alg, 'N_from': args.N_from, 'N_to': args.N_to, 'M_from': args.M_from, 'M_to': args.M_to,
                 'k': args.k, 'combine': args.combine, 'par': args.par, 'g_all': args.g_all, 'tissue_type': args.tissue_type,
                 'tissue_type_field': args.tissue_type_field}
+    if args.tcga and not (args.tissue_type_field and args.tissue_type):
+        params['tissue_type_field'] = 'sample_type.samples'
+        params['tissue_type'] = 'Primary Tumor'
 
     fields = dict()
     for (conf_sel, conf_role, conf_type) in zip(args.conf, args.roles, args.block_types):

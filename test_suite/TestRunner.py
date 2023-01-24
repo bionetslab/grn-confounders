@@ -83,7 +83,7 @@ class TestRunner(object):
 
         # induce partitions for all tests. If G_ALL is set, G_all is only run on confounder partition, since confounder partition
         # = random partition entire data
-        self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_dict[conf_sel]['type'], conf_sel, self.rank, self.logger)}) 
+        self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in Selectors.get_conf_partition(self.pheno_datasets[ct_sel], conf_dict[conf_sel]['type'], conf_sel, self.rank, logger=self.logger)}) 
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
         self.rnd_partitions = {ct_sel: {conf_sel: Selectors.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel], list(self.conf_partitions[ct_sel][conf_sel].values()), ct_sel, conf_sel)
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
@@ -269,10 +269,10 @@ class TestRunner(object):
         self.logger.info(datetime.now().strftime("%d/%m/%Y %H:%M:%S") + '\n')
         self.logger.info('Cohorts:\n')
         for ct in self.cancer_type_selectors:
-            self.logger.info(ct + '\n')
+            self.logger.info(str(ct) + '\n')
         self.logger.info('Confounders:\n')
         for conf in self.confounder_selectors:
-            self.logger.info(conf + '\n')
+            self.logger.info(str(conf) + '\n')
         self.logger.info('Algorithms:\n')
         for alg in self.algorithm_selectors:
-            self.logger.info(alg + '\n')
+            self.logger.info(str(alg) + '\n')
