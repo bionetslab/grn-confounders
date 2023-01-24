@@ -4,15 +4,12 @@ from .ARACNEWrapper import ARACNEWrapper
 from .WGCNAWrapper import WGCNAWrapper
 from .CEMiWrapper import CEMiWrapper
 from .GRNBOOST2Wrapper import GRNBOOST2Wrapper
-from .sdcorGCNWrapper import sdcorGCNWrapper
-
 import pandas as pd
 import numpy as np
 import os
 
 class TCGACancerTypeSelector(Enum):
     """Enum listing TCGA cancer type selectors by study abbreviations."""
-
     ACC = 'ACC'
     LAML = 'LAML'
     CHOL = 'CHOL'
@@ -52,7 +49,6 @@ class TCGACancerTypeSelector(Enum):
 
 class ConfounderSelector(Enum):
     """Enum listing predefined confounder selectors to avoid confusing custom string confounders and predefined confounders."""
-
     TYPE = 'TYPE'
     NONE = 'NONE'
 
@@ -107,7 +103,7 @@ def get_algorithm_wrapper(algorithm_selector):
     elif algorithm_selector == AlgorithmSelector.CUSTOMGCN:
         return CUSTOMGCNWrapper()
 
-def get_expression_data(cancer_type_selector, ged, sep=','):
+def get_expression_data(cancer_type_selector, ged, sep=',', logger=None):
     """Loads the expression data for the selected cancer type. Only leaves columns of protein-codeing genes, provided
     in the file protein-coding_gene.csv, in expression_data. Removes gene version identifiers from gene ensembl IDs.
 
@@ -118,6 +114,12 @@ def get_expression_data(cancer_type_selector, ged, sep=','):
 
     ged : str
         String describing file name of gene expression data file in data directory. 
+
+    sep : str
+        Character to be used as separator for files. Default is \',\'.
+
+    logger : logging.Logger
+        Logger to be used to log data specs and progress.
         
     Returns
     -------
@@ -132,9 +134,13 @@ def get_expression_data(cancer_type_selector, ged, sep=','):
     pcg = pd.read_csv(os.path.join('data', 'protein-coding_gene.csv'))
     mask = expression_data.columns.intersection(pcg['ensembl_gene_id'].values)
     expression_data = expression_data[mask]
+    if logger:
+        logger.info(cancer_type_selector + ' - expression data from file: ' + ged + ' - data shape after removing non-coding genes: ')
+        logger.info(expression_data.shape)
+        logger.info('\n')
     return expression_data
 
-def get_pheno_data(cancer_type_selector, pt, sep=','):
+def get_pheno_data(cancer_type_selector, pt, sep=',', tissue_type_field=None, tissue_type=None, logger=None):
     """Loads the phenotype data for the selected cancer type and adds a column containing cancer_type_selector. Only leave
     rows (samples) in pheno_data that have non-NaN values in the columns gender.demographic, race.demographic, 
     age_at_initial_pathologic_diagnosis and tumor_stage.diagnoses.
@@ -143,6 +149,21 @@ def get_pheno_data(cancer_type_selector, pt, sep=','):
     ----------
     cancer_type_selector : str
         Specifies for which cancer type the phenotypes should be loaded.
+
+    pt : str
+        File name of the pheno type file.
+
+    sep : str
+        Character to be used as separator for files. Default is \',\'.
+
+    tissue_type_field : str
+        Field in pt file to be used to filter the data. Default is None.
+
+    tissue_type : str
+        Attribute to be filtered for in the tissue_type_field. Default is None.
+
+    logger : logging.Logger
+        Logger to be used to log data specs and progress.
 
     Returns
     -------
@@ -153,11 +174,18 @@ def get_pheno_data(cancer_type_selector, pt, sep=','):
     pheno_data = pd.read_csv(os.path.join(cwd, 'data', pt), sep=sep, header=0, index_col=0)
     assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
     pheno_data['cohort'] = str(cancer_type_selector)
-    print('Filter Primary Tumor samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
-    pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
+    if tissue_type is not None and tissue_type_field is not None:
+        print('Filter for ' + str(tissue_type) + ' samples in pheno data for cohort ' + str(cancer_type_selector) + '...')
+        pheno_data =  pheno_data[pheno_data[tissue_type_field] == tissue_type]
+    if logger:
+        logger.info(cancer_type_selector + ' - pheno type data from file: ' + pt + ' - data shape: ')
+        logger.info(expression_data.shape)
+        logger.info('\n')
+        if tissue_type is not None and tissue_type_field is not None:
+            logger.info('Pheno type data were filtered for ' + tissue_type + ' accrding to field ' + tissue_type_field + '\n')    
     return pheno_data
 
-def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_block_size=20):
+def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_block_size=20, logger=None):
     """Returns two lists with the first containing string-identifiers for the blocks of the requested confounder 
     and the second containing the sample ids corresponding to the blocks. For the age confounder, the lower and upper quartiles are
     computed separately per cohort and are then combined into the resulting upper and lower fragments.
@@ -173,11 +201,22 @@ def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_blo
     block_type : BlockType
         QUARTILE or CATEGORY; defines how to create the partition.
 
+    rank : int
+        Rank of the executing process. Default is 0.
+
+    min_block_size : int
+        Minimum block size. If a block is smaller than min_block_size, it is removed from the partition.
+
+    logger : logging.Logger
+        Logger to be used to log data specs and progress.
+
     Returns
     -------
     conf_partition : list
         Contains the blocks belonging to the confounder-based partition.
     """
+    if logger:
+        logger.info('Induce partition by ' + str(pheno_field) +'\n')
     pheno_data = pheno_data_orig.copy()
     indices = None
     blocks = []
@@ -185,20 +224,29 @@ def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_blo
     if block_type == BlockType.ALL:
         samples = pheno_data.index.tolist()
         conf_partition.append(('all', samples))
+        if logger:
+            logger.info('Do not create blocks, but use entire data\n')
         return conf_partition
     pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
     pheno_data = pheno_data[pheno_data[pheno_field].notna()]
+    # specifically for TCGA data: aggregate stages
     if pheno_field == 'tumor_stage.diagnoses':
         pheno_data = pheno_data[pheno_data[pheno_field] != 'stage x']
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic']), pheno_field] = 'stage i'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic']), pheno_field] = 'stage ii'
         pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc']), pheno_field] = 'stage iii'
+        if logger:
+            logger.info('Aggregate stages according to field tumor_stage.diagnoses into stages i, ii, and iii+iv.\n')
     if block_type == BlockType.CATEGORY:
         blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
+        if logger:
+            logger.info('Induce partition by ' + str(pheno_field) + '\n')
         for block_attr in blocks:
             samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr].index.tolist()
             if len(samples) >= min_block_size:
                 conf_partition.append((block_attr, samples))
+                if logger:
+                    logger.info('block ' + block_attr + ': ' + str(len(samples)) + ' samples\n')
     elif block_type == BlockType.QUARTILE:
         samples_lower = []
         samples_upper = []
@@ -210,6 +258,9 @@ def get_conf_partition(pheno_data_orig, block_type, pheno_field, rank=0, min_blo
         if len(samples_lower) >= min_block_size and len(samples_upper) >= min_block_size:
             conf_partition.append(('lower', samples_lower))
             conf_partition.append(('upper', samples_upper))
+            if logger:
+                logger.info('block lower: ' + str(len(samples_lower)) + ' samples\n')
+                logger.info('block upper: ' + str(len(samples_upper)) + ' samples\n')
     return conf_partition
 
 def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
@@ -227,6 +278,12 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
     conf_partition : list
         List of blocks as pd.DataFrames with one column containing the sample identifiers belonging to the block.
         
+    ct_sel : str
+        String identifier of cancer type (cohort).
+
+    conf_sel : str
+        String identifier of confounder.
+
     Returns
     -------
     partitions : list
@@ -257,7 +314,24 @@ def get_n_random_partitions(n_from, n_to, samples, conf_partition, ct_sel, conf_
 
 def align_data(expression_datasets, pheno_datasets):
     """Data alignment. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa.
-    Remove all genes where standard deviation is 0."""
+    Remove all genes where standard deviation is 0.
+    
+    Parameters
+    ----------
+    expression_datasets : pd.DataFrame
+        Expression data set to be aligned by samples with pheno_datasets.
+
+    pheno_datasets : pd.DataFrame
+        Pheno data set to be aligned by samples with expression_datasets.
+
+    Returns
+    -------
+    expression_datasets : pd.DataFrame
+        Expression data set aligned by samples with pheno_datasets.
+
+    pheno_datasets : pd.DataFrame
+        Pheno data set aligned by samples with expression_datasets.
+    """
     for sel in expression_datasets.keys():
         print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
         pheno_datasets[sel] = pheno_datasets[sel][pheno_datasets[sel].index.isin(expression_datasets[sel].index)]
