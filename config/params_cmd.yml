@@ -1,0 +1,10 @@
+M_from: 0
+M_to: 20
+N_from: 0
+N_to: 20
+algorithms:
+- CEMITOOL
+combine: false
+g_all: false
+k: 5000
+par: false

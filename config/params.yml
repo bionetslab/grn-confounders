@@ -1,0 +1,12 @@
+algorithms: 
+- CEMITOOL
+N_from: 0
+N_to: 10
+M_from: 0
+M_to: 10
+k: 5000
+combine: !!bool False
+par: !!bool False
+g_all: !!bool False
+tissue_type: Primary Tumor
+tissue_type_field: sample_type.samples 

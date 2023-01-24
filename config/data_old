@@ -1,0 +1,14 @@
+cohorts:
+- cohort1:
+  name: HNSC
+  tcga: False
+  ged: TCGA-HNSC.htseq_fpkm.tsv
+  pd: TCGA-HNSC.GDC_phenotype.tsv
+  sep: ,
+- cohort2:
+  name: HNSC
+  tcga: False
+  ged: TCGA-HNSC.htseq_fpkm.tsv
+  pd: TCGA-HNSC.GDC_phenotype.tsv
+  sep: ,
+
