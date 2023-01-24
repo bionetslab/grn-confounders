@@ -17,7 +17,7 @@ def get_parser():
 
     custom = data_parser.add_parser('cmd', help='Use command line to specify input parameters.') #'Use own data. Place data in data directory and specify filenames in -ged and -pt. Order of files in -ged must match order of files in -pt, i.e. the ct, ged, and pt at index 0 correspond to each other.')
     custom.add_argument('-tcga', action='store_true', help='run tests additionally on combined datasets.')
-    
+
     custom.add_argument('-ct', required=True, nargs='+', help='Define cohort names for the filenames in ged and pt.')
     custom.add_argument('-ged', required=False, nargs='*', help='Specify filename of gene expression data.')
     custom.add_argument('-pt', required=False, nargs='*', help='Specify filename of pheno type data.')
@@ -33,6 +33,8 @@ def get_parser():
     custom.add_argument('-N_to', required=False, type=int, nargs='?', const=20, default=20)
     custom.add_argument('-M_to', required=False, type=int, nargs='?', const=20, default=20)
     custom.add_argument('-k', required=False, type=int, nargs='?', const=5000, default=5000)
+    custom.add_argument('-tissue_type_field', required=False, type=int, nargs='?', const=None, default=None)
+    custom.add_argument('-tissue_type', required=False, type=int, nargs='?', const=None, default=None)
     custom.add_argument('-combine', action='store_true', help='run tests additionally on combined datasets.')
     custom.add_argument('-par', action='store_true', help='If set, run tests in parallel, else, run tests sequentially.')
     custom.add_argument('-g_all', action='store_true', help='If set, run method on entire dataset and infer g_all.')
@@ -40,7 +42,8 @@ def get_parser():
     return parser
 
 def dump_config(args):
-    """instantiates testRunner object and passes the user arguments.
+    """Dump cmd line input arguments to config files for documentation and reusability purposes. Reuse code for reading config file
+    afterwards.
 
     Parameters
     ----------
@@ -61,7 +64,8 @@ def dump_config(args):
             data[ct] = {'tcga': False, 'ged': g, 'pt': p, 'sep': s}
 
     params = {'algorithms': args.alg, 'N_from': args.N_from, 'N_to': args.N_to, 'M_from': args.M_from, 'M_to': args.M_to,
-                'k': args.k, 'combine': args.combine, 'par': args.par, 'g_all': args.g_all}
+                'k': args.k, 'combine': args.combine, 'par': args.par, 'g_all': args.g_all, 'tissue_type': args.tissue_type,
+                'tissue_type_field': args.tissue_type_field}
 
     fields = dict()
     for (conf_sel, conf_role, conf_type) in zip(args.conf, args.roles, args.block_types):
@@ -92,7 +96,8 @@ def parse_config(data_p, fields_p, params_p):
             else:
                 assert data[key]['ged'] is not None and data[key]['ged'] is not None and data[key]['sep'], 'Specify ged (gene expression data) file name, pt (pheno type) file name, and sep (separators) for each cohort if tcga option is set to False.'
 
-    params = {'algorithm':'', 'N_from': '', 'N_to': '', 'M_from': '', 'M_to': '', 'k': '', 'combine': '', 'par': '', 'g_all': ''}
+    params = {'algorithm':'', 'N_from': '', 'N_to': '', 'M_from': '', 'M_to': '', 'k': '', 'combine': '', 'par': '', 'g_all': '',
+                'tissue_type': '', 'tissue_type_field': ''}
     with open(os.path.join(config_path, params_p)) as f:
         _params = yaml.load_all(f, Loader=yaml.FullLoader)
         for doc in _params:
@@ -159,7 +164,7 @@ def run_tests(data, fields, params):
 
     # start tests
     test_runner = TestRunner(data, fields, params['algorithms'], n_from, n_to, m_from, m_to, params['k'], combine=params['combine'],
-                            g_all=params['g_all'], rank=rank)
+                            g_all=params['g_all'], rank=rank, tissue_type_field=params['tissue_type_field'], tissue_type=params['tissue_type'])
     test_runner.run_on_cancer_types_confounders()
 
 if __name__ == '__main__':
