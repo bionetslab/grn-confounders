@@ -1,9 +1,7 @@
 import argparse
 from scipy.stats import mannwhitneyu
-from test_suite import Selectors
-from test_suite import preprocessing
+import confinspect
 import pandas as pd
-import numpy as np
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -126,7 +124,7 @@ if __name__ == '__main__':
                     description = 'Run Mann-Whitney-U Test to compare random-based and confounder-based distributions of mean Jaccard Indices at k, for all k. Obtain fraction of k with significant p-value.')
     parser.add_argument('-ct', required=True)
     parser.add_argument('-conf', required=True, nargs='+')
-    parser.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
+    parser.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(confinspect.Selectors.AlgorithmSelector)])
     parser.add_argument('-N_from', required=False, type=int, nargs='?', const=0, default=0)
     parser.add_argument('-M_from', required=False, type=int, nargs='?', const=0, default=0)
     parser.add_argument('-N_to', required=False, type=int, nargs='?', const=20, default=20)

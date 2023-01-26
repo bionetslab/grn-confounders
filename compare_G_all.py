@@ -1,4 +1,4 @@
-from test_suite import Selectors
+import confinspect
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ def run_G_all_tests(ct_sel, conf_sels, alg_sels, fro, to, k, block_ids):
     """
     for conf_sel in conf_sels:
         for alg_sel in alg_sels:
-            if conf_sel != Selectors.ConfounderSelector.NONE:
+            if conf_sel != confinspect.Selectors.ConfounderSelector.NONE:
                 run_G_all_test_single(ct_sel, conf_sel, alg_sel, fro, to, k, block_ids)
 
 def run_G_all_test_single(ct_sel, conf_sel, alg_sel, fro, to, k, block_ids):
@@ -54,7 +54,7 @@ def run_G_all_test_single(ct_sel, conf_sel, alg_sel, fro, to, k, block_ids):
         String identifiers of the confounder-based blocks underlying the networks to be tested. Order is irrelevant.
     """
     rep_k = range(10, k, 100)
-    algorithm_wrapper = Selectors.get_algorithm_wrapper(Selectors.AlgorithmSelector(alg_sel))
+    algorithm_wrapper = confinspect.Selectors.get_algorithm_wrapper(confinspect.Selectors.AlgorithmSelector(alg_sel))
     print('Compute mean JIs for G_all and confounder-based networks, and for G_all and random-based networks...')
     networks_blocks_conf = {bl: pd.DataFrame(columns=['size intersection', 'size union', 'state', 'k', 'mean JI', 'partID']) for bl in block_ids}
     conf_results = {l:{bl:[] for bl in block_ids} for l in range(fro, to)}
@@ -117,7 +117,7 @@ if __name__ == '__main__':
                     description = 'Compare networks inferred from blocks with G_all, then compare netorks from random blocks with G_all. Plot mean JIs in lineplot over k.')
     parser.add_argument('-ct', required=True)
     parser.add_argument('-conf', required=True, nargs='+')
-    parser.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(Selectors.AlgorithmSelector)])
+    parser.add_argument('-alg', required=True, nargs='+', choices=[str(sel) for sel in list(confinspect.Selectors.AlgorithmSelector)])
     parser.add_argument('-fro', required=False, type=int, nargs='?', const=0, default=0)
     parser.add_argument('-to', required=False, type=int, nargs='?', const=20, default=20)
     parser.add_argument('-k', required=False, type=int, nargs='?', const=5000, default=5000)
