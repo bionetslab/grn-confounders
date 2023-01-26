@@ -3,8 +3,12 @@ HNSC:
    ged: 
    pt: 
    sep:
+   tissue_type_field: sample_type.samples
+   tissue_type: Primary Tumor
 HNSC2:
    tcga: !!bool False
    ged: TCGA-HNSC.htseq_fpkm.tsv
    pt: TCGA-HNSC.GDC_phenotype.tsv
    sep: ','
+   tissue_type_field:
+   tissue_type:

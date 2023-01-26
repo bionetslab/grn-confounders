@@ -1,6 +1,6 @@
 gender.demographic:
-   role: confounder
+   role: CONFOUNDER
    type: CATEGORY
 tumor_stage.diagnoses:
-   role: variable
+   role: VARIABLE
    type: CATEGORY

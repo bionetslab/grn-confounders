@@ -8,5 +8,5 @@ k: 5000
 combine: !!bool False
 par: !!bool False
 g_all: !!bool False
-tissue_type: Primary Tumor
-tissue_type_field: sample_type.samples 
+save_networks: !!bool False
+logfile: log.txt
