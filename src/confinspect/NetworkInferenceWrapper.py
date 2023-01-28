@@ -12,9 +12,9 @@ class NetworkInferenceWrapper(ABC):
     partition : list
         A list of lists containing sample identifiers for samples that fall into the different 
         blocks of the sample partition. Must be set explicitly before calling infer_networks().
-    _inferred_networks : list
-        A list of data frames with gene symbols as indices and column names whose entries correspond to
-        edge scores in inferred network for the different blocks contained in self.partition.
+    _inferred_networks : dict
+        A dict containing data frames with gene symbols as indices and column names whose entries correspond to
+        edge scores in inferred network for the different blocks contained in self.partition. Keys are block identifiers.
     Methods
     -------
     infer_networks():
@@ -34,7 +34,7 @@ class NetworkInferenceWrapper(ABC):
         """Constructor."""
         self.expression_data = None
         self.partition = None
-        self._inferred_networks = None
+        self._inferred_networks = dict()
         self.cwd = cwd
         
     def infer_networks(self, rank=0):
@@ -44,9 +44,10 @@ class NetworkInferenceWrapper(ABC):
         rank : int
             Rank of executing process. Default is 0.
         """
-        self._inferred_networks = []
-        for block in self.partition:
-            self._inferred_networks.append(self._infer_network(self.expression_data.loc[block], rank))
+        self._inferred_networks.clear()
+        for block_id in self.partition.keys():
+            block = self.partition[block_id]
+            self._inferred_networks.update({block_id : self._infer_network(self.expression_data.loc[block], rank)})
 
     def mean_jaccard_index_at_k(self, k):
         """Returns the mean Jaccard index for the top k edges in the inferred networks.

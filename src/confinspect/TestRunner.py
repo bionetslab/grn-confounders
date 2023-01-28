@@ -95,7 +95,7 @@ class TestRunner(object):
         since confounder partition = random partition of the entire data."""
         self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], self.conf_dict[conf_sel]['type'], conf_sel, self.rank, logger=self.logger)}) 
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
-        self.rnd_partitions = {ct_sel: {conf_sel: self.get_n_random_partitions(self.n_from, self.n_to, self.pheno_datasets[ct_sel], list(self.conf_partitions[ct_sel][conf_sel].values()), ct_sel, conf_sel)
+        self.rnd_partitions = {ct_sel: {conf_sel: [OrderedDict({ret[0]: ret[1] for ret in self.get_ith_random_partition(i, self.pheno_datasets[ct_sel], self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)}) for i in range(self.n_from, self.n_to)]
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
     def run_all(self):
@@ -126,7 +126,7 @@ class TestRunner(object):
             print(f'\t\talgorithm = {str(alg_sel)}')
 
             print('running on confounder-based partitions...')
-            algorithm_wrapper.partition = list(self.conf_partitions[ct_sel][conf_sel].values())
+            algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
                 algorithm_wrapper.infer_networks(self.rank)
                 self.save_networks(algorithm_wrapper._inferred_networks, j, 'conf', alg_sel, ct_sel, conf_sel, self.save)
@@ -169,8 +169,8 @@ class TestRunner(object):
         """Saves the inferred networks to csv.
         Parameters
         ----------
-        inferred_networks: list
-            list containing the inferred networks as pd.DataFrames
+        inferred_networks: dict
+            dict containing the inferred networks as pd.DataFrames. Key is the identifier of the block that was used for network inference.
         part_nb: int
             index of the random partition whose results are saved; must be between 0 and self.n. If confounder-based partition, part_nb is 0.
         mode: str
@@ -185,10 +185,10 @@ class TestRunner(object):
             Whether to save or not save the inferred networks. The networks are usually very large and saving all networks might not be necessary and/or possible. Defaults to False.
         """
         if save:
-            for block_nb in range(len(inferred_networks)):
-                block_id = str(list(self.conf_partitions[ct_sel][conf_sel].keys())[block_nb])
+            for block_id in inferred_networks.keys():
                 path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
-                inferred_networks[block_nb].to_csv(path, index = False)
+                top_k_edges = inferred_networks[block_id][:self.k_max, :]
+                top_k_edges.to_csv(path, index = False)
 
     def get_expression_data(self, cancer_type_selector, sel_dict, logger=None):
         """Loads the expression data for the selected cancer type. Only leaves columns of protein-coding genes, provided
@@ -329,16 +329,16 @@ class TestRunner(object):
                     logger.info('block upper: ' + str(len(samples_upper)) + ' samples\n')
         return conf_partition
 
-    def get_n_random_partitions(self, n_from, n_to, samples, conf_partition, ct_sel, conf_sel):
+    def get_ith_random_partition(self, i, samples, conf_partition_dict, ct_sel, conf_sel):
         """Returns n random partitions each containing blocks of the same size as in the corresponding
         confounder based partition.
         Parameters
         ----------
-        n : int
-            Specifies the number of random partitions that should be generated.
+        i : int
+            Specifies the index of the random partition to be generated and/or returned.
         samples : pd.DataFrame
-            Contains all sample identifiers.
-        conf_partition : list
+            Pheno data set of the cohort to be partitioned.
+        conf_partition_dict : dict
             List of blocks as pd.DataFrames with one column containing the sample identifiers belonging to the block.
         ct_sel : str
             String identifier of cancer type (cohort).
@@ -346,30 +346,30 @@ class TestRunner(object):
             String identifier of confounder.
         Returns
         -------
-        partitions : list
-            List of random partitions.
+        partition : list
+            List of tuples with block identifiers and randomly sampled block. Block sizes according to blocks of the confounder-based partition.
         """
-        partitions=[]
-        for k in range(n_from, n_to):
-            samples_cpy = samples.copy()
-            cur = []
-            try:
-                part = pd.read_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
-                begin = 0
-                end = 0
-                for i in range(len(conf_partition)):
-                    end += len(conf_partition[i])
-                    cur.append([item for sublist in part[begin:end] for item in sublist])
-                    begin += len(conf_partition[i])
-            except FileNotFoundError:
-                print(f'rnd_partition {k} not found. Create new partitions.')
-                for i in range(len(conf_partition)):
-                    block = samples_cpy.sample(n=len(conf_partition[i]), replace=False)
-                    samples_cpy = samples_cpy.drop(block.index.values)
-                    cur.append(block.index.values)
-                    block.to_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{k}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
-            partitions.append(cur)
-        return partitions
+        samples_cpy = samples.copy()
+        cur = []
+        try:
+            part = pd.read_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{i}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
+            begin = 0
+            end = 0
+            conf_partition = list(conf_partition_dict.values())
+            for key in conf_partition_dict.keys():
+                end += len(conf_partition_dict[key])
+                block = [item for sublist in part[begin:end] for item in sublist]
+                cur.append((key, block))
+                begin += len(conf_partition_dict[key])
+        except FileNotFoundError:
+            print(f'rnd_partition {i} not found. Create new partitions.')
+            for key in conf_partition_dict.keys():
+                block = samples_cpy.sample(n=len(conf_partition_dict[key]), replace=False).index.values
+                samples_cpy = samples_cpy.drop(block)
+                cur.append((key, block))
+                pd.DataFrame(block).to_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{i}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
+        
+        return cur
 
     def align_data(self, expression_datasets, pheno_datasets):
         """Data alignment. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa.

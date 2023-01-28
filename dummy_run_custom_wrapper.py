@@ -22,6 +22,11 @@ if __name__ == "__main__":
     tr = TestRunner.TestRunner(os.getcwd(), data, fields, params)
     tr.add_custom_algorithm(wrap, 'name')
     tr.induce_partitions()
+    print(tr.rnd_partitions['HNSC']['gender.demographic'][0]['male'])
+    print(len(tr.rnd_partitions['HNSC']['gender.demographic'][0]['male']))
+
+    print(set(tr.rnd_partitions['HNSC']['gender.demographic'][0]['male']).intersection(set(tr.rnd_partitions['HNSC']['gender.demographic'][0]['female'])))
+
     print('This will throw an error unless the CustomWrapper gets implemented properly.')
     tr.run_all()
 
