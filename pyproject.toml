@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project]
+name = "confinspect"
+version = "0.0.1"
+authors = [
+  { name="Anna Ketteler", email="" },
+]
+description = "Assessing confounding in gene regulatory network inference and gene co-expression inference."
+keywords = ["demographic", "confounding", "network inference", "gcn", "grn", "gene expression"]
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+[project.urls]
+"Homepage" = "https://github.com/bionetslab/grn-confounders"
+"Bug Tracker" = "https://github.com/bionetslab/grn-confounders/issues"
