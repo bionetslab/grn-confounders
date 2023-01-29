@@ -48,7 +48,6 @@ def run_tests(data, fields, params):
         Dictionary populated with user input about parameters.
     """
     InputHandler.verify_input(data, params, fields)
-
     # prepare parallel vs. sequential
     if params['par']:
         from mpi4py import MPI

@@ -7,6 +7,6 @@ M_to: 10
 k: 5000
 combine: !!bool False
 par: !!bool False
-g_all: !!bool False
+g_all: !!bool True
 save_networks: !!bool False
 logfile: log.txt
