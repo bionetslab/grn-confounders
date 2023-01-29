@@ -47,11 +47,12 @@ class TestRunner(object):
         # required k in step size of 100, starting at 10
         self.rep_k = range(10, self.k_max, 100)
 
-        # if g_all flag is set, add 'NONE' to confounders
-        if self.g_all:
-            self.conf_dict[Selectors.ConfounderSelector.NONE] = Selectors.BlockType.ALL
-        self.chi = [key for key in conf_dict.keys() if conf_dict[key]['role'] == Selectors.Role.VARIABLE]
-
+        # if g_all flag is set, add 'ALL' to confounders
+        #if self.g_all: # TODO remove this. ALL is still needed, if so wants to infer entire network, but this line is not needed anymore
+            #self.conf_dict[Selectors.ConfounderSelector.ALL] = {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.ALL}
+        
+        self.chi = [key for key in list(conf_dict.keys()) if conf_dict[key]['role'] == Selectors.Role.VARIABLE]
+ 
         # initialize and empty logfile
         self.logger = TestRunner.get_logger(params_dict['logfile'], self.cwd)
 
@@ -62,6 +63,9 @@ class TestRunner(object):
 
         # log start of test runs
         self._log_init()
+
+        # prepare container for g_all networks
+        self.g_all_networks = {ct_sel: {alg_sel: {} for alg_sel in self.algorithm_selectors} for ct_sel in self.cancer_type_selectors}
 
         # get data
         self.expression_datasets = {sel: self.get_expression_data(sel, data_dict[sel], self.logger) for sel in self.cancer_type_selectors}
@@ -98,14 +102,36 @@ class TestRunner(object):
         self.rnd_partitions = {ct_sel: {conf_sel: [OrderedDict({ret[0]: ret[1] for ret in self.get_ith_random_partition(i, self.pheno_datasets[ct_sel], self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)}) for i in range(self.n_from, self.n_to)]
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
+    def infer_g_all(self):
+        """If self.g_all is True, infer G_all for all cohorts specified in self.cancer_type_selectors with all algorithms
+        specified in self.algorithm_selectors. Infer repeatedly for h in range(max(self.n_from, self.m_from), \
+        min(self.n_to, self.m_to)) and save network in self.g_all_networks[ct_sel][alg_sel][h].
+        """
+        for ct_sel in self.cancer_type_selectors:
+            for alg_sel in self.algorithm_selectors:
+                if max(self.n_from, self.m_from) < min(self.n_to, self.m_to):
+                    for alg_sel in self.algorithm_selectors:
+                        print(f'Inferring G_all for cohort = {str(ct_sel)} with algorithm = {str(alg_sel)}')
+                        algorithm_wrapper = self.algorithm_wrappers[alg_sel]
+                        algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
+                        algorithm_wrapper.partition = OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], Selectors.BlockType.ALL, Selectors.ConfounderSelector.All, self.rank, self.logger)})
+                        for h in range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)):
+                            algorithm_wrapper.infer_networks(self.rank)
+                            self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.All, self.save)
+                            self.g_all_networks[ct_sel][alg_sel].update({h: algorithm_wrapper._inferred_networks[0]})
+                else:
+                    self.logger.info('Comparison with G_all cannot be made for non-overlapping partition indices. Specify from, to such \
+                        that max(self.n_from, self.m_from) < min(self.n_to, self.m_to).')
+
     def run_all(self):
         """Runs the tests for a given cancer_type and confounder on all algorithms. Test is only performed if the partition induced
         by a confounder contains more tahn one block. Performs all requested chi2 tests.
         """
-        print('run...')
+        if self.g_all:
+            self.infer_g_all()
         for ct_sel in self.cancer_type_selectors:
             for conf_sel in self.confounder_selectors:
-                if len(list(self.conf_partitions[ct_sel][conf_sel].values())) > 1 or conf_sel == Selectors.ConfounderSelector.NONE:
+                if len(list(self.conf_partitions[ct_sel][conf_sel].values())) > 1 or conf_sel == Selectors.ConfounderSelector.ALL:
                     self._run_chi2_tests(conf_sel, ct_sel)
                     self._run_on_cancer_type_confounder(ct_sel, conf_sel)
 
@@ -119,12 +145,9 @@ class TestRunner(object):
             Confounder that should be investigated.
         """
         for alg_sel in self.algorithm_selectors:
-            prefix = f'{str(alg_sel)}'
-
             algorithm_wrapper = self.algorithm_wrappers[alg_sel]
             algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
             print(f'\t\talgorithm = {str(alg_sel)}')
-
             print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
@@ -133,7 +156,7 @@ class TestRunner(object):
                 network_state = []
                 intersections = []
                 unions = []
-                if conf_sel == Selectors.ConfounderSelector.NONE:
+                if conf_sel == Selectors.ConfounderSelector.ALL: # TODO remove? 
                     continue
                 for k in self.rep_k:
                     ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
@@ -144,9 +167,28 @@ class TestRunner(object):
                 pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 
                 'mean JI': self.conf_results[ct_sel][conf_sel][alg_sel][j]}).to_csv(os.path.join('results', 'JI', 
                 f'cb_{j}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
-
+                
+                if self.g_all and j in self.g_all_networks[ct_sel][alg_sel].keys():
+                    cur_g_all = self.g_all_networks[ct_sel][alg_sel][j]
+                    block_networks = algorithm_wrapper._inferred_networks.copy()
+                    for block_id in block_networks.keys():
+                        algorithm_wrapper._inferred_networks = {'g_all': cur_g_all, block_id: block_networks[block_id]}
+                        # compute meanJIs over k of cur_block_network and cur_g_all
+                        network_state = []
+                        intersections = []
+                        unions = []
+                        results = []
+                        for k in self.rep_k:
+                            ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
+                            results.append(ji)
+                            unions.append(s_un)
+                            intersections.append(s_int)
+                            network_state.append(state)
+                        pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 
+                        'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_conf_{str(j)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
+                        
             print('running on random partitions...')
-            if conf_sel != Selectors.ConfounderSelector.NONE:
+            if conf_sel != Selectors.ConfounderSelector.ALL:
                 for i in range(self.n_from, self.n_to):
                     algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
                     algorithm_wrapper.infer_networks(self.rank)
@@ -154,7 +196,6 @@ class TestRunner(object):
                     network_state = []
                     intersections = []
                     unions = []
-                    # skip random partition for G_all, since for G_all, random partition = confounder partition
                     for k in self.rep_k:
                         ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
                         self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(ji)
@@ -165,6 +206,25 @@ class TestRunner(object):
                     'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', 
                     f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
     
+                    if self.g_all and i in self.g_all_networks[ct_sel][alg_sel].keys():
+                        cur_g_all = self.g_all_networks[ct_sel][alg_sel][j]
+                        block_networks = algorithm_wrapper._inferred_networks.copy()
+                        for block_id in block_networks.keys():
+                            algorithm_wrapper._inferred_networks = {'g_all': cur_g_all, block_id: block_networks[block_id]}
+                            # compute meanJIs over k of cur_block_network and cur_g_all
+                            network_state = []
+                            intersections = []
+                            unions = []
+                            results = []
+                            for k in self.rep_k:
+                                ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
+                                results.append(ji)
+                                unions.append(s_un)
+                                intersections.append(s_int)
+                                network_state.append(state)
+                            pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 
+                            'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_rnd_{str(i)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
+                            
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel, save=False):
         """Saves the inferred networks to csv.
         Parameters
@@ -187,7 +247,7 @@ class TestRunner(object):
         if save:
             for block_id in inferred_networks.keys():
                 path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
-                top_k_edges = inferred_networks[block_id][:self.k_max, :]
+                top_k_edges = inferred_networks[block_id].iloc[:self.k_max, :]
                 top_k_edges.to_csv(path, index = False)
 
     def get_expression_data(self, cancer_type_selector, sel_dict, logger=None):
@@ -266,10 +326,10 @@ class TestRunner(object):
         ----------
         pheno_data_orig : pd.DataFrame
             Data frame containing phenotypic information. One row per sample, one column per attribute.
-        pheno_field : str
-            Field in pheno type file to be used to induce the partition.
         block_type : Selectors.BlockType
             QUARTILE or CATEGORY; defines how to create the partition.
+        pheno_field : str
+            Field in pheno type file to be used to induce the partition.
         rank : int
             Rank of the executing process. Default is 0.
         min_block_size : int
@@ -287,7 +347,7 @@ class TestRunner(object):
         indices = None
         blocks = []
         conf_partition = []
-        if block_type == Selectors.BlockType.ALL:
+        if block_type == Selectors.BlockType.ALL or pheno_field == str(Selectors.ConfounderSelector.All):
             samples = pheno_data.index.tolist()
             conf_partition.append(('all', samples))
             if logger:
@@ -436,6 +496,7 @@ class TestRunner(object):
         confusion_table : pd.DataFrame
             Initial confusion table of the conducted Chi^2 test.
         """
+        p = 10000000
         if logger:
             logger.info('Chi^2 test of ' + str(conf_sel) + ' and ' + str(var) + '\n')
         conf_partition = self.get_conf_partition(pheno, conf_dict[conf_sel]['type'], conf_sel)

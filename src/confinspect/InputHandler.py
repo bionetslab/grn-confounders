@@ -165,10 +165,9 @@ def verify_input(data, params, fields):
     if len(fields.keys()) == 0:
         assert params['g_all'] == True, 'If no fields are specified, g_all must be set to True. Otherwise, nothing to do here.'
     for key in fields.keys():
+        print(key)
         fields[key]['type'] = Selectors.BlockType(fields[key]['type'])
         fields[key]['role'] = Selectors.Role(fields[key]['role'])
-    if params['g_all']:
-        fields[Selectors.ConfounderSelector.NONE] = {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.ALL}
     assert params['g_all'] or len(list(data.keys())) > 0, 'If no confounders are specified, -g_all flag must be set to infer network from entire data instead.'
     assert params['N_from'] <= params['N_to'], 'N_from must be smaller than or equal to N_to'
     assert params['M_from'] <= params['M_to'], 'M_from must be smaller than or equal to M_to'

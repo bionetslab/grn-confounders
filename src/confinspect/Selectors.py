@@ -50,7 +50,7 @@ class TCGACancerTypeSelector(Enum):
 class ConfounderSelector(Enum):
     """Enum listing predefined confounder selectors to avoid confusing custom string confounders and predefined confounders."""
     TYPE = 'TYPE'
-    NONE = 'NONE'
+    All = 'All'
 
     def __str__(self):
         return self.value
