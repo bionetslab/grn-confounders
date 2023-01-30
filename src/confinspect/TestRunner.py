@@ -118,7 +118,7 @@ class TestRunner(object):
                         for h in range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)):
                             algorithm_wrapper.infer_networks(self.rank)
                             self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.All, self.save)
-                            self.g_all_networks[ct_sel][alg_sel].update({h: algorithm_wrapper._inferred_networks[0]})
+                            self.g_all_networks[ct_sel][alg_sel].update({h: algorithm_wrapper._inferred_networks['all']})
                 else:
                     self.logger.info('Comparison with G_all cannot be made for non-overlapping partition indices. Specify from, to such \
                         that max(self.n_from, self.m_from) < min(self.n_to, self.m_to).')
@@ -222,8 +222,7 @@ class TestRunner(object):
                                 unions.append(s_un)
                                 intersections.append(s_int)
                                 network_state.append(state)
-                            pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 
-                            'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_rnd_{str(i)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
+                            pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_rnd_{str(i)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
                             
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel, save=False):
         """Saves the inferred networks to csv.
