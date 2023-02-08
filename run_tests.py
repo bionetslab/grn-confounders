@@ -77,12 +77,10 @@ def run_tests(data, fields, params):
 
 if __name__ == '__main__':
     InputHandler.setup_directories()
-    """
     args = get_parser().parse_args()
     if args.input == 'cmd':
         data_p, fields_p, params_p = InputHandler.dump_config(args)
     elif args.input == 'config':
-    """
-    data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
+        data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
     data, fields, params = InputHandler.parse_config(data_p, fields_p, params_p)
     run_tests(data, fields, params)

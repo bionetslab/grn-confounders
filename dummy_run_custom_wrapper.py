@@ -9,7 +9,8 @@ class CustomWrapper(NetworkInferenceWrapper.NetworkInferenceWrapper):
         pass
 
     def _get_top_k_edges(self, i, k):
-        print('Get top k edges, with each edge being a tuple of nodes, and don\'t forget to order the nodes alphabetically, if the edges are undirected!')
+        print('Get top k edges, with each edge being a tuple of nodes, and don\'t forget to order the nodes alphabetically, if the \
+            edges are undirected!')
         pass
 
 if __name__ == "__main__":
