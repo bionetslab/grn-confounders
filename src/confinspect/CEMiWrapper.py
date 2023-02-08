@@ -25,7 +25,7 @@ class CEMiWrapper(NetworkInferenceWrapper):
         prefix = 'cemi'+str(rank)
         if not os.path.exists(os.path.join(main, 'temp')):
             os.mkdir(os.path.join(main, 'temp'))
-        assert os.path.exists(main, 'algorithms', 'CEMi'), 'download algorithms directory from\
+        assert os.path.exists(os.path.join(main, 'algorithms', 'CEMi')), 'download algorithms directory from\
              https://github.com/bionetslab/grn-confounders to use predefined wrappers.'
 
         expression_data = expression_data.T

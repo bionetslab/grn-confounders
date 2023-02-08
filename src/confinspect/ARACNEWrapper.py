@@ -31,7 +31,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
         prefix = 'aracne'+str(rank)
         if not os.path.exists(os.path.join(main, 'temp')):
             os.mkdir(os.path.join(main, 'temp'))
-        assert os.path.exists(main, 'algorithms', 'ARACNe-AP'), 'download algorithms directory from\
+        assert os.path.exists(os.path.join(main, 'algorithms', 'ARACNe-AP')), 'download algorithms directory from\
              https://github.com/bionetslab/grn-confounders to use predefined wrappers.'
 
         # -o: set output folder

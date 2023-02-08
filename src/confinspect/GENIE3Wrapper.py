@@ -30,7 +30,7 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
         prefix = 'genie3'+str(rank)
         if not os.path.exists(os.path.join(main, 'temp')):
             os.mkdir(os.path.join(main, 'temp'))
-        assert os.path.exists(main, 'algorithms', 'GENIE3'), 'download algorithms directory from\
+        assert os.path.exists(os.path.join(main, 'algorithms', 'GENIE3')), 'download algorithms directory from\
              https://github.com/bionetslab/grn-confounders to use predefined wrappers.'
 
         # remove columns with zero standard deviation and normalize columns to unit variance

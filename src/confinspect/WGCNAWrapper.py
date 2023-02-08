@@ -27,6 +27,10 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         """
         main = os.getcwd()
         prefix = 'wgcna'+str(rank)
+        if not os.path.exists(os.path.join(main, 'temp')):
+            os.mkdir(os.path.join(main, 'temp'))
+        assert os.path.exists(os.path.join(main, 'algorithms', 'WGCNA')), 'download algorithms directory from\
+             https://github.com/bionetslab/grn-confounders to use predefined wrappers.'
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
         
@@ -35,7 +39,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         expression_data = qnorm.quantile_normalize(expression_data, axis=0)
         qtls = expression_data.quantile(0.25, axis=1)
 
-        # Only use 50% most variable genes. Transformation for simplicity
+        # Only use 50% most variable genes. Transpose for simplicity
         expression_data = expression_data.T
         expression_data['var'] = expression_data.var(axis=1)
         quantile_var = expression_data['var'].quantile(0.5)

@@ -1,5 +1,4 @@
 from . import Selectors
-from . import preprocessing
 import pandas as pd
 import numpy as np
 import os
@@ -85,7 +84,7 @@ class TestRunner(object):
         self.rnd_results = {ct_sel: {conf_sel: {alg_sel: {i: list([]) for i in range(self.n_from, self.n_to)} 
             for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
-    def add_custom_algorithm(self, wrapper, name=Selectors.AlgorithmSelector.CUSTOMWRAPPER):
+    def add_custom_algorithm(self, wrapper, name):
         self.algorithm_selectors.append(name)
         self.algorithm_wrappers.update({name: wrapper})
         [alg.update({name: {j: list([]) for j in range(self.m_from, self.m_to)}}) for ct in self.conf_results.values() 
