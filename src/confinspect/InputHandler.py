@@ -3,6 +3,8 @@ import os
 from confinspect import Selectors
 
 def setup_directories():
+    """Set up directory structure needed by the TestRunner and NetworkInferenceWrapper. Root is os.getcwd().
+    """
     cwd = os.getcwd()
     dirs = [
     os.path.join(cwd, 'config'),
@@ -98,6 +100,19 @@ def default_missing_fields(fields):
     return fields
 
 def verify_input(data, params, fields):
+    """Check and default data, params, and fields dictionaries. The dictionaries ill contain all necessary entries afterwards.
+    Parameters
+    ----------
+    data : dict
+        Dictionary with data identifiers. Keys and types: {cohort_name: {'tcga': bool, 'ged': str, 'pt': str, 'sep': str, 'tissue_type_field': str, 'tissue_type': str}}
+    params : dict
+        Dictionary with parameter identifiers. Keys and types: {'algorithms': list, 'N_from': int, 'N_to': int, 'M_from': int, 'M_to': int, 'k_max': int, 'combine': bool, 'par': bool, 'g_all': bool, 'save_networks': bool, 'logfile': str}
+    fields : dict
+        Dictionary with parameter identifiers. Keys and types: {variable_name : {'role': 'confounder' | 'variable', 'type': 'CATEGORY' | 'QUARTILE'}}
+    Return
+    ----------
+    checked and defaulted data, params, fields dictionaries
+    """
     data = default_missing_data(data)
     params = default_missing_params(params)
     fields = default_missing_fields(fields)
