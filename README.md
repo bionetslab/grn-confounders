@@ -1,6 +1,6 @@
 # Investigating confounding in network inference
 
-The scripts in this repository implement the test protocol described in TODO, using the confinspect package that was developed for this purpose. The directory 'results_paper' contains all results and jupyter-notebooks used in the paper. Detailed information on the confinspect package can be found at TODO.
+grn-confounders is a collection of scripts that allow users to investigate confounding in network inference. The scripts provided in this repository implement the test protocol presented in TODO. The directory 'results_paper' contains all results and jupyter-notebooks used in the paper. For more customized testing, programmers can import the confinspect package directly into their own scripts. Detailed information on the confinspect package can be found at TODO.
 
 ### Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade pip.
@@ -79,6 +79,13 @@ Run the jupyter-notebook ... located in the root directory to create line plots 
 Then check whether the mean Jaccard Indices of the cmparison with the networks inferred from the entire data are stored in results/JI. The path names resolve as follows: TODO
 
 Run the jupyter-notebook ... located in the root directory to create line plots of the results.
+
+## Instructions on running tests on your own data
+TODO
+
+## Instructions on running tests with new methods
+To define custom algorithm wrappers, the user is referred to the script 'dummy_custom_' TODO, implementing the stub of a new method wrapper inheriting from NetwrokInferenceWrapper.py. For further instructions, please visit confinspect TODO and read the documentation and README.
+
 
 ## License
 GNU GPL
