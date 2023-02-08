@@ -12,12 +12,6 @@ out_path <- paste(main, '/temp/', prefix,  '_edge_list.csv', sep = "")
 datExpr <- read.csv(data_path, header = TRUE, sep='\t', as.is=TRUE)
 datExpr <- datExpr[-c(1)]
 
-#datExpr <- as.data.frame(t(datExpr))
-#datExpr$variance = apply(datExpr, 1, mean)
-#datExpr2 = datExpr[datExpr$variance >= quantile(datExpr$variance, c(.50)), ] #50% most variable genes
-#datExpr2$variance <- NULL
-#datExpr <- as.data.frame(t(datExpr2))
-
 # https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/Simulated-05-NetworkConstruction.pdf
 powers = c(c(1:10), seq(from = 10, to=20, by=2))
 # Call the network topology analysis function
@@ -37,10 +31,12 @@ diag(adjacency)<-NA
 edges<-melt(adjacency)
 colnames(edges)<-c("source","target","score")
 edges<-edges[!is.na(edges$score),]
-# reduce storage complexity.
-# Save to sort out edges with a smaller weight for our purpose, because these won't be in the top 5000 of weighted edges anyways
-edges<-edges[(edges$score > 0.001),]
-edges$score<-as.numeric(as.character(edges$score))
 
+# Reduce needed storage. Sort out edges with a smaller weight for our purpose, because these won't be in the top 5000 of weighted 
+# edges anyways. This is save, because even if less edges remain, the user will be notified in the saved .csv with the JIs in the
+# column 'filled'. Here, commented.
+#edges<-edges[(edges$score > 0.001),]
+
+edges$score<-as.numeric(as.character(edges$score))
 write.table(edges, out_path, sep='\t')
                                               

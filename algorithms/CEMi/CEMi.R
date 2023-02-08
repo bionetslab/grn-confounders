@@ -18,7 +18,6 @@ cem <- new_cem(geneData, filter=TRUE, apply_vst=TRUE)
 beta <- get_beta_data(cem)
 beta <- beta$powerEstimate
 cem <- get_adj(cem, beta=beta)
-#cem <- get_adj(cem, beta=8)
 adj <- adj_data(cem)
 
 Edges<<-graph_from_adjacency_matrix(adj, weighted=TRUE, diag=FALSE, mode = "undirected")
