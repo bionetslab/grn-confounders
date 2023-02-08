@@ -2,9 +2,6 @@
 
 The scripts in this repository implement the test protocol described in TODO, using the confinspect package that was developed for this purpose. The directory 'results_paper' contains all results and jupyter-notebooks used in the paper. Detailed information on the confinspect package can be found at TODO.
 
-### confinspect
-confinspect is a Python package for investigating confounding by phenotypic variables in gene regulatory network (GRN) inference and gene co-expression network (GCN) inference. The core class of the package is the TestRunner, which allows users to organize tests involving different algorithms, data sets, and variables. The package further includes a collection of predefined wrappers for popular gene network inference algorithms (ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, WGCNA), as well as tools for data preprocessing and selection. 
-
 ### Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade pip.
 ##### Install python packages
@@ -74,69 +71,14 @@ Use the ... script to start the actual tests. The config files provided in ... w
 ```
 TODO run_tests cmd
 ``` 
-##### Plot the results of the first part of the test
-Check whether the computed mean Jaccard Indices are stored in results/JI, and the networks are stored in results/networks. Only the networks 
-##### Plot the results of the second part of the test
+##### Plot the results
+Check whether the computed mean Jaccard Indices are stored in results/JI. The path names resolve as follows: TODO
 
+Run the jupyter-notebook ... located in the root directory to create line plots and swarm plots of the results.
 
+Then check whether the mean Jaccard Indices of the cmparison with the networks inferred from the entire data are stored in results/JI. The path names resolve as follows: TODO
 
-
-To contribute to the development of confinspect, please refer to the CONTRIBUTING file for guidelines and instructions.
-License
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Installation
-
-
-          
-
-## Running the framework
-
-After the tools are installed, clone the framework on your local machine.
-Open terminal in the project folder and run the following command:
-
-```python
-python run_tests.py -ct BLCA -conf age -alg ARACNE -k 500 seq -n 100 -m 1
-
-# -ct stands for disease (You may select: PCPG, GBM, COAD, BRCA, LUAD, PRAD, SKCM)
-# -conf stands for confounders (You may select: sex, race, age, stage, type)
-# -alg stands for algorithm (You may select: ARACNE, GENIE3, WGCNA, CEMI)
-# -k stands for the top k edges of the network (You may select k value between 1 and 1000)
-# -n stands for the number of partitions (You may select n between 1 and 1000)
-# -m stands for random procedures. For GENIE3 select -m as 100. For other algorithms -m is 1.
-```
-
-NOTE: The user should be connected to the internet for downloading the gene dataset(TCGA). If the user is not connected to the network, the gene dataset has to be manually added by the user in the data folder. 
-
-## Result Plots
-                                           ARACNe result plot
-![ARACNE(111)](https://user-images.githubusercontent.com/106863105/191177650-a46fb3c7-9194-4f4d-9622-052b8e4fcb8a.png)
-
-                                            WGCNA result plot
-![WGCNA_1](https://user-images.githubusercontent.com/106863105/191212093-54a66e60-4614-47cd-bc3e-52733aa6ec83.png)
-
-
-
-
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
+Run the jupyter-notebook ... located in the root directory to create line plots of the results.
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+GNU GPL
