@@ -1,5 +1,6 @@
 import confinspect
-from confinspect import NetworkInferenceWrapper, TestRunner, Selectors, InputHandler
+from confinspect import NetworkInferenceWrapper, TestRunner, Selectors
+import InputHandler
 import os
 
 class CustomWrapper(NetworkInferenceWrapper.NetworkInferenceWrapper):

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from confinspect import InputHandler, TestRunner
+from confinspect import TestRunner
+import InputHandler
 import os
+import argparse
 
 def get_parser():
     """Return parser for command line argument processing."""
@@ -76,11 +78,11 @@ def run_tests(data, fields, params):
     test_runner.run_all()
 
 if __name__ == '__main__':
-    InputHandler.setup_directories()
-    args = get_parser().parse_args()
-    if args.input == 'cmd':
-        data_p, fields_p, params_p = InputHandler.dump_config(args)
-    elif args.input == 'config':
-        data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
+    #InputHandler.setup_directories()
+    #args = get_parser().parse_args()
+    #if args.input == 'cmd':
+        #data_p, fields_p, params_p = InputHandler.dump_config(args)
+    #elif args.input == 'config':
+    data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
     data, fields, params = InputHandler.parse_config(data_p, fields_p, params_p)
     run_tests(data, fields, params)
