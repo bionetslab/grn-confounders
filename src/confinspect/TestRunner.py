@@ -114,10 +114,10 @@ class TestRunner(object):
                         print(f'Inferring G_all for cohort = {str(ct_sel)} with algorithm = {str(alg_sel)}')
                         algorithm_wrapper = self.algorithm_wrappers[alg_sel]
                         algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
-                        algorithm_wrapper.partition = OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], Selectors.BlockType.ALL, Selectors.ConfounderSelector.All, self.rank, self.logger)})
+                        algorithm_wrapper.partition = OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], Selectors.BlockType.ALL, Selectors.ConfounderSelector.ALL, self.rank, self.logger)})
                         for h in range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)):
                             algorithm_wrapper.infer_networks(self.rank)
-                            self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.All, self.save)
+                            self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.ALL, self.save)
                             self.g_all_networks[ct_sel][alg_sel].update({h: algorithm_wrapper._inferred_networks['all']})
                 else:
                     self.logger.info('Comparison with G_all cannot be made for non-overlapping partition indices. Specify from, to such \
@@ -346,7 +346,7 @@ class TestRunner(object):
         indices = None
         blocks = []
         conf_partition = []
-        if block_type == Selectors.BlockType.ALL or pheno_field == str(Selectors.ConfounderSelector.All):
+        if block_type == Selectors.BlockType.ALL or pheno_field == str(Selectors.ConfounderSelector.ALL):
             samples = pheno_data.index.tolist()
             conf_partition.append(('all', samples))
             if logger:
@@ -430,7 +430,7 @@ class TestRunner(object):
         
         return cur
 
-    def align_data(self, expression_datasets, pheno_datasets):
+    def align_data(self, expression_datasets, pheno_datasets, logger=None):
         """Data alignment. Remove such samples from the expression_data files that are not in the pheno_data files and vice versa.
         Remove all genes where standard deviation is 0.
         
@@ -458,6 +458,8 @@ class TestRunner(object):
             print('Remove genes where standard deviation of expression data is 0 for cohort ' + str(sel) + '...')
             expression_datasets[sel] = expression_datasets[sel].loc[:, (expression_datasets[sel].std() != 0)]
             pheno_datasets[sel] = pheno_datasets[sel][pheno_datasets[sel].index.isin(expression_datasets[sel].index)]
+            if logger:
+                logger.info('Pheno data shape of ' + str(sel) + ' after alignment: ' + str(pheno_datasets[sel].shape) + '\nGene expression data shape of ' + str(sel) + ' after alignment: ' + str(expression_datasets[sel].shape))
         return expression_datasets, pheno_datasets
 
     def _add_if_combined(self):
