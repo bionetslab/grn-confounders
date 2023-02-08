@@ -4,7 +4,6 @@ import numpy as np
 import subprocess
 import os
 import sys
-from . import preprocessing as prp
 import csv
 import random
 #from arboreto.algo import grnboost2, genie3
@@ -32,9 +31,11 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
         """
         main = self.cwd
         prefix = 'grnboost2'+str(rank)
-
+        if not os.path.exists(os.path.join(main, 'temp')):
+            os.mkdir(os.path.join(main, 'temp'))
+            
         # remove columns with zero standard deviation, save expression data
-        expression_data = prp.normalizeToUnitVariance(expression_data)
+        expression_data = GRNBOOST2Wrapper.normalizeToUnitVariance(expression_data)
         expression_data = expression_data.loc[:, (expression_data.std() != 0)]
 
         # get regulators and remove such genes that are not present in expression_data
@@ -81,4 +82,16 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
                 except:
                     state.append('empty'+str(i))
             return set(top_k_edges), state
+
+    @staticmethod
+    def normalizeToUnitVariance(df):
+        # normalize gene expression data for each gene vector (col) to unit length
+        pd.options.mode.chained_assignment = None 
+        for col in df:
+            if df[col].std() != 0:
+                df[col] = df[col]/df[col].std()
+            else:
+                print('df contains column '+str(col) + ' with std()==0. Normalization would produce nan value. Remove column ' + str(col) + ' before normalization.')
+        pd.options.mode.chained_assignment = 'warn'
+        return df
 

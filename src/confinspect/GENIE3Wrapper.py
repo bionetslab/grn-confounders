@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
-from . import preprocessing as prp
 import csv
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
@@ -29,10 +28,14 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
         """
         main = self.cwd
         prefix = 'genie3'+str(rank)
+        if not os.path.exists(os.path.join(main, 'temp')):
+            os.mkdir(os.path.join(main, 'temp'))
+        assert os.path.exists(main, 'algorithms', 'GENIE3'), 'download algorithms directory from\
+             https://github.com/bionetslab/grn-confounders to use predefined wrappers.'
 
         # remove columns with zero standard deviation and normalize columns to unit variance
         expression_data = expression_data.loc[:, (expression_data.std() != 0)]
-        expression_data = prp.normalizeToUnitVariance(expression_data)
+        expression_data = GENIE3Wrapper.normalizeToUnitVariance(expression_data)
 
         # save expression_data as csv
         expression_data = expression_data.T # R version of genie wants gene x sample data set
@@ -96,3 +99,15 @@ class GENIE3Wrapper(NetworkInferenceWrapper):
                 except:
                     state.append('empty'+str(i))
             return set(top_k_edges), state
+
+    @staticmethod
+    def normalizeToUnitVariance(df):
+        # normalize gene expression data for each gene vector (col) to unit length
+        pd.options.mode.chained_assignment = None 
+        for col in df:
+            if df[col].std() != 0:
+                df[col] = df[col]/df[col].std()
+            else:
+                print('df contains column '+str(col) + ' with std()==0. Normalization would produce nan value. Remove column ' + str(col) + ' before normalization.')
+        pd.options.mode.chained_assignment = 'warn'
+        return df

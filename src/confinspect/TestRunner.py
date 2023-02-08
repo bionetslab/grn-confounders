@@ -47,10 +47,7 @@ class TestRunner(object):
         # required k in step size of 100, starting at 10
         self.rep_k = range(10, self.k_max, 100)
 
-        # if g_all flag is set, add 'ALL' to confounders
-        #if self.g_all: # TODO remove this. ALL is still needed, if so wants to infer entire network, but this line is not needed anymore
-            #self.conf_dict[Selectors.ConfounderSelector.ALL] = {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.ALL}
-        
+        # list all chi2 tests to be performed
         self.chi = [key for key in list(conf_dict.keys()) if conf_dict[key]['role'] == Selectors.Role.VARIABLE]
  
         # initialize and empty logfile
@@ -107,6 +104,10 @@ class TestRunner(object):
         specified in self.algorithm_selectors. Infer repeatedly for h in range(max(self.n_from, self.m_from), \
         min(self.n_to, self.m_to)) and save network in self.g_all_networks[ct_sel][alg_sel][h].
         """
+        if not os.path.exists(os.path.join(self.cwd, 'results')):
+            os.mkdir(os.path.join(self.cwd, 'results'))
+        if not os.path.exists(os.path.join(self.cwd, 'results', 'JI')):
+            os.mkdir(os.path.join(self.cwd, 'results', 'JI'))
         for ct_sel in self.cancer_type_selectors:
             for alg_sel in self.algorithm_selectors:
                 if max(self.n_from, self.m_from) < min(self.n_to, self.m_to):
@@ -127,6 +128,10 @@ class TestRunner(object):
         """Runs the tests for a given cancer_type and confounder on all algorithms. Test is only performed if the partition induced
         by a confounder contains more tahn one block. Performs all requested chi2 tests.
         """
+        if not os.path.exists(os.path.join(self.cwd, 'results')):
+            os.mkdir(os.path.join(self.cwd, 'results'))
+        if not os.path.exists(os.path.join(self.cwd, 'results', 'JI')):
+            os.mkdir(os.path.join(self.cwd, 'results', 'JI'))
         if self.g_all:
             self.infer_g_all()
         for ct_sel in self.cancer_type_selectors:
@@ -243,6 +248,10 @@ class TestRunner(object):
         save : bool
             Whether to save or not save the inferred networks. The networks are usually very large and saving all networks might not be necessary and/or possible. Defaults to False.
         """
+        if not os.path.exists(os.path.join(self.cwd, 'results')):
+            os.mkdir(os.path.join(self.cwd, 'results'))
+        if not os.path.exists(os.path.join(self.cwd, 'results', 'networks')):
+            os.mkdir(os.path.join(self.cwd, 'results', 'networks'))
         if save:
             for block_id in inferred_networks.keys():
                 path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
@@ -265,6 +274,7 @@ class TestRunner(object):
         expression_data : pd.DataFrame
             Expression data (indices are sample IDs, column names are gene IDs).
         """
+        assert os.path.exists(os.path.join(self.cwd, 'data', sel_dict['ged'])), 'provided gene expression data file does not exist.'
         expression_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['ged']), sep=sel_dict['sep'], header=0, index_col=0)
         print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
         expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
@@ -294,6 +304,7 @@ class TestRunner(object):
         pheno_data : pd.DataFrame
             Expression data (indices are sample IDs, column names are gene IDs).
         """
+        assert os.path.exists(os.path.join(self.cwd, 'data', sel_dict['pt'])), 'provided pheno type data file does not exist.'
         try:
             tissue_type_field, tissue_type = sel_dict['tissue_type_field'], sel_dict['tissue_type']
         except:
@@ -354,14 +365,6 @@ class TestRunner(object):
             return conf_partition
         pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
         pheno_data = pheno_data[pheno_data[pheno_field].notna()]
-        # specifically for TCGA data: aggregate stages
-        if pheno_field == 'tumor_stage.diagnoses':
-            pheno_data = pheno_data[pheno_data[pheno_field] != 'stage x']
-            pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic']), pheno_field] = 'stage i'
-            pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic']), pheno_field] = 'stage ii'
-            pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc']), pheno_field] = 'stage iii'
-            if logger:
-                logger.info('Aggregate stages according to field tumor_stage.diagnoses into stages i, ii, and iii+iv.\n')
         if block_type == Selectors.BlockType.CATEGORY:
             blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
             if logger:
@@ -411,6 +414,8 @@ class TestRunner(object):
         samples_cpy = samples.copy()
         cur = []
         try:
+            if not os.path.exists(os.path.join(main, 'partitions')):
+                os.mkdir(os.path.join(main, 'partitions'))
             part = pd.read_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{i}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
             begin = 0
             end = 0
