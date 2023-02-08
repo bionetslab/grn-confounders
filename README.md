@@ -4,8 +4,11 @@ grn-confounders is a collection of scripts that allow users to investigate confo
 
 ### Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade pip.
+##### Install confinspect as local package from the source code src/confinspect/. Move into the root directory of the repository, then run the following command:
+```
+pip install .
+```
 ##### Install python packages
-confinspect==TODO
 matplotlib==3.6.0
 mpi4py==3.1.4
 numpy==1.23.3
