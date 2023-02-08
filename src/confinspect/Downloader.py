@@ -12,6 +12,8 @@ def download_TCGA_expression_data(cancer_type_selector):
         Specifies the cohort that the phenotype file is to be downloaded for.
     """
     cwd = os.getcwd()
+    if not os.path.exists(os.path.join(cwd, 'data')):
+        os.mkdir(os.path.join(cwd, 'data'))
     url = ""
     if cancer_type_selector in [str(val) for val in list(Selectors.TCGACancerTypeSelector)]:
         url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.htseq_fpkm.tsv.gz'
@@ -46,11 +48,15 @@ def download_TCGA_phenotype_data(cancer_type_selector):
         pheno_data = pheno_data.rename(columns={'gender.demographic': 'sex', 'age_at_initial_pathologic_diagnosis': 'age'
                                             'tumor_stage.diagnoses': 'stage', 'race.demographic': 'ethnicity'}, errors='ignore')
 
+        if not os.path.exists(os.path.join(cwd, 'data')):
+            os.mkdir(os.path.join(cwd, 'data'))
         pheno_data.to_csv(os.path.join(cwd, 'data', 'TCGA-'+str(cancer_type_selector)+'.GDC_phenotype.tsv'), sep=',')
 
 def download_known_tfs():
     """Saves known human transcription factors obtained from humantfs.ccbr.utoronto.ca in /data.
     """
     cwd = os.getcwd()
+    if not os.path.exists(os.path.join(cwd, 'data')):
+        os.mkdir(os.path.join(cwd, 'data'))
     df = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', delimiter='\t', index_col=0)
     df.to_csv(os.path.join(cwd, 'data', 'regulators.csv'), sep=',')
