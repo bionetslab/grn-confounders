@@ -1,4 +1,5 @@
 from . import Selectors
+from . import preprocessing
 import pandas as pd
 import numpy as np
 import os
@@ -46,7 +47,10 @@ class TestRunner(object):
         # required k in step size of 100, starting at 10
         self.rep_k = range(10, self.k_max, 100)
 
-        # list all chi2 tests to be performed
+        # if g_all flag is set, add 'ALL' to confounders
+        #if self.g_all: # TODO remove this. ALL is still needed, if so wants to infer entire network, but this line is not needed anymore
+            #self.conf_dict[Selectors.ConfounderSelector.ALL] = {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.ALL}
+        
         self.chi = [key for key in list(conf_dict.keys()) if conf_dict[key]['role'] == Selectors.Role.VARIABLE]
  
         # initialize and empty logfile
@@ -82,7 +86,7 @@ class TestRunner(object):
         self.rnd_results = {ct_sel: {conf_sel: {alg_sel: {i: list([]) for i in range(self.n_from, self.n_to)} 
             for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
-    def add_custom_algorithm(self, wrapper, name):
+    def add_custom_algorithm(self, wrapper, name=Selectors.AlgorithmSelector.CUSTOMWRAPPER):
         self.algorithm_selectors.append(name)
         self.algorithm_wrappers.update({name: wrapper})
         [alg.update({name: {j: list([]) for j in range(self.m_from, self.m_to)}}) for ct in self.conf_results.values() 
@@ -273,7 +277,8 @@ class TestRunner(object):
         expression_data : pd.DataFrame
             Expression data (indices are sample IDs, column names are gene IDs).
         """
-        assert os.path.exists(os.path.join(self.cwd, 'data', sel_dict['ged'])), 'provided gene expression data file does not exist.'
+        if not os.path.exists(os.path.join(self.cwd, 'partitions')):
+            os.mkdir(os.path.join(self.cwd, 'partitions'))
         expression_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['ged']), sep=sel_dict['sep'], header=0, index_col=0)
         print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
         expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
@@ -303,7 +308,6 @@ class TestRunner(object):
         pheno_data : pd.DataFrame
             Expression data (indices are sample IDs, column names are gene IDs).
         """
-        assert os.path.exists(os.path.join(self.cwd, 'data', sel_dict['pt'])), 'provided pheno type data file does not exist.'
         try:
             tissue_type_field, tissue_type = sel_dict['tissue_type_field'], sel_dict['tissue_type']
         except:

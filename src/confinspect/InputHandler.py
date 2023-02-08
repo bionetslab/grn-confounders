@@ -1,5 +1,4 @@
 import argparse
-import yaml
 import os
 from confinspect import Selectors
 
@@ -26,68 +25,6 @@ def setup_directories():
             Follow the installation instructions given in the README at TODO. For further instructions, see the README at TODO.')
         print('INFO: the code expects the user to implement a custom NetworkInferenceWrapper. Inherit from the abstract NetworkInferenceWrapper \
             of this package and hand the wrapper to the TestRunner object manually by calling add_custom_algorithm.')
-
-def dump_config(args):
-    """Dump cmd line input arguments to config files for documentation and reusability purposes. Reuse code for reading config file
-    afterwards.
-    Parameters
-    ----------
-    args: argparse.Namespace
-        Namespace object populated with user command line arguments.
-    """
-    assert len(args.block_types) == len(args.conf) == len(args.roles) if args.conf is not None else True
-    assert len(args.ct) == len(args.ged) == len(args.pt) == len(args.sep) if not args.tcga else True
-    
-    cwd = os.getcwd()
-    data = dict()
-    for ct in args.ct:
-        if args.tcga:
-            data[ct] = {'tcga': True, 'ged': None, 'pt': None, 'sep': None, 'tissue_type_field': None, 'tissue_type': None}
-        else:
-            g, p, s, tf, tt = args.ged, args.pt, args.sep, args.tissue_type_field, args.tissue_type
-            data[ct] = {'tcga': False, 'ged': g, 'pt': p, 'sep': s, 'tissue_type_field': tf, 'tissue_type': tt}
-
-    params = {'algorithms': args.alg, 'N_from': args.N_from, 'N_to': args.N_to, 'M_from': args.M_from, 'M_to': args.M_to,
-                'k_max': args.k_max, 'combine': args.combine, 'par': args.par, 'g_all': args.g_all, 'save_networks': args.save_networks, 'logfile': args.log}
-
-    fields = dict()
-    for (conf_sel, conf_role, conf_type) in zip(args.conf, args.roles, args.block_types):
-        fields[conf_sel] = {'role': conf_role, 'type': conf_type}
-
-    if not os.path.exists(config_path):
-        os.mkdir(config_path)
-    with open(os.path.join(cwd, 'config', 'data_cmd.yml'), 'w') as f:
-        data = yaml.dump(data, f)
-    with open(os.path.join(cwd, 'config', 'fields_cmd.yml'), 'w') as f:
-        data = yaml.dump(fields, f)
-    with open(os.path.join(cwd, 'config', 'params_cmd.yml'), 'w') as f:
-        data = yaml.dump(params, f)
-
-    return 'data_cmd.yml', 'fields_cmd.yml', 'params_cmd.yml'
-
-def parse_config(data_p, fields_p, params_p):
-    cwd = os.getcwd()
-    config_path = os.path.join(cwd, 'config')
-    assert os.path.exists(config_path) and os.path.exists(os.path.join(config_path, data_p)) and os.path.exists(os.path.join(config_path, fields_p)) and os.path.exists(os.path.join(config_path, params_p)), 'Put data.yml, fields.yml, and params.yml in config/'
-    
-    data = dict()
-    with open(os.path.join(config_path, data_p)) as f:
-        _data = yaml.load_all(f, Loader=yaml.FullLoader)
-        for doc in _data:
-            data = doc
-            break
-    with open(os.path.join(config_path, params_p)) as f:
-        _params = yaml.load_all(f, Loader=yaml.FullLoader)
-        for doc in _params:
-            params = doc
-            break
-    fields = dict()
-    with open(os.path.join(config_path, fields_p)) as f:
-        _fields = yaml.load_all(f, Loader=yaml.FullLoader)
-        for doc in _fields:
-            fields = doc
-            break
-    return data, fields, params
 
 def default_missing_data(data):
     """Check data dict. E.g. data_dict = {'HNSC': {'tcga': False, 'ged': 'ged_filename.csv', 'pt': 'pt_filename.csv', 'sep': ',', 'tissue_type_field': 'sample_type.sample', 'tissue_type': 'Primary Tumor'}}. Further documentation on the data_dict can be found at TODO.
@@ -126,7 +63,7 @@ def default_missing_params(params):
         Checked params dict.
     """
     if 'algorithms' not in params.keys():
-        print('No algorithm specified in params[\'algorithms\']. Please add custom algorithm after instantiating TestRunner by calling TODO before calling induce_partitions().')
+        print('No algorithm specified in params[\'algorithms\']. Please add custom algorithm after instantiating TestRunner by calling add_custom_algorithm before calling induce_partitions.')
         params['algorithms'] = []
     params['N_from'] = 0 if 'N_from' not in params.keys() else params['N_from']
     params['N_to'] = params['N_from'] + 100 if 'N_to' not in params.keys() else params['N_to']
@@ -135,7 +72,7 @@ def default_missing_params(params):
     params['k_max'] = 5000 if 'k_max' not in params.keys() else params['k_max']
     params['combine'] = False if 'combine' not in params.keys() else params['combine']
     params['par'] = False if 'par' not in params.keys() else params['par']
-    params['g_all'] = False if 'g_all' not in params.keys() else params['g_all']
+    params['g_all'] = True if 'g_all' not in params.keys() else params['g_all']
     params['save_networks'] = False if 'save_networks' not in params.keys() else params['save_networks']
     params['logfile'] = 'log.txt' if 'logfile' not in params.keys() else params['logfile']
     return params

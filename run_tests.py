@@ -3,6 +3,7 @@ from confinspect import TestRunner
 import InputHandler
 import os
 import argparse
+import yaml
 
 def get_parser():
     """Return parser for command line argument processing."""
@@ -77,12 +78,74 @@ def run_tests(data, fields, params):
     test_runner.induce_partitions()
     test_runner.run_all()
 
+def dump_config(args):
+    """Dump cmd line input arguments to config files for documentation and reusability purposes. Reuse code for reading config file
+    afterwards.
+    Parameters
+    ----------
+    args: argparse.Namespace
+        Namespace object populated with user command line arguments.
+    """
+    assert len(args.block_types) == len(args.conf) == len(args.roles) if args.conf is not None else True
+    assert len(args.ct) == len(args.ged) == len(args.pt) == len(args.sep) if not args.tcga else True
+    
+    cwd = os.getcwd()
+    data = dict()
+    for ct in args.ct:
+        if args.tcga:
+            data[ct] = {'tcga': True, 'ged': None, 'pt': None, 'sep': None, 'tissue_type_field': None, 'tissue_type': None}
+        else:
+            g, p, s, tf, tt = args.ged, args.pt, args.sep, args.tissue_type_field, args.tissue_type
+            data[ct] = {'tcga': False, 'ged': g, 'pt': p, 'sep': s, 'tissue_type_field': tf, 'tissue_type': tt}
+
+    params = {'algorithms': args.alg, 'N_from': args.N_from, 'N_to': args.N_to, 'M_from': args.M_from, 'M_to': args.M_to,
+                'k_max': args.k_max, 'combine': args.combine, 'par': args.par, 'g_all': args.g_all, 'save_networks': args.save_networks, 'logfile': args.log}
+
+    fields = dict()
+    for (conf_sel, conf_role, conf_type) in zip(args.conf, args.roles, args.block_types):
+        fields[conf_sel] = {'role': conf_role, 'type': conf_type}
+
+    if not os.path.exists(config_path):
+        os.mkdir(config_path)
+    with open(os.path.join(cwd, 'config', 'data_cmd.yml'), 'w') as f:
+        data = yaml.dump(data, f)
+    with open(os.path.join(cwd, 'config', 'fields_cmd.yml'), 'w') as f:
+        data = yaml.dump(fields, f)
+    with open(os.path.join(cwd, 'config', 'params_cmd.yml'), 'w') as f:
+        data = yaml.dump(params, f)
+
+    return 'data_cmd.yml', 'fields_cmd.yml', 'params_cmd.yml'
+
+def parse_config(data_p, fields_p, params_p):
+    cwd = os.getcwd()
+    config_path = os.path.join(cwd, 'config')
+    assert os.path.exists(config_path) and os.path.exists(os.path.join(config_path, data_p)) and os.path.exists(os.path.join(config_path, fields_p)) and os.path.exists(os.path.join(config_path, params_p)), 'Put data.yml, fields.yml, and params.yml in config/'
+    
+    data = dict()
+    with open(os.path.join(config_path, data_p)) as f:
+        _data = yaml.load_all(f, Loader=yaml.FullLoader)
+        for doc in _data:
+            data = doc
+            break
+    with open(os.path.join(config_path, params_p)) as f:
+        _params = yaml.load_all(f, Loader=yaml.FullLoader)
+        for doc in _params:
+            params = doc
+            break
+    fields = dict()
+    with open(os.path.join(config_path, fields_p)) as f:
+        _fields = yaml.load_all(f, Loader=yaml.FullLoader)
+        for doc in _fields:
+            fields = doc
+            break
+    return data, fields, params
+
 if __name__ == '__main__':
     #InputHandler.setup_directories()
     #args = get_parser().parse_args()
     #if args.input == 'cmd':
-        #data_p, fields_p, params_p = InputHandler.dump_config(args)
+        #data_p, fields_p, params_p = dump_config(args)
     #elif args.input == 'config':
     data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
-    data, fields, params = InputHandler.parse_config(data_p, fields_p, params_p)
+    data, fields, params = parse_config(data_p, fields_p, params_p)
     run_tests(data, fields, params)
