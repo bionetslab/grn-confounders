@@ -49,7 +49,7 @@ pip install arboreto
 ```
 ## Instructions on reproducing the tests presented in the paper
 To reproduce the presented tests, follow the steps below:
-### Download this repository
+##### Download this repository
 After downloading this repository, check for the following directries and make sure the algorithms directory contains the caller script belonging to the predefined algrithm wrappers.
 
 root/
