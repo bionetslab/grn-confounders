@@ -29,11 +29,11 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = self.cwd
+        main = os.getcwd()
         prefix = 'grnboost2'+str(rank)
         if not os.path.exists(os.path.join(main, 'temp')):
             os.mkdir(os.path.join(main, 'temp'))
-            
+
         # remove columns with zero standard deviation, save expression data
         expression_data = GRNBOOST2Wrapper.normalizeToUnitVariance(expression_data)
         expression_data = expression_data.loc[:, (expression_data.std() != 0)]

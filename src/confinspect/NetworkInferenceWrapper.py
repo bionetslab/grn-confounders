@@ -30,12 +30,11 @@ class NetworkInferenceWrapper(ABC):
         Abstract method to infer a network from expression data. Must be implemented by derived classes.
     """
     
-    def __init__(self, cwd):
+    def __init__(self):
         """Constructor."""
         self.expression_data = None
         self.partition = None
         self._inferred_networks = dict()
-        self.cwd = cwd
         
     def infer_networks(self, rank=0):
         """Infers all networks for the stored partition and expression data. Before, delete any network stored in self._inferred_networks.

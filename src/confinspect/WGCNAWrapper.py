@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
-from . import preprocessing as prp
 import csv
 import qnorm
 
@@ -26,7 +25,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = self.cwd
+        main = os.getcwd()
         prefix = 'wgcna'+str(rank)
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')

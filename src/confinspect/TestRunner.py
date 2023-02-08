@@ -1,5 +1,4 @@
 from . import Selectors
-from . import preprocessing
 import pandas as pd
 import numpy as np
 import os
@@ -67,7 +66,7 @@ class TestRunner(object):
         # get data
         self.expression_datasets = {sel: self.get_expression_data(sel, data_dict[sel], self.logger) for sel in self.cancer_type_selectors}
         self.pheno_datasets = {sel: self.get_pheno_data(sel, data_dict[sel], self.logger) for sel in self.cancer_type_selectors}
-        self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel, self.cwd) for sel in self.algorithm_selectors}
+        self.algorithm_wrappers = {sel: Selectors.get_algorithm_wrapper(sel) for sel in self.algorithm_selectors}
 
         # align data, remove 0-std genes, add combined data, if required
         self.expression_datasets, self.pheno_datasets = self.align_data(self.expression_datasets, self.pheno_datasets)
@@ -83,7 +82,7 @@ class TestRunner(object):
         self.rnd_results = {ct_sel: {conf_sel: {alg_sel: {i: list([]) for i in range(self.n_from, self.n_to)} 
             for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
-    def add_custom_algorithm(self, wrapper, name=Selectors.AlgorithmSelector.CUSTOMWRAPPER):
+    def add_custom_algorithm(self, wrapper, name):
         self.algorithm_selectors.append(name)
         self.algorithm_wrappers.update({name: wrapper})
         [alg.update({name: {j: list([]) for j in range(self.m_from, self.m_to)}}) for ct in self.conf_results.values() 
@@ -414,8 +413,8 @@ class TestRunner(object):
         samples_cpy = samples.copy()
         cur = []
         try:
-            if not os.path.exists(os.path.join(main, 'partitions')):
-                os.mkdir(os.path.join(main, 'partitions'))
+            if not os.path.exists(os.path.join(self.cwd, 'partitions')):
+                os.mkdir(os.path.join(self.cwd, 'partitions'))
             part = pd.read_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{i}_{ct_sel}_{conf_sel}'), header=None, index_col=False, dtype=str).values.tolist()
             begin = 0
             end = 0

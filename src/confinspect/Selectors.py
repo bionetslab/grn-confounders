@@ -62,8 +62,6 @@ class AlgorithmSelector(Enum):
     WGCNA = 'WGCNA'
     CEMITOOL = 'CEMITOOL'
     GRNBOOST2 = 'GRNBOOST2'
-    SDCORGCN = 'SDCORGCN'
-    CUSTOMWRAPPER = 'CUSTOMWRAPPER'
     
     def __str__(self):
         return self.value
@@ -85,7 +83,7 @@ class Role(Enum):
     def __str__(self):
         return self.value
 
-def get_algorithm_wrapper(algorithm_selector, cwd):
+def get_algorithm_wrapper(algorithm_selector):
     """Returns the appropriate algorithm based on the selection.
 
     Parameters
@@ -96,14 +94,12 @@ def get_algorithm_wrapper(algorithm_selector, cwd):
         Current working directory containing all input and output directories.
     """
     if algorithm_selector == AlgorithmSelector.GENIE3:
-        return GENIE3Wrapper(cwd)
+        return GENIE3Wrapper()
     elif algorithm_selector == AlgorithmSelector.ARACNE:
-        return ARACNEWrapper(cwd)
+        return ARACNEWrapper()
     elif algorithm_selector == AlgorithmSelector.WGCNA:
-        return WGCNAWrapper(cwd)
+        return WGCNAWrapper()
     elif algorithm_selector == AlgorithmSelector.CEMITOOL:
-        return CEMiWrapper(cwd)
+        return CEMiWrapper()
     elif algorithm_selector == AlgorithmSelector.GRNBOOST2:
-        return GRNBOOST2Wrapper(cwd)
-    elif algorithm_selector == AlgorithmSelector.SDCORGCN:
-        return sdcorGCNWrapper(cwd)
+        return GRNBOOST2Wrapper()

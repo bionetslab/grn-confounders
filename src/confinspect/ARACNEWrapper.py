@@ -4,7 +4,6 @@ import numpy as np
 import subprocess
 import os
 import sys
-from . import preprocessing as prp
 import csv
 import random
 test_suite = os.path.join(os.path.dirname(__file__))
@@ -28,7 +27,7 @@ class ARACNEWrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = self.cwd
+        main = os.getcwd()
         prefix = 'aracne'+str(rank)
         if not os.path.exists(os.path.join(main, 'temp')):
             os.mkdir(os.path.join(main, 'temp'))
