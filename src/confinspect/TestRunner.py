@@ -7,6 +7,7 @@ from scipy.stats import chi2_contingency
 from datetime import datetime
 from collections import OrderedDict
 import logging
+from . import InputHandler
 
 class TestRunner(object):
     """Runs the tests."""
@@ -30,27 +31,25 @@ class TestRunner(object):
             Dict of further parameters needed to run the tests.
             e.g. {'algorithms': [GENIE3, WGCNA], 'N_from': 0, 'N_to': 100, 'M_from': 0, 'M_to': 10, 'k_max': 5000, 'combine': False, 'par': False, 'g_all': False, 'save_networks': False} Further documentation on the params_dict can be found at TODO.
         """
-        # set utility parameters
+        # set and default utility parameters
         self.cwd = os.getcwd()
         self.rank = rank
+        data_dict, params_dict, conf_dict = InputHandler.verify_input(data_dict, params_dict, conf_dict)
+        self.data_dict = data_dict
+        self.conf_dict = conf_dict
         self.save = params_dict['save_networks']
         self.n_from = params_dict['N_from']
-        self.n_to = params_dict['N_to']
+        self.n_to = params_dict['N_to'] 
         self.m_from = params_dict['M_from']
         self.m_to = params_dict['M_to']
         self.k_max = params_dict['k_max']
         self.g_all = params_dict['g_all']
         self.combine = params_dict['combine']
-        self.data_dict = data_dict
-        self.conf_dict = conf_dict
 
         # required k in step size of 100, starting at 10
         self.rep_k = range(10, self.k_max, 100)
 
-        # if g_all flag is set, add 'ALL' to confounders
-        #if self.g_all: # TODO remove this. ALL is still needed, if so wants to infer entire network, but this line is not needed anymore
-            #self.conf_dict[Selectors.ConfounderSelector.ALL] = {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.ALL}
-        
+        # list variables for chi2 tests
         self.chi = [key for key in list(conf_dict.keys()) if conf_dict[key]['role'] == Selectors.Role.VARIABLE]
  
         # initialize and empty logfile

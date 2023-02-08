@@ -37,6 +37,7 @@ def default_missing_data(data):
     data : dict
         Checked data dict.
     """
+    assert len(data.keys()) > 0, 'specify at least one cohort'
     for ct_dict in data.values():
         ct_dict['tcga'] = False if 'tcga' not in ct_dict.keys() else ct_dict['tcga']
         if 'sep' not in ct_dict.keys():
@@ -62,6 +63,7 @@ def default_missing_params(params):
     params : dict
         Checked params dict.
     """
+    params = {} if params is None else params
     if 'algorithms' not in params.keys():
         print('No algorithm specified in params[\'algorithms\']. Please add custom algorithm after instantiating TestRunner by calling add_custom_algorithm before calling induce_partitions.')
         params['algorithms'] = []
@@ -72,7 +74,7 @@ def default_missing_params(params):
     params['k_max'] = 5000 if 'k_max' not in params.keys() else params['k_max']
     params['combine'] = False if 'combine' not in params.keys() else params['combine']
     params['par'] = False if 'par' not in params.keys() else params['par']
-    params['g_all'] = True if 'g_all' not in params.keys() else params['g_all']
+    params['g_all'] = False if 'g_all' not in params.keys() else params['g_all']
     params['save_networks'] = False if 'save_networks' not in params.keys() else params['save_networks']
     params['logfile'] = 'log.txt' if 'logfile' not in params.keys() else params['logfile']
     return params
@@ -89,7 +91,7 @@ def default_missing_fields(fields):
     fields : dict
         Checked fields dict.
     """
-    fields = {} if fields is None else fields
+    assert len(fields.keys()) > 0, 'specify at least one field'
     for conf_dict in fields.values():
         conf_dict['role'] = 'confounder' if 'role' not in conf_dict.keys() else conf_dict['role']
         conf_dict['type'] = 'CATEGORY' if 'type' not in conf_dict.keys() else conf_dict['type']
@@ -113,6 +115,7 @@ def verify_input(data, params, fields):
             data[key] = {'ged': get_tcga_ged_name(key), 'pt': get_tcga_pt_name(key), 'sep': ',', 'tcga': True, 'tissue_type_field': data[key]['tissue_type_field'], 'tissue_type': data[key]['tissue_type']}
         else:
             assert data[key]['ged'] and data[key]['pt'], 'Specify ged (gene expression data) file name and pt (pheno type) file name for each cohort if tcga option is set to False.'
+    return data, params, fields
 
 def get_tcga_ged_name(key):
     """Get string of TCGA gene expression file for cohort specified in key. TCGA files can be downloaded using download_tcga_cohorts.py at TODO.
