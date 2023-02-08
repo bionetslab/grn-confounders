@@ -11,7 +11,7 @@ import logging
 class TestRunner(object):
     """Runs the tests."""
 
-    def __init__(self, cwd, data_dict, conf_dict, params_dict, rank=0):
+    def __init__(self, data_dict, conf_dict, params_dict, rank=0):
         """Constructs TestRunner object on the requested parameters.
         
         Parameters
@@ -31,7 +31,7 @@ class TestRunner(object):
             e.g. {'algorithms': [GENIE3, WGCNA], 'N_from': 0, 'N_to': 100, 'M_from': 0, 'M_to': 10, 'k_max': 5000, 'combine': False, 'par': False, 'g_all': False, 'save_networks': False} Further documentation on the params_dict can be found at TODO.
         """
         # set utility parameters
-        self.cwd = cwd
+        self.cwd = os.getcwd()
         self.rank = rank
         self.save = params_dict['save_networks']
         self.n_from = params_dict['N_from']

@@ -71,7 +71,7 @@ def run_tests(data, fields, params):
         m_to = params['M_to']
 
     # start tests
-    test_runner = TestRunner.TestRunner(os.getcwd(), data, fields, params, rank=rank)
+    test_runner = TestRunner.TestRunner(data, fields, params, rank=rank)
     test_runner.induce_partitions()
     test_runner.run_all()
 

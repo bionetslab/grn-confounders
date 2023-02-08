@@ -20,7 +20,7 @@ if __name__ == "__main__":
     fields = {'gender.demographic': {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.CATEGORY}}
     params = {'N_from': 0, 'N_to': 1, 'M_from': 0, 'M_to': 1, 'k_max': 100, 'save_networks': False, 'combine': False, 'g_all': False, 'logfile': 'log.txt'}
     InputHandler.verify_input(data, params, fields)
-    tr = TestRunner.TestRunner(os.getcwd(), data, fields, params)
+    tr = TestRunner.TestRunner(data, fields, params)
     tr.add_custom_algorithm(wrap, 'name')
     tr.induce_partitions()
     print(tr.rnd_partitions['HNSC']['gender.demographic'][0]['male'])
