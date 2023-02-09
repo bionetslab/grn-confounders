@@ -28,7 +28,7 @@ seaborn==0.12.2
 There are two options for users from here on: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section 'Option 2: Test your own methods'.
 ## Option 1: Run the tests using our predefined wrappers
 #### Install the methods called by our predefined wrapper scripts
-This step only has to be performed if you intend to use one of the predefined methods: ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA. If you want to test other methods, please refer to the information given in section TODO. 
+This step only has to be performed if you intend to use one of the predefined methods: ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA. If you want to test other methods, please refer to the information given in section 'Option 2: Test your own methods'. 
 ##### ARACNe-AP
 After downloading the [ARACNe-AP source code](https://github.com/califano-lab/ARACNe-AP), use the following command in the root directory of ARACNe-AP to build the ``jar`` executable:
 ```
@@ -105,10 +105,11 @@ To reproduce the presented tests, you can use the scripts download_tcga_data.py 
 ##### Download TCGA data
 Make sure you are connected to the internet when running download_tcga_data.py. The script will download the data from [UCSC Xena](TODO), aggregate substages into superior stages and merge stages iii and iv, as described in our paper. Further, the columns 'gender.demographic', 'age_at_initial_pathologic_diagnosis', 'race.demographic', and 'tumor_stage.diagnoses' will be renamed into 'sex', 'age', 'ethnicity', and 'stage', respectively, as in our tests. The pheno type file and gene expression file are saved to the data directory.
 
-To download the LUSC and HNSC cohorts, for example, use the following command:
+To download the LUSC and HNSC cohorts and the human known transcription factors, use the following command:
 ```
-TODO downloader cmd
+python download_tcga_cohorts.py -ct LUSC HNSC -tfs -pcgs
 ``` 
+All files are saved to the data directory. The list of human known transcription factors is saved to 'regulators.csv'. The list of protein-coding genes is saved to 'protein-coding_gene.csv'.
 ##### Set up the config files
 
     data.yml: 
