@@ -38,6 +38,10 @@ The jar will be placed in ``dist/aracne.jar``. The documentation can be found in
 
 For more information on using ARACNe-AP, check this [Readme](https://github.com/bionetslab/grn-confounders/tree/main/algorithms/ARACNe-AP)
 ##### GENIE3
+Huynh-Thu V, Irrthum A, Wehenkel L, Geurts P (2010). “Inferring regulatory networks from expression data using tree-based methods.” PLoS ONE, 5(9), e12776. doi: 10.1371/journal.pone.0012776.
+
+Aibar S, Bravo Gonzalez-Blas C, Moerman T, Huynh-Thu V, Imrichova H, Hulselmans G, Rambow F, Marine J, Geurts P, Aerts J, van den Oord J, Kalender Atak Z, Wouters J, Aerts S (2017). “SCENIC: Single-Cell Regulatory Network Inference And Clustering.” Nature Methods, 14, 1083-1086. doi: 10.1038/nmeth.4463.
+
 Run the folloing commands in the R terminal:
 ```bash
 if (!require("BiocManager", quietly = TRUE))
@@ -45,12 +49,18 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("GENIE3")
 ```   
  ##### WGCNA
+Langfelder P, Horvath S (2008). “WGCNA: an R package for weighted correlation network analysis.” BMC Bioinformatics, 559. https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559.
+
+Langfelder P, Horvath S (2012). “Fast R Functions for Robust Correlations and Hierarchical Clustering.” Journal of Statistical Software, 46(11), 1–17. https://www.jstatsoft.org/v46/i11/.
+
  Run the following commands in the R terminal:
 ```bash
  if (!require("WGCNA", quietly = TRUE))
    install.packages("WGCNA", repos = "http://cran.us.r-project.org")
 ```   
 ##### CEMiTool
+Russo PdST, Ferreira GR, Cardozo LE, Burger MC, Arias-Carrasco R, Maruyama SR, Hirata TDC, Lima DS, Passos FM, Fukutani KF, Lever M, Silva JS, Maracaja-Coutinho V, Nakaya HTI (2018). “CEMiTool: a Bioconductor package for performing comprehensive modular co-expression analyses.” BMC Bioinformatics, 19(56), 1–13. doi: 10.1186/s12859-018-2053-1, https://doi.org/10.1186/s12859-018-2053-1.
+
 Run the following commands in the R terminal:
 ```bash
  if (!require("BiocManager", quietly = TRUE))
@@ -58,6 +68,8 @@ Run the following commands in the R terminal:
 BiocManager::install("CEMiTool")
 ```
 ##### GRNBoost2
+Thomas Moerman, Sara Aibar Santos, Carmen Bravo González-Blas, Jaak Simm, Yves Moreau, Jan Aerts, Stein Aerts, GRNBoost2 and Arboreto: efficient and scalable inference of gene regulatory networks, Bioinformatics, Volume 35, Issue 12, June 2019, Pages 2159–2161, https://doi.org/10.1093/bioinformatics/bty916
+
 Run the following command line to install the python arboreto package containing the GRNBoost2 method:
 ```
 pip install arboreto
@@ -208,6 +220,17 @@ Check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. 
 JIs obtained from comparison of the network inferred from block _l_ belongin to the confounder-based partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_conf\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
 
 JIs obtained from comparison of the network inferred from block _l_ belongin to the random partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_rnd\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
+
+## Further data sets used
+List of protein-coding genes: http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_groups/protein-coding_gene.txt
+
+Seal RL, Braschi B, Gray K, Jones TEM, Tweedie S, Haim-Vilmovsky L, Bruford EA. Genenames.org: the HGNC resources in 2023. Nucleic Acids Res. PMID: 36243972 DOI: 10.1093/nar/gkac888
+
+HGNC Database, HUGO Gene Nomenclature Committee (HGNC), European Molecular Biology Laboratory, European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge CB10 1SD, United Kingdom www.genenames.org. Date of access: 01.10.2022
+
+List of human known transcription factors: http://humantfs.ccbr.utoronto.ca/download/v_1.01/DatabaseExtract_v_1.01.csv
+
+Lambert SA, Jolma A, Campitelli LF, Das PK, Yin Y, Albu M, Chen X, Taipale J, Hughes TR, Weirauch MT.(2018) The Human Transcription Factors. Cell. 172(4):650-665. doi: 10.1016/j.cell.2018.01.029. Review.
 
 ## License
 GNU GPL
