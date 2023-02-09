@@ -59,4 +59,14 @@ def download_known_tfs():
     if not os.path.exists(os.path.join(cwd, 'data')):
         os.mkdir(os.path.join(cwd, 'data'))
     df = pd.read_csv('http://humantfs.ccbr.utoronto.ca/download/v_1.01/TFs_Ensembl_v_1.01.txt', delimiter='\t', index_col=0)
-    df.to_csv(os.path.join(cwd, 'data', 'regulators.csv'), sep=',')
+    df.to_csv(os.path.join(cwd, 'data', 'regulators_.csv'), sep=',')
+
+def download_protein_coding_genes():
+    """Saves protein coding genes obtained from http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_groups/protein-coding_gene.txt
+    in /data."""
+    cwd = os.getcwd()
+    if not os.path.exists(os.path.join(cwd, 'data')):
+        os.mkdir(os.path.join(cwd, 'data'))
+    df = pd.read_csv('http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_groups/protein-coding_gene.txt', delimiter='\t', index_col=False, dtype=str)
+    df = df['ensembl_gene_id']
+    df.to_csv(os.path.join(cwd, 'data', 'protein-coding_gene.csv'), sep=',', index=False)
