@@ -69,7 +69,6 @@ class NetworkInferenceWrapper(ABC):
         sum_jaccard_indices = 0.0
         num_comparisons = 0
         state_k = ''
-        print(self._inferred_networks.keys())
         for i, j in itt.combinations(self._inferred_networks.keys(), 2):
             top_k_edges_i, state_i = self._get_top_k_edges(i, k)
             top_k_edges_j, state_j = self._get_top_k_edges(j, k)

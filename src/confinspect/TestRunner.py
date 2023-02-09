@@ -30,12 +30,19 @@ class TestRunner(object):
             Dict of further parameters needed to run the tests.
             e.g. {'algorithms': [GENIE3, WGCNA], 'N_from': 0, 'N_to': 100, 'M_from': 0, 'M_to': 10, 'k_max': 5000, 'combine': False, 'par': False, 'g_all': False, 'save_networks': False} Further documentation on the params_dict can be found at TODO.
         """
-        # set and default utility parameters
+        # initialize and empty logfile
         self.cwd = os.getcwd()
-        self.rank = rank
-        data_dict, params_dict, conf_dict = InputHandler.verify_input(data_dict, params_dict, conf_dict)
+        self.logger = TestRunner.get_logger(params_dict['logfile'], self.cwd)
+
+        # check and possibly default input dictionaries
+        data_dict, params_dict, conf_dict = InputHandler.verify_input(data_dict, params_dict, conf_dict, self.logger)
+
+        # set data and confounder dictionaries
         self.data_dict = data_dict
         self.conf_dict = conf_dict
+
+        # set utility parameters
+        self.rank = rank
         self.save = params_dict['save_networks']
         self.n_from = params_dict['N_from']
         self.n_to = params_dict['N_to'] 
@@ -51,9 +58,6 @@ class TestRunner(object):
         # list variables for chi2 tests
         self.chi = [key for key in list(conf_dict.keys()) if conf_dict[key]['role'] == Selectors.Role.VARIABLE]
  
-        # initialize and empty logfile
-        self.logger = TestRunner.get_logger(params_dict['logfile'], self.cwd)
-
         # set selector parameters
         self.cancer_type_selectors = sorted(list(data_dict.keys()))
         self.confounder_selectors = list(conf_dict.keys())
@@ -137,7 +141,7 @@ class TestRunner(object):
             self.infer_g_all()
         for ct_sel in self.cancer_type_selectors:
             for conf_sel in self.confounder_selectors:
-                if len(list(self.conf_partitions[ct_sel][conf_sel].values())) > 1 or conf_sel == Selectors.ConfounderSelector.ALL:
+                if len(list(self.conf_partitions[ct_sel][conf_sel].values())) > 1:
                     self._run_chi2_tests(conf_sel, ct_sel)
                     self._run_on_cancer_type_confounder(ct_sel, conf_sel)
 
@@ -162,8 +166,6 @@ class TestRunner(object):
                 network_state = []
                 intersections = []
                 unions = []
-                if conf_sel == Selectors.ConfounderSelector.ALL: # TODO remove? 
-                    continue
                 for k in self.rep_k:
                     ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
                     self.conf_results[ct_sel][conf_sel][alg_sel][j].append(ji)
@@ -194,41 +196,40 @@ class TestRunner(object):
                         'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_conf_{str(j)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
                         
             print('running on random partitions...')
-            if conf_sel != Selectors.ConfounderSelector.ALL:
-                for i in range(self.n_from, self.n_to):
-                    algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
-                    algorithm_wrapper.infer_networks(self.rank)
-                    self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel, self.save)
-                    network_state = []
-                    intersections = []
-                    unions = []
-                    for k in self.rep_k:
-                        ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
-                        self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(ji)
-                        unions.append(s_un)
-                        intersections.append(s_int)
-                        network_state.append(state)
-                    pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 
+            for i in range(self.n_from, self.n_to):
+                algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
+                algorithm_wrapper.infer_networks(self.rank)
+                self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel, self.save)
+                network_state = []
+                intersections = []
+                unions = []
+                for k in self.rep_k:
+                    ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
+                    self.rnd_results[ct_sel][conf_sel][alg_sel][i].append(ji)
+                    unions.append(s_un)
+                    intersections.append(s_int)
+                    network_state.append(state)
+                pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 
                     'mean JI': self.rnd_results[ct_sel][conf_sel][alg_sel][i]}).to_csv(os.path.join('results', 'JI', 
                     f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
     
-                    if self.g_all and i in self.g_all_networks[ct_sel][alg_sel].keys():
-                        cur_g_all = self.g_all_networks[ct_sel][alg_sel][j]
-                        block_networks = algorithm_wrapper._inferred_networks.copy()
-                        for block_id in block_networks.keys():
-                            algorithm_wrapper._inferred_networks = {'g_all': cur_g_all, block_id: block_networks[block_id]}
-                            # compute meanJIs over k of cur_block_network and cur_g_all
-                            network_state = []
-                            intersections = []
-                            unions = []
-                            results = []
-                            for k in self.rep_k:
-                                ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
-                                results.append(ji)
-                                unions.append(s_un)
-                                intersections.append(s_int)
-                                network_state.append(state)
-                            pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_rnd_{str(i)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
+                if self.g_all and i in self.g_all_networks[ct_sel][alg_sel].keys():
+                    cur_g_all = self.g_all_networks[ct_sel][alg_sel][j]
+                    block_networks = algorithm_wrapper._inferred_networks.copy()
+                    for block_id in block_networks.keys():
+                        algorithm_wrapper._inferred_networks = {'g_all': cur_g_all, block_id: block_networks[block_id]}
+                        # compute meanJIs over k of cur_block_network and cur_g_all
+                        network_state = []
+                        intersections = []
+                        unions = []
+                        results = []
+                        for k in self.rep_k:
+                            ji, state, s_int, s_un = algorithm_wrapper.mean_jaccard_index_at_k(k)
+                            results.append(ji)
+                            unions.append(s_un)
+                            intersections.append(s_int)
+                            network_state.append(state)
+                        pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_rnd_{str(i)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
                             
     def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel, save=False):
         """Saves the inferred networks to csv.

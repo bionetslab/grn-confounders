@@ -99,7 +99,28 @@ def default_missing_fields(fields):
         conf_dict['type'] = 'CATEGORY' if 'type' not in conf_dict.keys() else conf_dict['type']
     return fields
 
-def verify_input(data, params, fields):
+def dump_config(data, params, fields, logger=None):
+    """Dump defaulted config files to inform the user about the final configurations of his test runs.
+    Parameters
+    ----------
+    args: argparse.Namespace
+        Namespace object populated with user command line arguments.
+    """
+    cwd = os.getcwd()
+    stamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    if not os.path.exists(config_path):
+        os.mkdir(config_path)
+    with open(os.path.join(cwd, 'config', f'data_def_{stamp}.yml'), 'w') as f:
+        yaml.dump(data, f)
+    with open(os.path.join(cwd, 'config', f'fields_def_{stamp}.yml'), 'w') as f:
+        yaml.dump(fields, f)
+    with open(os.path.join(cwd, 'config', f'params_def_{stamp}.yml'), 'w') as f:
+        yaml.dump(params, f)
+    if logger:
+        logger.info(f'Defaulted incomplete config files. Modified files were dumped to data_def_{stamp}.yml, params_def_{stamp}.yml,\
+             fields_def_{stamp}.yml\ in config directory.')
+
+def verify_input(data_, params_, fields_, logger=None):
     """Check and default data, params, and fields dictionaries. The dictionaries ill contain all necessary entries afterwards.
     Parameters
     ----------
@@ -113,15 +134,11 @@ def verify_input(data, params, fields):
     ----------
     checked and defaulted data, params, fields dictionaries
     """
-    data = default_missing_data(data)
-    params = default_missing_params(params)
-    fields = default_missing_fields(fields)
+    data = default_missing_data(data_)
+    params = default_missing_params(params_)
+    fields = default_missing_fields(fields_)
     if len(fields.keys()) == 0:
         assert params['g_all'] == True, 'If no fields are specified, g_all must be set to True. Otherwise, nothing to do here.'
-    for key in fields.keys():
-        print(key)
-        fields[key]['type'] = Selectors.BlockType(fields[key]['type'])
-        fields[key]['role'] = Selectors.Role(fields[key]['role'])
     assert params['g_all'] or len(list(data.keys())) > 0, 'If no confounders are specified, -g_all flag must be set to infer network from entire data instead.'
     assert params['N_from'] <= params['N_to'], 'N_from must be smaller than or equal to N_to'
     assert params['M_from'] <= params['M_to'], 'M_from must be smaller than or equal to M_to'
@@ -130,6 +147,15 @@ def verify_input(data, params, fields):
             data[key] = {'ged': get_tcga_ged_name(key), 'pt': get_tcga_pt_name(key), 'sep': ',', 'tcga': True, 'tissue_type_field': data[key]['tissue_type_field'], 'tissue_type': data[key]['tissue_type']}
         else:
             assert data[key]['ged'] and data[key]['pt'], 'Specify ged (gene expression data) file name and pt (pheno type) file name for each cohort if tcga option is set to False.'
+    if not (data == data_) and (fields == fields_) and (params == params_):
+        dump_config(data, params, fields, logger)
+
+    # change string identifiers into Selectors
+    for key in fields.keys():
+        assert fields[key]['type'] in [str(sel) for sel in list(Selectors.BlockType)], f'type of {key} confounder must be one of ' + ','.join([str(sel) for sel in list(Selectors.BlockType)])
+        assert fields[key]['role'] in [str(sel) for sel in list(Selectors.Role)], f'role of {key} confounder must be one of ' + ','.join([str(sel) for sel in list(Selectors.Role)])
+        fields[key]['type'] = Selectors.BlockType(fields[key]['type'])
+        fields[key]['role'] = Selectors.Role(fields[key]['role'])
     return data, params, fields
 
 def get_tcga_ged_name(key):
