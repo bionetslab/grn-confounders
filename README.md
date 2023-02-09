@@ -128,7 +128,7 @@ TODO downloader cmd
        role: CONFOUNDER
        type: CATEGORY
     ethnicity:
-       role: CONFUNDER
+       role: CONFOUNDER
        type: CATEGORY
     stage:
        role: VARIABLE
