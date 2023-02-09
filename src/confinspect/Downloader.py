@@ -45,7 +45,7 @@ def download_TCGA_phenotype_data(cancer_type_selector):
         except KeyError:
             pass
         # rename columns
-        pheno_data = pheno_data.rename(columns={'gender.demographic': 'sex', 'age_at_initial_pathologic_diagnosis': 'age'
+        pheno_data = pheno_data.rename(columns={'gender.demographic': 'sex', 'age_at_initial_pathologic_diagnosis': 'age',
                                             'tumor_stage.diagnoses': 'stage', 'race.demographic': 'ethnicity'}, errors='ignore')
 
         if not os.path.exists(os.path.join(cwd, 'data')):
