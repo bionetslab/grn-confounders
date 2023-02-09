@@ -1,0 +1,12 @@
+age:
+   role: CONFOUNDER
+   type: QUARTILE
+sex:
+   role: CONFOUNDER
+   type: CATEGORY
+ethnicity:
+   role: CONFUNDER
+   type: CATEGORY
+stage:
+   role: VARIABLE
+   type: CATEGORY  

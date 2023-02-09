@@ -1,0 +1,8 @@
+HNSC:
+   tcga: !!bool True
+   tissue_type_field: sample_type.samples 
+   tissue_type: Primary Tumor
+LUSC:
+   tcga: !!bool True
+   tissue_type_field: sample_type.samples 
+   tissue_type: Primary Tumor
