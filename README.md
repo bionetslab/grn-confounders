@@ -155,7 +155,7 @@ These config files can be found in the config directory with the appendix '\_tcg
 ##### Start the tests
 Use the run_tests.py script to start the actual tests. The config files from above will instruct the script.
 ```
-TODO run_tests cmd
+python run_tests.py
 ``` 
 ## Option 2: Test your own methods
 To define custom algorithm wrappers, the user can use the following code stub as a blue print:
