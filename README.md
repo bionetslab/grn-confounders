@@ -24,8 +24,8 @@ seaborn==0.12.2
 
 *IMPORTANT*
 
-There are two options for users from here on: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section TODO.
-## 1) Run the tests using our predefined wrappers
+There are two options for users from here on: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section 'Option 2: Test your own methods'.
+## Option 1: Run the tests using our predefined wrappers
 #### Install the methods called by our predefined wrapper scripts
 This step only has to be performed if you intend to use one of the predefined methods: ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA. If you want to test other methods, please refer to the information given in section TODO. 
 ##### ARACNe-AP
@@ -61,7 +61,7 @@ Run the following command line to install the python arboreto package containing
 ```
 pip install arboreto
 ```
-## Run the tests
+#### Run tests on your own data
 (If you want to reproduce the tests from our paper, please go to the next section)
 
 To use the predefined wrappers, i.e. using one of the methods ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA, you can use the runner script run_tests.py. The runner script takes all input parameters from the config files provided in the config directory. The config files are organized as follows:
@@ -99,7 +99,7 @@ To use the predefined wrappers, i.e. using one of the methods ARACNe-AP, CEMiToo
     logfile: log.txt # print info log to this file (in 'w', i.e. overwrite mode), default is log.txt
     
 You can modify the config files such that you can run your own tests, or use the config files given in the section below, to...
-### Reproduce the tests from the paper
+#### Reproduce the tests from the paper
 To reproduce the presented tests, you can use the scripts download_tcga_data.py before running run_tests.py. All scripts will use the TCGA study abbreviations we use in our paper to address the different cohorts.
 ##### Download TCGA data
 Make sure you are connected to the internet when running download_tcga_data.py. The script will download the data from [UCSC Xena](TODO), aggregate substages into superior stages and merge stages iii and iv, as described in our paper. Further, the columns 'gender.demographic', 'age_at_initial_pathologic_diagnosis', 'race.demographic', and 'tumor_stage.diagnoses' will be renamed into 'sex', 'age', 'ethnicity', and 'stage', respectively, as in our tests. The pheno type file and gene expression file are saved to the data directory.
@@ -128,7 +128,7 @@ TODO downloader cmd
        role: CONFOUNDER
        type: CATEGORY
     ethnicity:
-       role: CONFUNDER
+       role: CONFOUNDER
        type: CATEGORY
     stage:
        role: VARIABLE
@@ -139,7 +139,7 @@ TODO downloader cmd
     - ARACNE
     - CEMITOOL
     - GENIE3
-    - GRNBoost2
+    - GRNBOOST2
     - WGCNA
     N_from: 0 
     N_to: 100 
@@ -155,7 +155,7 @@ Use the run_tests.py script to start the actual tests. The config files from abo
 ```
 TODO run_tests cmd
 ``` 
-## Test your own methods
+## Option 2: Test your own methods
 To define custom algorithm wrappers, the user can use the following code stub as a blue print:
 ```python
 import confinspect
