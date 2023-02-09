@@ -152,8 +152,8 @@ def verify_input(data_, params_, fields_, logger=None):
 
     # change string identifiers into Selectors
     for key in fields.keys():
-        assert fields[key]['type'] in [str(sel) for sel in list(Selectors.BlockType)], f'type of {key} confounder must be one of ' + ','.join([str(sel) for sel in list(Selectors.BlockType)])
-        assert fields[key]['role'] in [str(sel) for sel in list(Selectors.Role)], f'role of {key} confounder must be one of ' + ','.join([str(sel) for sel in list(Selectors.Role)])
+        assert str(fields[key]['type']) in [str(sel) for sel in list(Selectors.BlockType) if sel != Selectors.BlockType.ALL], f'type of {key} confounder must be one of ' + ','.join([str(sel) for sel in list(Selectors.BlockType) if sel != Selectors.BlockType.ALL])
+        assert str(fields[key]['role']) in [str(sel) for sel in list(Selectors.Role)], f'role of {key} confounder must be one of ' + ','.join([str(sel) for sel in list(Selectors.Role)])
         fields[key]['type'] = Selectors.BlockType(fields[key]['type'])
         fields[key]['role'] = Selectors.Role(fields[key]['role'])
     return data, params, fields
