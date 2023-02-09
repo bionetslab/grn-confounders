@@ -1,14 +1,20 @@
-# Investigating confounding in network inference
+# Investigating confounding in network inference - the confinspect package
 
-grn-confounders is a collection of scripts that allow users to investigate confounding in network inference. The scripts provided in this repository implement the test protocol presented in TODO. The directory 'results_paper' contains all results and jupyter-notebooks used in the paper. For more customized testing, programmers can import the confinspect package directly into their own scripts. Detailed information on the confinspect package can be found at TODO.
+Investigating confounding in gene regulatory networks (GRNs) and gene co-expression networks (GCNs) inferred from gene expression data.
 
-### Prerequisites
+The scripts and package provided in this repository allow users to investigate confounding in network inference, as presented in this [paper](TODO). The directory 'results_paper' contains all the presented results and jupyter-notebooks used in the paper. Further, programmers can import the confinspect package directly into their own scripts for more customized testing.
+
+There are two options for users: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section TODO.
+
+## Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade pip.
-##### Install confinspect as local package from the source code src/confinspect/. Move into the root directory of the repository, then run the following command:
+
+Download this repository. The directory result_paper can be omitted, unles you wish to visualize the results from our paper.
+#### Install confinspect as a local package from the source code src/confinspect/. Move into the root directory of the repository, then run the following command:
 ```
 pip install .
 ```
-##### Install python packages
+#### Install the required python packages
 matplotlib==3.6.0
 mpi4py==3.1.4
 numpy==1.23.3
@@ -17,6 +23,8 @@ PyYAML==6.0
 qnorm==0.8.1
 scipy==1.9.1
 seaborn==0.12.2
+#### Install the methods called by our predefined wrapper scripts
+This step only has to be performed if you intend to use one of the predefined methods: ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA. If you want to test other methods, please refer to the information given in section TODO. 
 ##### ARACNe-AP
 After downloading the [ARACNe-AP source code](https://github.com/califano-lab/ARACNe-AP), use the following command in the root directory of ARACNe-AP to build the ``jar`` executable:
 ```
@@ -50,26 +58,49 @@ Run the following command line to install the python arboreto package containing
 ```
 pip install arboreto
 ```
-## Instructions on reproducing the tests presented in the paper
-To reproduce the presented tests, follow the steps below:
-##### Download this repository
-After downloading this repository, check for the following directries and make sure the algorithms directory contains the caller script belonging to the predefined algrithm wrappers.
-
-root/
-  algorithms/
-  config/
-  data/
-  results/
-    JI/
-    networks/
-  temp/
-
+### 1) Run the tests using our predefined wrappers
+To use the predefined wrappers, i.e. using one of the methods ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA, you can use the runner script run_tests.py. The runner script takes all input parameters from the config files provided in the config directory. The config files are organized as follows:
+    data.yml: information abut the gene expression data and pheno type data to be used. Example:
+    HNSC: # arbitrary string identifier of the cohort
+       tcga: !!bool False # iff the data was downloaded using the download_tcga_data.py TODO. Default is False
+       ged: 'ged_file_name.csv' # name of the gene expression file, located in the data directory
+       pt: 'pt_file_name.csv' # name of the pheno type file, located in the data directory
+       sep: ',' # separator used in both the files at ged and pt, default is ','
+       tissue_type_field: sample_type.samples # name of the column (field) in the pt file to be used to filter the samples. Must exist in the pt file.
+       tissue_type: Primary Tumor # keep only samples that have 'Primary Tumor' in the 'sample_type.samples' column. Must exist in the pt file.
+    LUSC:
+        ...and so on
+        
+    fields.yml: information about the confounders
+    gender.demographic: # name of the column in the pt file to be tested for confounding (i.e. used to induce a partition)
+       role: CONFOUNDER # CONFOUNDER | VARIABLE - perform a chi2 test for dependency of all variables with all confounders
+       type: CATEGORY # CATEGORY | QUARTILE - how to induce the partition. CATEGORY: split samples into blocks based on the exact expression in the column used for partitioning (e.g. male, female). QUARTILE: form a block of each of the upper and lower quartile accoridng to the values in the column used for partitioning. Column values must be numerical (e.g. upper and lower quartile of a numerical age column)
+    tumor_stage.diagnoses:
+       role: VARIABLE
+       type: CATEGORY
+       
+    params.yml: all other parameters
+    algorithms: # list methods to be tested below, in capital letters.
+    - CEMITOOL
+    - WGCNA
+    N_from: 0 # starting index of random partitions per (cohort, confounder)
+    N_to: 10 # stopping index of random partitions per (cohort, confounder)
+    M_from: 0 # starting index 
+    M_to: 10
+    k: 5000
+    combine: !!bool False
+    par: !!bool False
+    g_all: !!bool True
+    save_networks: !!bool False
+    logfile: log.txt
+    
+   
+To reproduce the presented tests, you can use the scripts download_tcga_data.py and run_tests.py. The actual runner script, run_tests.py, is instructed by the config files data.yml, fields.yml, and params.yml in the config directory. You can use the files as-is, or modify them to run tests on your own data and confounders. Follow the steps below:
 ##### Download TCGA data
-Use the command line tool of the downloader script to download the gene expression data and pheno type data of a TCGA cohort, exemplarily the LUSC cohort. Make sure you are connected to the internet and have permission to access the internet on your device. The downloader will rename the fields ... and aggregate substages into the superior stages i, ii, and a joint categoriy iii and iv.
+Use the command line tool of the downloader script to download the gene expression data and pheno type data of a TCGA cohort, exemplarily the LUSC cohort. Make sure you are connected to the internet and have permission to access the internet on your device. The downloader will rename the fields ... and aggregate substages into the superior stages i, ii, and a joint categoriy iii and iv. The data is stored in the data directory.
 ```
 TODO downloader cmd
 ``` 
-##### Run the tests
 Use the ... script to start the actual tests. The config files provided in ... will instruct the script to test for confounding of the ... confounders in the LUSC cohort using the methods ... Further, test for an effect of the stage variable, and compute a $\chi^{2}$ test of the stage variable. 
 ```
 TODO run_tests cmd
