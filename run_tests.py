@@ -2,7 +2,6 @@
 from confinspect import TestRunner
 import InputHandler
 import os
-import argparse
 import yaml
 
 def run_tests(data, fields, params):
