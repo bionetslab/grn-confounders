@@ -139,7 +139,7 @@ TODO downloader cmd
     - ARACNE
     - CEMITOOL
     - GENIE3
-    - GRNBoost2
+    - GRNBOOST2
     - WGCNA
     N_from: 0 
     N_to: 100 
