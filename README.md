@@ -4,12 +4,10 @@ Investigating confounding in gene regulatory networks (GRNs) and gene co-express
 
 The scripts and package provided in this repository allow users to investigate confounding in network inference, as presented in this [paper](TODO). The directory 'results_paper' contains all the presented results and jupyter-notebooks used in the paper. Further, programmers can import the confinspect package directly into their own scripts for more customized testing.
 
-There are two options for users: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section TODO.
-
 ## Prerequisites
-Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade pip.
+Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade [pip](https://pypi.org/project/pip/).
 
-Download this repository. The directory result_paper can be omitted, unles you wish to visualize the results from our paper.
+Download this repository. The directory results_paper can be omitted, unless you only wish to visualize the results from our paper.
 #### Install confinspect as a local package from the source code src/confinspect/. Move into the root directory of the repository, then run the following command:
 ```
 pip install .
@@ -23,6 +21,11 @@ PyYAML==6.0
 qnorm==0.8.1
 scipy==1.9.1
 seaborn==0.12.2
+
+*IMPORTANT*
+
+There are two options for users from here on: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section TODO.
+## 1) Run the tests using our predefined wrappers
 #### Install the methods called by our predefined wrapper scripts
 This step only has to be performed if you intend to use one of the predefined methods: ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA. If you want to test other methods, please refer to the information given in section TODO. 
 ##### ARACNe-AP
@@ -58,11 +61,13 @@ Run the following command line to install the python arboreto package containing
 ```
 pip install arboreto
 ```
-### 1) Run the tests using our predefined wrappers
+## Run the tests
+(If you want to reproduce the tests from our paper, please go to the next section)
+
 To use the predefined wrappers, i.e. using one of the methods ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA, you can use the runner script run_tests.py. The runner script takes all input parameters from the config files provided in the config directory. The config files are organized as follows:
+
     data.yml: information abut the gene expression data and pheno type data to be used. Example:
     HNSC: # arbitrary string identifier of the cohort
-       tcga: !!bool False # iff the data was downloaded using the download_tcga_data.py TODO. Default is False
        ged: 'ged_file_name.csv' # name of the gene expression file, located in the data directory
        pt: 'pt_file_name.csv' # name of the pheno type file, located in the data directory
        sep: ',' # separator used in both the files at ged and pt, default is ','
@@ -71,40 +76,118 @@ To use the predefined wrappers, i.e. using one of the methods ARACNe-AP, CEMiToo
     LUSC:
         ...and so on
         
-    fields.yml: information about the confounders
+    fields.yml: information about the confounders. We distinguish between variables and confounders ('special variables'). The chi2-tests are performed for each variable with all confounders. The results of the chi2 tests are printed to the log file.
     gender.demographic: # name of the column in the pt file to be tested for confounding (i.e. used to induce a partition)
-       role: CONFOUNDER # CONFOUNDER | VARIABLE - perform a chi2 test for dependency of all variables with all confounders
+       role: CONFOUNDER # CONFOUNDER | VARIABLE - perform a chi2 test for dependency for each variable with all confounders
        type: CATEGORY # CATEGORY | QUARTILE - how to induce the partition. CATEGORY: split samples into blocks based on the exact expression in the column used for partitioning (e.g. male, female). QUARTILE: form a block of each of the upper and lower quartile accoridng to the values in the column used for partitioning. Column values must be numerical (e.g. upper and lower quartile of a numerical age column)
     tumor_stage.diagnoses:
-       role: VARIABLE
-       type: CATEGORY
+       ... and so on
        
     params.yml: all other parameters
     algorithms: # list methods to be tested below, in capital letters.
     - CEMITOOL
     - WGCNA
-    N_from: 0 # starting index of random partitions per (cohort, confounder)
-    N_to: 10 # stopping index of random partitions per (cohort, confounder)
-    M_from: 0 # starting index 
-    M_to: 10
-    k: 5000
-    combine: !!bool False
-    par: !!bool False
-    g_all: !!bool True
-    save_networks: !!bool False
-    logfile: log.txt
+    N_from: 0 # starting index of random partitions per (cohort, confounder), default is 0
+    N_to: 10 # stopping index of random partitions per (cohort, confounder), default is 100
+    M_from: 0 # starting index of the copies of the confounder-induced partition per (cohort, confounder), default is 0
+    M_to: 10 # stopping index of the copies of the confounder-induced partition per (cohort, confounder), default is 10
+    k: 5000 # Compute mean Jaccard  Index of top k edges, k in range(10, k,100), default is 5000
+    combine: !!bool False # combine all cohorts specified in data.yml into one cohort and test for the effect of 'cohort name' as confounder, default is False
+    par: !!bool False # use MPI parallelization, default is False
+    g_all: !!bool False # infer networks from entire data set, for overlapping indices of range(N_from, N_to) and range(M_from, M_to), default is False
+    save_networks: !!bool False # save networks from which the mean Jaccard Indices were computed, default is False (high storage consumption)
+    logfile: log.txt # print info log to this file (in 'w', i.e. overwrite mode), default is log.txt
     
-   
-To reproduce the presented tests, you can use the scripts download_tcga_data.py and run_tests.py. The actual runner script, run_tests.py, is instructed by the config files data.yml, fields.yml, and params.yml in the config directory. You can use the files as-is, or modify them to run tests on your own data and confounders. Follow the steps below:
+You can modify the config files such that you can run your own tests, or use the config files given in the section below, to...
+### Reproduce the tests from the paper
+To reproduce the presented tests, you can use the scripts download_tcga_data.py before running run_tests.py. All scripts will use the TCGA study abbreviations we use in our paper to address the different cohorts.
 ##### Download TCGA data
-Use the command line tool of the downloader script to download the gene expression data and pheno type data of a TCGA cohort, exemplarily the LUSC cohort. Make sure you are connected to the internet and have permission to access the internet on your device. The downloader will rename the fields ... and aggregate substages into the superior stages i, ii, and a joint categoriy iii and iv. The data is stored in the data directory.
+Make sure you are connected to the internet when running download_tcga_data.py. The script will download the data from [UCSC Xena](TODO), aggregate substages into superior stages and merge stages iii and iv, as described in our paper. Further, the columns 'gender.demographic', 'age_at_initial_pathologic_diagnosis', 'race.demographic', and 'tumor_stage.diagnoses' will be renamed into 'sex', 'age', 'ethnicity', and 'stage', respectively, as in our tests. The pheno type file and gene expression file are saved to the data directory.
+
+To download the LUSC and HNSC cohorts, for example, use the following command:
 ```
 TODO downloader cmd
 ``` 
-Use the ... script to start the actual tests. The config files provided in ... will instruct the script to test for confounding of the ... confounders in the LUSC cohort using the methods ... Further, test for an effect of the stage variable, and compute a $\chi^{2}$ test of the stage variable. 
+##### Set up the config files
+
+    data.yml: 
+    HNSC:
+       tcga: !!bool True
+       tissue_type_field: sample_type.samples 
+       tissue_type: Primary Tumor
+    LUSC:
+       tcga: !!bool True
+       tissue_type_field: sample_type.samples 
+       tissue_type: Primary Tumor
+       
+    fields.yml: 
+    age: # name of the column in the pt file to be tested for confounding (i.e. used to induce a partition)
+       role: CONFOUNDER
+       type: QUARTILE
+    sex:
+       role: CONFOUNDER
+       type: CATEGORY
+    ethnicity:
+       role: CONFUNDER
+       type: CATEGORY
+    stage:
+       role: VARIABLE
+       type: CATEGORY       
+       
+    params.yml:
+    algorithms:
+    - ARACNE
+    - CEMITOOL
+    - GENIE3
+    - GRNBoost2
+    - WGCNA
+    N_from: 0 
+    N_to: 100 
+    M_from: 0 
+    M_to: 10 
+    k: 5000 
+    par: !!bool True 
+    g_all: !!bool True
+
+These config files can be found in the config directory with the appendix '\_tcga'. Remove the appendix or copy the lines into the data.yml, fields.yml, params.yml files.
+##### Start the tests
+Use the run_tests.py script to start the actual tests. The config files from above will instruct the script.
 ```
 TODO run_tests cmd
 ``` 
+## Test your own methods
+To define custom algorithm wrappers, the user can use the following code stub as a blue print:
+```python
+import confinspect
+from confinspect import NetworkInferenceWrapper, TestRunner, Selectors
+import InputHandler
+import os
+
+class CustomWrapper(NetworkInferenceWrapper.NetworkInferenceWrapper):
+
+    def _infer_network(self, expression_data, rank):
+        print('infer network from a single block!')
+        pass
+
+    def _get_top_k_edges(self, i, k):
+        print('Get top k edges, with each edge being a tuple of nodes, and don\'t forget to order the nodes alphabetically, if the \
+            edges are undirected!')
+        pass
+
+if __name__ == "__main__":
+    InputHandler.setup_directories()
+    wrap = CustomWrapper()
+    data = {'HNSC': {'tcga': True, 'ged': f'TCGA-HNSC.htseq_fpkm.tsv', 'pt': f'TCGA-HNSC.GDC_phenotype.tsv', 'sep': ',', 'tissue_type_field': None, 'tissue_type': None}}
+    fields = {'gender.demographic': {'role': Selectors.Role.CONFOUNDER, 'type': Selectors.BlockType.CATEGORY}}
+    params = {'N_from': 0, 'N_to': 1, 'M_from': 0, 'M_to': 1, 'k_max': 100, 'save_networks': False, 'g_all': True, 'logfile': 'log.txt'}
+    InputHandler.verify_input(data, params, fields)
+    tr = TestRunner.TestRunner(data, fields, params)
+    tr.add_custom_algorithm(wrap, 'name')
+    tr.induce_partitions()
+
+    print('This will throw an error unless the CustomWrapper gets implemented properly.')
+    tr.run_all()
+```
 ##### Plot the results
 Check whether the computed mean Jaccard Indices are stored in results/JI. The path names resolve as follows: TODO
 
@@ -113,13 +196,6 @@ Run the jupyter-notebook ... located in the root directory to create line plots 
 Then check whether the mean Jaccard Indices of the cmparison with the networks inferred from the entire data are stored in results/JI. The path names resolve as follows: TODO
 
 Run the jupyter-notebook ... located in the root directory to create line plots of the results.
-
-## Instructions on running tests on your own data
-TODO
-
-## Instructions on running tests with new methods
-To define custom algorithm wrappers, the user is referred to the script 'dummy_custom_' TODO, implementing the stub of a new method wrapper inheriting from NetwrokInferenceWrapper.py. For further instructions, please visit confinspect TODO and read the documentation and README.
-
 
 ## License
 GNU GPL
