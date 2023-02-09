@@ -2,16 +2,17 @@
 
 Investigating confounding in gene regulatory networks (GRNs) and gene co-expression networks (GCNs) inferred from gene expression data.
 
-The scripts and package provided in this repository allow users to investigate confounding in network inference, as presented in this [paper](TODO). The directory 'results_paper' contains all the presented results and jupyter-notebooks used in the paper. Further, programmers can import the confinspect package directly into their own scripts for more customized testing.
+The scripts and package provided in this repository allow users to investigate confounding in network inference using the methods ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, and WGCNA, as presented in this [paper](TODO). The directory 'results_paper' contains all the results presented and jupyter-notebooks used in the paper. Further, programmers can import the confinspect package directly into their own scripts to implement customized algorithm wrappers and testing procedures.
 
 ## Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade [pip](https://pypi.org/project/pip/).
 
-Download this repository. The directory results_paper can be omitted, unless you only wish to visualize the results from our paper.
-#### Install confinspect as a local package from the source code src/confinspect/. Move into the root directory of the repository, then run the following command:
+Download this repository. The directory results_paper can be omitted, unless you wish to visualize the results from our paper.
+#### Install confinspect as a local package from the source code. Move into the root directory of the repository, then run the following command:
 ```
 pip install .
 ```
+pip will install confinspect from the .toml file and the code in src/confinspect as a local package. Please note that the package might be removed upon disactivation of your environment, and re-installation via the command above might be necessary.
 #### Install the required python packages
 matplotlib==3.6.0
 mpi4py==3.1.4
@@ -61,7 +62,7 @@ Run the following command line to install the python arboreto package containing
 ```
 pip install arboreto
 ```
-#### Run tests on your own data
+#### Test your own data
 (If you want to reproduce the tests from our paper, please go to the next section)
 
 To use the predefined wrappers, i.e. using one of the methods ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, or WGCNA, you can use the runner script run_tests.py. The runner script takes all input parameters from the config files provided in the config directory. The config files are organized as follows:
@@ -189,13 +190,23 @@ if __name__ == "__main__":
     tr.run_all()
 ```
 ##### Plot the results
-Check whether the computed mean Jaccard Indices are stored in results/JI. The path names resolve as follows: TODO
+*Visualization of the first part of the protocol (i.e. comparisons of the networks inferred from the blocks of the same partition)
 
-Run the jupyter-notebook ... located in the root directory to create line plots and swarm plots of the results.
+Check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. The path names resolve as follows:
 
-Then check whether the mean Jaccard Indices of the cmparison with the networks inferred from the entire data are stored in results/JI. The path names resolve as follows: TODO
+JIs obtained from confounder-based partition _i_ of the cohort _cohort_ induced by the variable _variable_ inferred by the method _method_: cb\_{i}\_{method}\_{variable}\_{cohort}\_jaccInd.csv
 
-Run the jupyter-notebook ... located in the root directory to create line plots of the results.
+JIs obtained from random partition _i_ of the cohort _cohort_ induced by the variable _variable_ inferred by the method _method_: rnd\_{i}\_{method}\_{variable}\_{cohort}\_jaccInd.csv
+
+Modify the entries for method names, confounders, and cohorts in the jupyter-notebook visualize_mean_JIs_blocks.ipynb, then run the notebook.
+
+*Visualization of the first part of the protocol (i.e. comparisons of the networks inferred from the single blocks with the network inferred from the entire data)
+
+Check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. The path names resolve as follows:
+
+JIs obtained from comparison of the network inferred from block _l_ belongin to the confounder-based partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_conf\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
+
+JIs obtained from comparison of the network inferred from block _l_ belongin to the random partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_rnd\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
 
 ## License
 GNU GPL
