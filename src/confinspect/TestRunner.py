@@ -16,8 +16,6 @@ class TestRunner(object):
         
         Parameters
         ----------
-        cwd : str
-            Current working directory containing all input and output directories.
         data_dict : dict
             Dict of cancer types to be investigated with corresponding gene expression file names, phenotype file names, pheno data 
             filtering information, and separator character.
@@ -29,6 +27,8 @@ class TestRunner(object):
         params_dict : dict
             Dict of further parameters needed to run the tests.
             e.g. {'algorithms': [GENIE3, WGCNA], 'N_from': 0, 'N_to': 100, 'M_from': 0, 'M_to': 10, 'k_max': 5000, 'combine': False, 'par': False, 'g_all': False, 'save_networks': False} Further documentation on the params_dict can be found at TODO.
+        rank : int
+            Rank of executing process. 0, if sequential.
         """
         # initialize and empty logfile
         self.cwd = os.getcwd()
@@ -89,6 +89,16 @@ class TestRunner(object):
             for alg_sel in self.algorithm_selectors} for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
     def add_custom_algorithm(self, wrapper, name):
+        """Add custom (i.e. not in Selectors.AlgorithmSelectors, i.e. none of the predefined algorithm warppers) algorithm to the 
+        TestRunner after instantiation.
+        
+        Parameters
+        ----------
+        wrapper : NetworkInferenceWrapper
+            Instance of a NetworkInferenceWrapper.
+        name : str
+            String identifier of the custom algorithm wrapper.
+        """
         self.algorithm_selectors.append(name)
         self.algorithm_wrappers.update({name: wrapper})
         [alg.update({name: {j: list([]) for j in range(self.m_from, self.m_to)}}) for ct in self.conf_results.values() 
@@ -105,9 +115,9 @@ class TestRunner(object):
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
 
     def infer_g_all(self):
-        """If self.g_all is True, infer G_all for all cohorts specified in self.cancer_type_selectors with all algorithms
-        specified in self.algorithm_selectors. Infer repeatedly for h in range(max(self.n_from, self.m_from), \
-        min(self.n_to, self.m_to)) and save network in self.g_all_networks[ct_sel][alg_sel][h].
+        """Infer network from entire data for all cohorts specified in self.cancer_type_selectors with all algorithms
+        specified in self.algorithm_selectors. Infer repeatedly for h in range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)) 
+        and save network in self.g_all_networks[ct_sel][alg_sel][h].
         """
         if not os.path.exists(os.path.join(self.cwd, 'results')):
             os.mkdir(os.path.join(self.cwd, 'results'))
@@ -123,7 +133,8 @@ class TestRunner(object):
                         algorithm_wrapper.partition = OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], Selectors.BlockType.ALL, Selectors.ConfounderSelector.ALL, self.rank, self.logger)})
                         for h in range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)):
                             algorithm_wrapper.infer_networks(self.rank)
-                            self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.ALL, self.save)
+                            if self.save:
+                                self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.ALL, self.save)
                             self.g_all_networks[ct_sel][alg_sel].update({h: algorithm_wrapper._inferred_networks['all']})
                 else:
                     self.logger.info('Comparison with G_all cannot be made for non-overlapping partition indices. Specify from, to such \
@@ -162,7 +173,8 @@ class TestRunner(object):
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
                 algorithm_wrapper.infer_networks(self.rank)
-                self.save_networks(algorithm_wrapper._inferred_networks, j, 'conf', alg_sel, ct_sel, conf_sel, self.save)
+                if self.save:
+                    self.save_networks(algorithm_wrapper._inferred_networks, j, 'conf', alg_sel, ct_sel, conf_sel)
                 network_state = []
                 intersections = []
                 unions = []
@@ -199,7 +211,8 @@ class TestRunner(object):
             for i in range(self.n_from, self.n_to):
                 algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
                 algorithm_wrapper.infer_networks(self.rank)
-                self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel, self.save)
+                if self.save:
+                    self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
                 network_state = []
                 intersections = []
                 unions = []
@@ -231,7 +244,7 @@ class TestRunner(object):
                             network_state.append(state)
                         pd.DataFrame({'size intersection': intersections, 'size union': unions, 'state': network_state, 'k': self.rep_k, 'mean JI': results}).to_csv(os.path.join('results', 'JI', f'g_all_rnd_{str(i)}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_{block_id}_jaccInd.csv'), index=False)
                             
-    def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel, save=False):
+    def save_networks(self, inferred_networks, part_nb, mode, alg_sel, ct_sel, conf_sel):
         """Saves the inferred networks to csv.
         Parameters
         ----------
@@ -247,18 +260,15 @@ class TestRunner(object):
             Cohort that was investigated.
         conf_sel : str | ConfounderSelector
             Confounder that was investigated.
-        save : bool
-            Whether to save or not save the inferred networks. The networks are usually very large and saving all networks might not be necessary and/or possible. Defaults to False.
         """
         if not os.path.exists(os.path.join(self.cwd, 'results')):
             os.mkdir(os.path.join(self.cwd, 'results'))
         if not os.path.exists(os.path.join(self.cwd, 'results', 'networks')):
             os.mkdir(os.path.join(self.cwd, 'results', 'networks'))
-        if save:
-            for block_id in inferred_networks.keys():
-                path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
-                top_k_edges = inferred_networks[block_id].iloc[:self.k_max, :]
-                top_k_edges.to_csv(path, index = False)
+        for block_id in inferred_networks.keys():
+            path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
+            top_k_edges = inferred_networks[block_id].iloc[:self.k_max, :]
+            top_k_edges.to_csv(path, index = False)
 
     def get_expression_data(self, cancer_type_selector, sel_dict, logger=None):
         """Loads the expression data for the selected cancer type. Only leaves columns of protein-coding genes, provided
@@ -363,7 +373,7 @@ class TestRunner(object):
             samples = pheno_data.index.tolist()
             conf_partition.append(('all', samples))
             if logger:
-                logger.info('Do not create blocks, but use entire data\n')
+                logger.info('Use all data\n')
             return conf_partition
         pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
         pheno_data = pheno_data[pheno_data[pheno_field].notna()]
@@ -434,7 +444,6 @@ class TestRunner(object):
                 samples_cpy = samples_cpy.drop(block)
                 cur.append((key, block))
                 pd.DataFrame(block).to_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{i}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
-        
         return cur
 
     def align_data(self, expression_datasets, pheno_datasets, logger=None):
@@ -445,15 +454,12 @@ class TestRunner(object):
         ----------
         expression_datasets : pd.DataFrame
             Expression data set to be aligned by samples with pheno_datasets.
-
         pheno_datasets : pd.DataFrame
             Pheno data set to be aligned by samples with expression_datasets.
-
         Returns
         -------
         expression_datasets : pd.DataFrame
             Expression data set aligned by samples with pheno_datasets.
-
         pheno_datasets : pd.DataFrame
             Pheno data set aligned by samples with expression_datasets.
         """
@@ -480,9 +486,18 @@ class TestRunner(object):
             self.pheno_datasets.update({comb_name: pd.concat(self.pheno_datasets.values())})
 
     def _run_chi2_tests(self, conf_sel, ct_sel):
+        """Runs the chi2 tests for all variables in self.chi with the currently tested variable.
+        Parameters
+        ----------
+        ct_sel : str | CancerTypeSelector
+            Cohort that schould be investigated.
+        conf_sel : str | ConfounderSelector
+            Variable that should be tested for dependency with all variables in self.chi.
+        """
         if self.rank == 0:
             for var in self.chi:
-                p, table = self._var_conf_chi(self.pheno_datasets[ct_sel], conf_sel, var, self.conf_dict, self.logger)
+                if var != conf_sel:
+                    p, table = self._var_conf_chi(self.pheno_datasets[ct_sel], conf_sel, var, self.conf_dict, self.logger)
 
     def _var_conf_chi(self, pheno, conf_sel, var, conf_dict, logger=None):
         """Perform Chi^2 test of conf_sel and var.
