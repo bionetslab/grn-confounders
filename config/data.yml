@@ -1,14 +1,7 @@
-HNSC:
-   tcga: !!bool True
-   ged: 
-   pt: 
-   sep:
-   tissue_type_field: sample_type.samples
-   tissue_type: Primary Tumor
-HNSC2:
-   tcga: !!bool False
-   ged: TCGA-HNSC.htseq_fpkm.tsv
-   pt: TCGA-HNSC.GDC_phenotype.tsv
-   sep: ','
-   tissue_type_field:
-   tissue_type:
+HNSC: # required! arbitrary string identifier of the cohort
+
+   ged: 'ged_file_name.csv' # required! name of the gene expression file, located in the data directory
+   pt: 'pt_file_name.csv' # required! name of the pheno type file, located in the data directory
+   sep: ',' # default ',' separator used in both the files at ged and pt, default is ','
+   tissue_type_field: 'sample_type.samples' # default None; name of the column (field) in the pt file to be used to filter the samples. Must exist in the pt file.
+   tissue_type: 'Primary Tumor' # default None; keep only samples that have 'Primary Tumor' in the 'sample_type.samples' column. Must exist in the pt file.

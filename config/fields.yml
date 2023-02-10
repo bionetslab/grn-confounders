@@ -1,6 +1,7 @@
-gender.demographic:
-   role: CONFOUNDER
-   type: CATEGORY
-tumor_stage.diagnoses:
-   role: VARIABLE
-   type: CATEGORY
+gender.demographic: # name of the column in the pt file to be tested for confounding (i.e. used to induce a partition)
+   role: CONFOUNDER # CONFOUNDER | VARIABLE - perform a chi2 test for dependency for each variable with all confounders
+   type: CATEGORY # CATEGORY | QUARTILE - how to induce the partition. CATEGORY split samples into blocks based on the exact expression in the column used for partitioning (e.g. male, female). QUARTILE form a block of each of the upper and lower quartile accoridng to the values in the column used for partitioning. Column values must be numerical (e.g. upper and lower quartile of a numerical age column)
+tumor_stage.diagnoses: # name of the column in the pt file to be tested for confounding (i.e. used to induce a partition)
+   role: VARIABLE # CONFOUNDER | VARIABLE - perform a chi2 test for dependency for each variable with all confounders
+   type: CATEGORY # CATEGORY | QUARTILE - how to induce the partition. CATEGORY split samples into blocks based on the exact expression in the column used for partitioning (e.g. male, female). QUARTILE form a block of each of the upper and lower quartile accoridng to the values in the column used for partitioning. Column values must be numerical (e.g. upper and lower quartile of a numerical age column)
+

@@ -1,12 +1,13 @@
-algorithms: 
+algorithms: # default []; if empty, custom wrapper has to be added, see Option 2 in the README. List of methods to be tested below, in capital letters.
 - CEMITOOL
-N_from: 0
-N_to: 10
-M_from: 0
-M_to: 10
-k: 5000
-combine: !!bool False
-par: !!bool False
-g_all: !!bool True
-save_networks: !!bool False
-logfile: log.txt
+- WGCNA
+N_from: 0 # default 0; starting index of random partitions per (cohort, confounder)
+N_to: 10 # default 100; stopping index of random partitions per (cohort, confounder)
+M_from: 0 # default 0; starting index of the copies of the confounder-induced partition per (cohort, confounder)
+M_to: 10 # default 10; stopping index of the copies of the confounder-induced partition per (cohort, confounder)
+k: 5000 # default 5000; Compute mean Jaccard  Index of top k edges, k in range(10, k,100)
+combine: !!bool False # default False; combine all cohorts specified in data.yml into one cohort and test for the effect of 'cohort name' as confounder
+par: !!bool False # default False; use MPI parallelization
+g_all: !!bool False # default False; infer networks from entire data set, for overlapping indices of range(N_from, N_to) and range(M_from, M_to)
+save_networks: !!bool False # default False; save networks from which the mean Jaccard Indices were computed (high storage consumption)
+logfile: log.txt # default log.txt; print info log to this file (in 'w', i.e. overwrite mode)
