@@ -22,6 +22,24 @@ PyYAML==6.0
 qnorm==0.8.1
 scipy==1.9.1
 seaborn==0.12.2
+#### Download list of human known transcription factors and list of protein-coding genes
+The list of protein-coding genes is required for all tests, the list of human known transcription factors is only required for testing of GRN inference methods. The list of protein-coding genes can be downloaded as follows:
+```
+python download_tcga_cohorts.py -pcgs
+```
+The list of human known transcription factors can be downloaded as follows:
+```
+python download_tcga_cohorts.py -tfs
+```
+List of protein-coding genes: http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_groups/protein-coding_gene.txt
+
+Seal RL, Braschi B, Gray K, Jones TEM, Tweedie S, Haim-Vilmovsky L, Bruford EA. Genenames.org: the HGNC resources in 2023. Nucleic Acids Res. PMID: 36243972 DOI: 10.1093/nar/gkac888
+
+HGNC Database, HUGO Gene Nomenclature Committee (HGNC), European Molecular Biology Laboratory, European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge CB10 1SD, United Kingdom www.genenames.org. Date of access: 01.10.2022
+
+List of human known transcription factors: http://humantfs.ccbr.utoronto.ca/download/v_1.01/DatabaseExtract_v_1.01.csv
+
+Lambert SA, Jolma A, Campitelli LF, Das PK, Yin Y, Albu M, Chen X, Taipale J, Hughes TR, Weirauch MT.(2018) The Human Transcription Factors. Cell. 172(4):650-665. doi: 10.1016/j.cell.2018.01.029. Review.
 
 *IMPORTANT*
 
@@ -221,16 +239,5 @@ JIs obtained from comparison of the network inferred from block _l_ belongin to 
 
 JIs obtained from comparison of the network inferred from block _l_ belongin to the random partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_rnd\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
 
-## Further data sets used
-List of protein-coding genes: http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_groups/protein-coding_gene.txt
-
-Seal RL, Braschi B, Gray K, Jones TEM, Tweedie S, Haim-Vilmovsky L, Bruford EA. Genenames.org: the HGNC resources in 2023. Nucleic Acids Res. PMID: 36243972 DOI: 10.1093/nar/gkac888
-
-HGNC Database, HUGO Gene Nomenclature Committee (HGNC), European Molecular Biology Laboratory, European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge CB10 1SD, United Kingdom www.genenames.org. Date of access: 01.10.2022
-
-List of human known transcription factors: http://humantfs.ccbr.utoronto.ca/download/v_1.01/DatabaseExtract_v_1.01.csv
-
-Lambert SA, Jolma A, Campitelli LF, Das PK, Yin Y, Albu M, Chen X, Taipale J, Hughes TR, Weirauch MT.(2018) The Human Transcription Factors. Cell. 172(4):650-665. doi: 10.1016/j.cell.2018.01.029. Review.
-
 ## License
-GNU GPL
+GNU General Public License v3.0
