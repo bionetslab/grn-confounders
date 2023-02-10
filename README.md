@@ -22,7 +22,15 @@ PyYAML==6.0
 qnorm==0.8.1
 scipy==1.9.1
 seaborn==0.12.2
-
+#### Download list of human known transcription factors and list of protein-coding genes
+The list of protein-coding genes is required for all tests, the list of human known transcription factors is only required for testing of GRN inference methods. The list of protein-coding genes can be downloaded as follows:
+```
+python download_tcga_cohorts.py -pcgs
+```
+The list of human known transcription factors can be downloaded as follows:
+```
+python download_tcga_cohorts.py -tfs
+```
 *IMPORTANT*
 
 There are two options for users from here on: 1) use the scripts provided in the root directory of this repository to run tests with our predefined algorithm wrappers --> continue with the instructions right below. 2) Use the local package confinspect to implement your own algorithm wrapper (inherit from NetwrkInferenceWrapper.py) --> skip to section 'Option 2: Test your own methods'.
@@ -233,4 +241,4 @@ List of human known transcription factors: http://humantfs.ccbr.utoronto.ca/down
 Lambert SA, Jolma A, Campitelli LF, Das PK, Yin Y, Albu M, Chen X, Taipale J, Hughes TR, Weirauch MT.(2018) The Human Transcription Factors. Cell. 172(4):650-665. doi: 10.1016/j.cell.2018.01.029. Review.
 
 ## License
-GNU GPL
+GNU General Public License v3.0
