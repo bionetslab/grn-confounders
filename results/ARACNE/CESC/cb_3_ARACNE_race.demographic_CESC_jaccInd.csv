@@ -1,0 +1,51 @@
+size intersection,size union,state,k,mean JI
+0,20,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,10,0.0
+5,215,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,110,0.015503875968992248
+14,406,emptyasian_emptyasian_filledblack or african americanwhite_,210,0.02461761245361571
+23,597,emptyasian_emptyasian_filledblack or african americanwhite_,310,0.023953098827470685
+36,784,emptyasian_emptyasian_filledblack or african americanwhite_,410,0.025686745286349833
+40,980,emptyasian_emptyasian_filledblack or african americanwhite_,510,0.022454999698994643
+59,1132,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,610,0.0259569224047853
+60,1231,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,710,0.024340002140695968
+64,1327,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,810,0.023430251622972516
+66,1425,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,910,0.022190588529145062
+67,1524,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1010,0.02090678981568239
+68,1623,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1110,0.019796907041947708
+69,1722,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1210,0.018827392444481558
+70,1821,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1310,0.018201643979808342
+72,1919,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1410,0.017822417948709215
+74,2017,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1510,0.017279947745564194
+75,2116,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1610,0.01662986646833238
+75,2216,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1710,0.01588638147597587
+75,2316,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1810,0.015380894086465167
+76,2415,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,1910,0.015059796578852322
+77,2514,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2010,0.014609101687070756
+77,2614,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2110,0.01421151019949536
+78,2713,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2210,0.013827627891462399
+78,2813,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2310,0.013350506929454149
+80,2911,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2410,0.013142534588508068
+82,3009,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2510,0.013075249341068134
+82,3109,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2610,0.012670477668094045
+85,3206,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2710,0.012611644978315484
+86,3305,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2810,0.01235007810292068
+90,3401,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,2910,0.012405951644525534
+90,3501,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3010,0.012068422746767527
+91,3600,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3110,0.011947742399712177
+91,3700,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3210,0.011641369070239728
+91,3800,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3310,0.011351514298356314
+91,3900,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3410,0.011076875194522254
+91,4000,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3510,0.010816282583272484
+92,4099,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3610,0.01065180982243819
+94,4197,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3710,0.010576558513574303
+95,4296,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3810,0.010425697171281662
+95,4396,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,3910,0.010204380174406402
+98,4493,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4010,0.010220366058436075
+98,4593,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4110,0.010013396318160539
+99,4692,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4210,0.009887926693687899
+101,4790,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4310,0.009838842961457437
+102,4889,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4410,0.009795643549641846
+102,4989,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4510,0.009614060304314201
+102,5089,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4610,0.009439724617118958
+102,5189,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4710,0.009272210750559881
+103,5288,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4810,0.009175377165352765
+104,5387,emptyasian_emptyblack or african american_emptyasian_emptyblack or african american_,4910,0.009082203164580926

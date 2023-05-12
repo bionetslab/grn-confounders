@@ -1,0 +1,51 @@
+size intersection,size union,state,k,mean JI
+7,13,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,10,0.2145748987854251
+68,152,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,110,0.21396526141223707
+128,292,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,210,0.2616298863266496
+187,433,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,310,0.2661977291372908
+267,553,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,410,0.27747819363359155
+334,686,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,510,0.2858717259596963
+397,823,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,610,0.28303200721950755
+441,979,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,710,0.27015303344248986
+503,1117,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,810,0.272405929044285
+564,1256,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,910,0.270968405122983
+616,1404,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1010,0.27041335397298405
+671,1549,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1110,0.264623377127685
+732,1688,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1210,0.26290968681427423
+785,1835,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1310,0.2594844364174779
+837,1983,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1410,0.25718427093216234
+890,2130,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1510,0.2537245902073412
+942,2278,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1610,0.25135333041473
+994,2426,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1710,0.24939827154262564
+1045,2575,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1810,0.24561955872813832
+1087,2733,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,1910,0.2408003314618917
+1128,2892,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2010,0.23928743920164675
+1182,3038,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2110,0.2382808933230259
+1240,3180,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2210,0.239100430680949
+1291,3329,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2310,0.23729738577670614
+1349,3471,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2410,0.23778560753366973
+1394,3626,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2510,0.2349533057323998
+1445,3775,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2610,0.2320725789341216
+1498,3922,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2710,0.2303839474026312
+1543,4077,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2810,0.2286137142643759
+1589,4231,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,2910,0.22600669026826345
+1644,4376,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3010,0.22482194845252187
+1698,4522,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3110,0.22405065248485678
+1739,4681,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3210,0.22247569267882247
+1771,4849,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3310,0.22027515540617482
+1812,5008,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3410,0.22111738513345594
+1852,5168,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3510,0.2196846439982807
+1911,5309,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3610,0.2195231844935297
+1965,5455,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3710,0.21836141258228228
+2013,5607,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3810,0.21649713108881144
+2042,5778,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,3910,0.2139699375648232
+2093,5927,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,4010,0.2132598241732795
+2132,6088,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,4110,0.2113207442202627
+2182,6238,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,4210,0.21012120091446018
+2223,6397,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,4310,0.20824561569004832
+2274,6546,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,4410,0.2081709825967996
+2320,6700,filledasianblack or african american_filledasianwhite_filledblack or african americanwhite_,4510,0.20719015561302542
+2361,6859,emptyasian_emptyasian_filledblack or african americanwhite_,4610,0.20566145811107509
+2403,7017,emptyasian_emptyasian_filledblack or african americanwhite_,4710,0.20479814512564762
+2452,7168,emptyasian_emptyasian_filledblack or african americanwhite_,4810,0.20408098896553292
+2498,7322,emptyasian_emptyasian_filledblack or african americanwhite_,4910,0.2031979195252133

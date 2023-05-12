@@ -20,13 +20,14 @@ parts/
 sdist/
 var/
 wheels/
+.idea/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
-
+*.DS_Store
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -129,7 +130,7 @@ dmypy.json
 .pyre/
 
 # files to ignore
-**/results
+results/datasets
 **/input
 **/GENIE3
 **/.vscode

@@ -1,0 +1,51 @@
+size intersection,size union,state,k,mean JI
+1,19,filledstage istage ii_filledstage istage iii_filledstage iistage iii_,10,0.017543859649122806
+46,174,filledstage istage ii_filledstage istage iii_filledstage iistage iii_,110,0.10364123926268087
+90,330,filledstage istage ii_filledstage istage iii_filledstage iistage iii_,210,0.10222442523911172
+136,484,filledstage istage ii_filledstage istage iii_filledstage iistage iii_,310,0.1045946946033653
+170,650,emptystage i_emptystage i_filledstage iistage iii_,410,0.10132745747637177
+202,818,emptystage i_emptystage i_filledstage iistage iii_,510,0.09560196294740399
+242,978,emptystage i_emptystage i_filledstage iistage iii_,610,0.09580131912844785
+286,1134,emptystage i_emptystage i_filledstage iistage iii_,710,0.0970904234541561
+316,1304,emptystage i_emptystage i_filledstage iistage iii_,810,0.09355345370684602
+340,1480,emptystage i_emptystage i_filledstage iistage iii_,910,0.08887319069903339
+357,1663,emptystage i_emptystage i_filledstage iistage iii_,1010,0.08369674960703581
+377,1843,emptystage i_emptystage i_filledstage iistage iii_,1110,0.0797202789192572
+401,2019,emptystage i_emptystage i_filledstage iistage iii_,1210,0.07721126095027799
+429,2191,emptystage i_emptystage i_filledstage iistage iii_,1310,0.07560455255164066
+451,2369,emptystage i_emptystage i_filledstage iistage iii_,1410,0.07339739990163464
+481,2539,emptystage i_emptystage i_filledstage iistage iii_,1510,0.07273149115439649
+503,2717,emptystage i_emptystage i_filledstage iistage iii_,1610,0.0711482738382115
+528,2892,emptystage i_emptystage i_filledstage iistage iii_,1710,0.06983350671715115
+544,3076,emptystage i_emptystage i_filledstage iistage iii_,1810,0.06750803713253596
+576,3244,emptystage i_emptystage i_filledstage iistage iii_,1910,0.06766295888463127
+599,3421,emptystage i_emptystage i_filledstage iistage iii_,2010,0.06647973395403313
+612,3608,emptystage i_emptystage i_filledstage iistage iii_,2110,0.06460018594877413
+636,3784,emptystage i_emptystage i_filledstage iistage iii_,2210,0.06376728133882288
+650,3970,emptystage i_emptystage i_filledstage iistage iii_,2310,0.06215261480708039
+669,4151,emptystage i_emptystage i_filledstage iistage iii_,2410,0.06102207271444466
+689,4331,emptystage i_emptystage i_filledstage iistage iii_,2510,0.06007155911676554
+705,4515,emptystage i_emptystage i_filledstage iistage iii_,2610,0.05885214879492621
+735,4685,emptystage i_emptystage i_filledstage iistage iii_,2710,0.05887416011136135
+752,4868,emptystage i_emptystage i_filledstage iistage iii_,2810,0.057862782824823294
+779,5041,emptystage i_emptystage i_filledstage iistage iii_,2910,0.057684359953943255
+792,5228,emptystage i_emptystage i_filledstage iistage iii_,3010,0.056485888741658836
+810,5410,emptystage i_emptystage i_filledstage iistage iii_,3110,0.05601558985008188
+823,5597,emptystage i_emptystage i_filledstage iistage iii_,3210,0.05494972907347364
+840,5780,emptystage i_emptystage i_filledstage iistage iii_,3310,0.054307747459758166
+854,5966,emptystage i_emptystage i_filledstage iistage iii_,3410,0.05342275017957173
+864,6156,emptystage i_emptystage i_filledstage iistage iii_,3510,0.05251800255182588
+882,6338,emptystage i_emptystage i_filledstage iistage iii_,3610,0.05197557794898509
+897,6523,emptystage i_emptystage i_filledstage iistage iii_,3710,0.0513714862409216
+913,6707,emptystage i_emptystage i_filledstage iistage iii_,3810,0.050856442294758004
+927,6893,emptystage i_emptystage i_filledstage iistage iii_,3910,0.050179645713616744
+946,7074,emptystage i_emptystage i_filledstage iistage iii_,4010,0.04980450707239978
+961,7259,emptystage i_emptystage i_filledstage iistage iii_,4110,0.04923938171965145
+973,7447,emptystage i_emptystage i_filledstage iistage iii_,4210,0.04854979627922373
+997,7623,emptystage i_emptystage i_filledstage iistage iii_,4310,0.04848590680387747
+1020,7800,emptystage i_emptystage i_filledstage iistage iii_,4410,0.048518065176754666
+1035,7985,emptystage i_emptystage i_filledstage iistage iii_,4510,0.04803239295482082
+1042,8178,emptystage i_emptystage i_filledstage iistage iii_,4610,0.04720024543980587
+1056,8364,emptystage i_emptystage i_filledstage iistage iii_,4710,0.04671977749130209
+1073,8547,emptystage i_emptystage i_filledstage iistage iii_,4810,0.046391428359350416
+1090,8730,emptystage i_emptystage i_filledstage iistage iii_,4910,0.046076509591081644
