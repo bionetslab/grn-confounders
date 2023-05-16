@@ -134,6 +134,9 @@ results/datasets
 **/input
 **/GENIE3
 **/.vscode
+**/data
+**/temp
+**/partitions
 
 # file formats to ignore
 *.odt
