@@ -4,17 +4,17 @@ import os
 import pandas as pd
 import numpy as np
 import subprocess
+from . import preprocessing as prp
 import csv
-import rpy2.robjects as robjects
 
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
 
-class CEMiWrapper(NetworkInferenceWrapper):
+class CUSTOMGCNWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data, rank):
-        """Method to infer a network from expression data using the GENIE3 algorithm.
+        """Method to infer a network from expression data using a custom GCN inference method.
 
         Parameters
         ----------
@@ -29,28 +29,26 @@ class CEMiWrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = os.getcwd()
-        prefix = 'cemi'+str(rank)
+        main = self.cwd
+        prefix = 'customgcn'+str(rank)
 
-        expression_data = expression_data.T
-        #data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
-        data_path = os.path.abspath(f'/dev/shm/{prefix}_expression_data.csv')
+        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
+
+        # add preprocessing, if required
+
+        # save expression data
         expression_data.to_csv(data_path, sep='\t')
 
-        #out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
-        out_path = os.path.abspath(f'/dev/shm/{prefix}_edge_list.csv')
+        out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
 
-        prog = os.path.join(main, 'algorithms', 'CEMi', 'CEMi.R')
-        robjects.r['source'](prog)
-        get_netw = robjects.globalenv['get_netw']
-        get_netw(str(prefix))
+        command = f'call_method_here {prefix}'
+        subprocess.run(command, shell=True)
 
         # get results
         network = pd.read_csv(out_path, sep='\t', index_col=0)
         network = network.sort_values(by=['score', 'source', 'target'], axis=0, ascending=False)
-        
         network['type'] = 'undirected'
-        
+
         # remove temporary files
         subprocess.call('rm ' + str(out_path), shell=True)
         subprocess.call('rm ' + str(data_path), shell=True)
@@ -82,11 +80,10 @@ class CEMiWrapper(NetworkInferenceWrapper):
                 gene_1 = block.iloc[j, 0]
                 gene_2 = block.iloc[j, 1]
                 state.append('filled')
-                if (gene_1 < gene_2):
+                if(gene_1 < gene_2):
                     top_k_edges.append((gene_1, gene_2))
                 else:
                     top_k_edges.append((gene_2, gene_1))
             except:
                 state.append('empty' + str(i))
         return set(top_k_edges), state
-

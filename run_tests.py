@@ -71,4 +71,7 @@ if __name__ == '__main__':
     InputHandler.setup_directories()
     data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
     data, fields, params = parse_config(data_p, fields_p, params_p)
+    print(params)
+    print(fields)
+    print(data)
     run_tests(data, fields, params)

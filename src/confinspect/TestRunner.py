@@ -1,6 +1,8 @@
 from . import Selectors
+import math
 import pandas as pd
 import numpy as np
+import math
 import os
 from scipy.stats import chi2_contingency
 from datetime import datetime
@@ -111,8 +113,17 @@ class TestRunner(object):
         since confounder partition = random partition of the entire data."""
         self.conf_partitions = {ct_sel: {conf_sel: OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], self.conf_dict[conf_sel]['type'], conf_sel, self.rank, logger=self.logger)}) 
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
-        self.rnd_partitions = {ct_sel: {conf_sel: [OrderedDict({ret[0]: ret[1] for ret in self.get_ith_random_partition(i, self.pheno_datasets[ct_sel], self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)}) for i in range(self.n_from, self.n_to)]
+        self.rnd_partitions = {ct_sel: {conf_sel: [OrderedDict({ret[0]: ret[1] for ret in self.get_ith_random_partition(i, pd.DataFrame(index=TestRunner.flatten(self.conf_partitions[ct_sel][conf_sel].values())), self.conf_partitions[ct_sel][conf_sel], ct_sel, conf_sel)}) for i in range(self.n_from, self.n_to)]
             for conf_sel in self.confounder_selectors} for ct_sel in self.cancer_type_selectors}
+
+    @staticmethod
+    def flatten(l):
+        assert all([item == item for sublist in l for item in sublist]), f'NAN encountered! {len([item for sublist in l for item in sublist])}'
+        new = [item for sublist in l for item in sublist if item == item]
+        print('new len: ' + str(len(new)))
+        assert len(set(new)) == len(new), 'Duplicates in list!'
+        #assert all([not math.isnan(x) for x in new]), 'nan value in index encountered!'
+        return new
 
     def infer_g_all(self):
         """Infer network from entire data for all cohorts specified in self.cancer_type_selectors with all algorithms
@@ -125,16 +136,23 @@ class TestRunner(object):
             os.mkdir(os.path.join(self.cwd, 'results', 'JI'))
         for ct_sel in self.cancer_type_selectors:
             for alg_sel in self.algorithm_selectors:
-                if max(self.n_from, self.m_from) < min(self.n_to, self.m_to):
-                    for alg_sel in self.algorithm_selectors:
-                        print(f'Inferring G_all for cohort = {str(ct_sel)} with algorithm = {str(alg_sel)}')
-                        algorithm_wrapper = self.algorithm_wrappers[alg_sel]
-                        algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
-                        algorithm_wrapper.partition = OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], Selectors.BlockType.ALL, Selectors.ConfounderSelector.ALL, self.rank, self.logger)})
-                        for h in range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)):
+                if True:# max(self.n_from, self.m_from) < min(self.n_to, self.m_to):
+                    print(f'Inferring G_all for cohort = {str(ct_sel)} with algorithm = {str(alg_sel)}')
+                    algorithm_wrapper = self.algorithm_wrappers[alg_sel]
+                    algorithm_wrapper.expression_data = self.expression_datasets[ct_sel]
+                    algorithm_wrapper.partition = OrderedDict({ret[0]: ret[1] for ret in self.get_conf_partition(self.pheno_datasets[ct_sel], Selectors.BlockType.ALL, Selectors.ConfounderSelector.ALL, self.rank, self.logger)})
+                    if self.n_from < 10:
+                        for h in range(self.n_from, self.n_to):#range(max(self.n_from, self.m_from), min(self.n_to, self.m_to)):
+                            print('path exists:')
+                            print(os.path.join(self.cwd, 'results', 'networks', f'conf_part{h}_all_{alg_sel}_{ct_sel}_ALL_gene_list.csv'))
+                            print(os.path.exists(os.path.join(self.cwd, 'results', 'networks', f'conf_part{h}_all_{alg_sel}_{ct_sel}_ALL_gene_list.csv')))
+                            if os.path.exists(os.path.join(self.cwd, 'results', 'networks', f'conf_part{h}_all_{alg_sel}_{ct_sel}_ALL_gene_list.csv')):
+                                self.g_all_networks[ct_sel][alg_sel].update({h: pd.read_csv(os.path.join(self.cwd, 'results', 'networks', f'conf_part{h}_all_{alg_sel}_{ct_sel}_ALL_gene_list.csv'), index_col=False)})
+                                print(self.g_all_networks[ct_sel][alg_sel][h].head())
+                                continue
                             algorithm_wrapper.infer_networks(self.rank)
                             if self.save:
-                                self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.ALL, self.save)
+                                self.save_networks(algorithm_wrapper._inferred_networks, h, 'conf', alg_sel, ct_sel, Selectors.ConfounderSelector.ALL)
                             self.g_all_networks[ct_sel][alg_sel].update({h: algorithm_wrapper._inferred_networks['all']})
                 else:
                     self.logger.info('Comparison with G_all cannot be made for non-overlapping partition indices. Specify from, to such \
@@ -172,6 +190,15 @@ class TestRunner(object):
             print('running on confounder-based partitions...')
             algorithm_wrapper.partition = self.conf_partitions[ct_sel][conf_sel]
             for j in range(self.m_from, self.m_to):
+                #if os.path.exists(os.path.join(self.cwd, 'results', 'JI', f'cb_{j}_{alg_sel}_{conf_sel}_{ct_sel}_jaccInd.csv')):
+                #continue
+                try:
+                    algorithm_wrapper._inferred_networks.clear()
+                    for block_id in algorithm_wrapper.partition.keys():
+                        print(f'conf_part{j}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
+                        algorithm_wrapper._inferred_networks.update({block_id: pd.read_csv(os.path.join(self.cwd, 'results', 'networks', f'conf_part{j}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv'), index_col=False)})
+                except FileNotFoundError:
+                    algorithm_wrapper.infer_networks(self.rank)
                 algorithm_wrapper.infer_networks(self.rank)
                 if self.save:
                     self.save_networks(algorithm_wrapper._inferred_networks, j, 'conf', alg_sel, ct_sel, conf_sel)
@@ -210,7 +237,14 @@ class TestRunner(object):
             print('running on random partitions...')
             for i in range(self.n_from, self.n_to):
                 algorithm_wrapper.partition = self.rnd_partitions[ct_sel][conf_sel][i-self.n_from]
-                algorithm_wrapper.infer_networks(self.rank)
+                #if os.path.exists(os.path.join(self.cwd, 'results', 'JI', f'rnd_{i}_{alg_sel}_{conf_sel}_{ct_sel}_jaccInd.csv')):
+                #if os.path.exists(os.path.join(self.cwd, 'results', 'networks', f'rnd_{i}_{alg_sel}_{conf_sel}_{ct_sel}_.csv'))
+                try:
+                    algorithm_wrapper._inferred_networks.clear()
+                    for block_id in algorithm_wrapper.partition.keys():
+                        algorithm_wrapper._inferred_networks.update({block_id: pd.read_csv(os.path.join(self.cwd, 'results', 'networks', f'rnd_part{i}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv'), index_col=False)})
+                except FileNotFoundError:
+                    algorithm_wrapper.infer_networks(self.rank)
                 if self.save:
                     self.save_networks(algorithm_wrapper._inferred_networks, i, 'rnd', alg_sel, ct_sel, conf_sel)
                 network_state = []
@@ -227,7 +261,7 @@ class TestRunner(object):
                     f'rnd_{i}_{str(alg_sel)}_{str(conf_sel)}_{str(ct_sel)}_jaccInd.csv'), index=False)
     
                 if self.g_all and i in self.g_all_networks[ct_sel][alg_sel].keys():
-                    cur_g_all = self.g_all_networks[ct_sel][alg_sel][j]
+                    cur_g_all = self.g_all_networks[ct_sel][alg_sel][i]
                     block_networks = algorithm_wrapper._inferred_networks.copy()
                     for block_id in block_networks.keys():
                         algorithm_wrapper._inferred_networks = {'g_all': cur_g_all, block_id: block_networks[block_id]}
@@ -261,14 +295,15 @@ class TestRunner(object):
         conf_sel : str | ConfounderSelector
             Confounder that was investigated.
         """
-        if not os.path.exists(os.path.join(self.cwd, 'results')):
-            os.mkdir(os.path.join(self.cwd, 'results'))
-        if not os.path.exists(os.path.join(self.cwd, 'results', 'networks')):
-            os.mkdir(os.path.join(self.cwd, 'results', 'networks'))
-        for block_id in inferred_networks.keys():
-            path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
-            top_k_edges = inferred_networks[block_id].iloc[:self.k_max, :]
-            top_k_edges.to_csv(path, index = False)
+        if part_nb < 10:
+            if not os.path.exists(os.path.join(self.cwd, 'results')):
+                os.mkdir(os.path.join(self.cwd, 'results'))
+            if not os.path.exists(os.path.join(self.cwd, 'results', 'networks')):
+                os.mkdir(os.path.join(self.cwd, 'results', 'networks'))
+            for block_id in inferred_networks.keys():
+                path = os.path.join(self.cwd, 'results', 'networks', f'{mode}_part{part_nb}_{block_id}_{alg_sel}_{ct_sel}_{conf_sel}_gene_list.csv')
+                top_k_edges = inferred_networks[block_id].iloc[:self.k_max, :]
+                top_k_edges.to_csv(path, index = False)
 
     def get_expression_data(self, cancer_type_selector, sel_dict, logger=None):
         """Loads the expression data for the selected cancer type. Only leaves columns of protein-coding genes, provided
@@ -288,7 +323,7 @@ class TestRunner(object):
         """
         if not os.path.exists(os.path.join(self.cwd, 'partitions')):
             os.mkdir(os.path.join(self.cwd, 'partitions'))
-        expression_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['ged']), sep=sel_dict['sep'], header=0, index_col=0)
+        expression_data = pd.read_csv(os.path.join(self.cwd,'..', 'data', sel_dict['ged']), sep='\t', header=0, index_col=0)
         print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
         expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
         print('Only leave protein-coding genes in expression data set for cohort ' + str(cancer_type_selector) + '...')
@@ -323,7 +358,7 @@ class TestRunner(object):
             tissue_type_field, tissue_type = None, None
         if logger:
             logger.info(cancer_type_selector + ' - Reading pheno type data from file: ' + sel_dict['pt'])
-        pheno_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['pt']), sep=sel_dict['sep'], header=0, index_col=0)
+        pheno_data = pd.read_csv(os.path.join(self.cwd, '..', 'data', sel_dict['pt']), sep='\t', header=0, index_col=0)
         assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
         pheno_data['cohort'] = str(cancer_type_selector)
         if tissue_type is not None and tissue_type_field is not None:
@@ -378,12 +413,23 @@ class TestRunner(object):
         pheno_data = pheno_data[pheno_data[pheno_field] != 'not reported']
         pheno_data = pheno_data[pheno_data[pheno_field].notna()]
         if block_type == Selectors.BlockType.CATEGORY:
+            if pheno_field == 'tumor_stage.diagnoses':
+                # specifically for TCGA data: aggregate stages
+                pheno_data = pheno_data[pheno_data['tumor_stage.diagnoses'].str.strip() != 'stage x']
+                pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage ia', 'stage ib', 'stage ic']), 'tumor_stage.diagnoses'] = 'stage i'
+                pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic']), 'tumor_stage.diagnoses'] = 'stage ii'
+                pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc']), 'tumor_stage.diagnoses'] = 'stage iii'
+                print('Aggregated stages according to field tumor_stage.diagnoses (i.e. stage) into stages i, ii, and iii+iv.\n')
             blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
             if logger:
                 logger.info('Induce partition by ' + str(pheno_field) + '\n')
             for block_attr in blocks:
                 samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr].index.tolist()
+                samples = [x for x in samples if str(x) != 'nan']
                 if len(samples) >= min_block_size:
+                    samples = [sample for sample in samples if sample == sample]
+                    assert all([item == item for item in samples])
+                    print(pheno_field + ' ' + str(len(samples)))
                     conf_partition.append((block_attr, samples))
                     if logger:
                         logger.info('block ' + block_attr + ': ' + str(len(samples)) + ' samples\n')
@@ -401,6 +447,7 @@ class TestRunner(object):
                 if logger:
                     logger.info('block lower: ' + str(len(samples_lower)) + ' samples\n')
                     logger.info('block upper: ' + str(len(samples_upper)) + ' samples\n')
+        assert all(item == item for sublist in conf_partition for item in sublist[1])
         return conf_partition
 
     def get_ith_random_partition(self, i, samples, conf_partition_dict, ct_sel, conf_sel):
@@ -424,6 +471,7 @@ class TestRunner(object):
             List of tuples with block identifiers and randomly sampled block. Block sizes according to blocks of the confounder-based partition.
         """
         samples_cpy = samples.copy()
+        print('random')
         cur = []
         try:
             if not os.path.exists(os.path.join(self.cwd, 'partitions')):
@@ -441,6 +489,7 @@ class TestRunner(object):
             print(f'rnd_partition {i} not found. Create new partitions.')
             for key in conf_partition_dict.keys():
                 block = samples_cpy.sample(n=len(conf_partition_dict[key]), replace=False).index.values
+                print(block)
                 samples_cpy = samples_cpy.drop(block)
                 cur.append((key, block))
                 pd.DataFrame(block).to_csv(os.path.join(self.cwd, 'partitions', f'rnd_part{i}_{ct_sel}_{conf_sel}'), mode='a', header=False, index=False)
@@ -464,6 +513,8 @@ class TestRunner(object):
             Pheno data set aligned by samples with expression_datasets.
         """
         for sel in expression_datasets.keys():
+            pheno_datasets[sel] = pheno_datasets[sel][pheno_datasets[sel].index.notnull()]
+            expression_datasets[sel] = expression_datasets[sel][expression_datasets[sel].index.notnull()]
             print('Align expression data and phenotype data on samples for cohort ' + str(sel) + '...')
             pheno_datasets[sel] = pheno_datasets[sel][pheno_datasets[sel].index.isin(expression_datasets[sel].index)]
             samples = pheno_datasets[sel].index.values        

@@ -4,17 +4,16 @@ import numpy as np
 import subprocess
 import os
 import sys
+import preprocessing as prp
 import csv
 import random
-from arboreto.algo import grnboost2, genie3
-from arboreto.utils import load_tf_names
 test_suite = os.path.join(os.path.dirname(__file__))
 sys.path.append(test_suite)
 
-class GRNBOOST2Wrapper(NetworkInferenceWrapper):
+class CUSTOMGRNWrapper(NetworkInferenceWrapper):
 
     def _infer_network(self, expression_data, rank):
-        """Method to infer a network from expression data using the GENIE3 algorithm.
+        """Method to infer a network from expression data using a custom GRN inference method. Please extend script.
 
         Parameters
         ----------
@@ -29,26 +28,39 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
             columns 'node_lower' and 'node_upper' contain the gene symbols of the nodes that are connected by the edge.
             Fr directed networks, these columns are named 'source' and 'target'.
         """
-        main = os.getcwd()
-        prefix = 'grnboost2'+str(rank)
-        if not os.path.exists(os.path.join(main, 'temp')):
-            os.mkdir(os.path.join(main, 'temp'))
+        main = self.cwd
+        prefix = 'customgrn'+str(rank)
 
-        # remove columns with zero standard deviation, save expression data
-        expression_data = GRNBOOST2Wrapper.normalizeToUnitVariance(expression_data)
-        expression_data = expression_data.loc[:, (expression_data.std() != 0)]
+        # set output folder
+        out_dir = os.path.join(main, 'temp', prefix)
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
+        out_path = os.path.join(out_dir, 'temp_network.txt')
+
+        # add preprocessing, if required
+
+        # save expression_data to csv
+        data_path = os.path.join(main, 'temp', str(prefix), f'{prefix}_expression_data.txt')
+        expression_data.to_csv(data_path, sep='\t', index=False)
 
         # get regulators and remove such genes that are not present in expression_data
         ktf_path = os.path.join(main, 'data', 'regulators.csv')
         regulators = np.loadtxt(ktf_path, delimiter='\t', dtype=str)
-        regulators = regulators[np.isin(regulators, expression_data.columns.values)].tolist()
+        regulators = regulators[np.isin(regulators, expression_data.index)]
+        regulator_path = os.path.join(main, 'temp', str(prefix), f'{prefix}_regulators.txt')
+        pd.DataFrame(regulators).to_csv(regulator_path, sep='\t', index=False, header=False)
 
-        # run GRNBOOST2
-        network = grnboost2(expression_data=expression_data, tf_names=regulators)
+        # run method
+        command = f'call_method_here {data_path} {out_dir} {regulator_path}'
+        subprocess.run(command, shell=True)
 
         # get results
+        network = pd.read_csv(out_path, sep='\t', index_col=False)
+        network = network.sort_values(by=['score', 'source', 'target'], axis=0, ascending=False)
         network['type'] = 'directed'
         
+        # remove temporary directory
+        subprocess.call('rm -r '+str(out_dir), shell=True)
         return network
 
     def _get_top_k_edges(self, i, k):
@@ -82,16 +94,3 @@ class GRNBOOST2Wrapper(NetworkInferenceWrapper):
                 except:
                     state.append('empty'+str(i))
             return set(top_k_edges), state
-
-    @staticmethod
-    def normalizeToUnitVariance(df):
-        # normalize gene expression data for each gene vector (col) to unit length
-        pd.options.mode.chained_assignment = None 
-        for col in df:
-            if df[col].std() != 0:
-                df[col] = df[col]/df[col].std()
-            else:
-                print('df contains column '+str(col) + ' with std()==0. Normalization would produce nan value. Remove column ' + str(col) + ' before normalization.')
-        pd.options.mode.chained_assignment = 'warn'
-        return df
-

@@ -44,7 +44,7 @@ def default_missing_data(data):
         ct_dict['tcga'] = False if 'tcga' not in ct_dict.keys() else ct_dict['tcga']
         if 'sep' not in ct_dict.keys():
             print('Setting sep separator to \',\'...')
-            ct_dict['sep'] = ','
+            ct_dict['sep'] = '\t'
         if 'tissue_type_field' not in ct_dict.keys():
             ct_dict['tissue_type_field'] = None
             ct_dict['tissue_type'] = None
@@ -144,7 +144,7 @@ def verify_input(data_, params_, fields_, logger=None):
     assert params['M_from'] <= params['M_to'], 'M_from must be smaller than or equal to M_to'
     for key in data.keys():
         if data[key]['tcga']:
-            data[key] = {'ged': get_tcga_ged_name(key), 'pt': get_tcga_pt_name(key), 'sep': ',', 'tcga': True, 'tissue_type_field': data[key]['tissue_type_field'], 'tissue_type': data[key]['tissue_type']}
+            data[key] = {'ged': get_tcga_ged_name(key), 'pt': get_tcga_pt_name(key), 'sep': '\t', 'tcga': True, 'tissue_type_field': data[key]['tissue_type_field'], 'tissue_type': data[key]['tissue_type']}
         else:
             assert data[key]['ged'] and data[key]['pt'], 'Specify ged (gene expression data) file name and pt (pheno type) file name for each cohort if tcga option is set to False.'
     if not (data == data_) and (fields == fields_) and (params == params_):

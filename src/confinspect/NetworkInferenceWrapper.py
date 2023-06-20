@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import itertools as itt
 import os
+import numpy as np
 
 class NetworkInferenceWrapper(ABC):
     """An abstract wrapper class for network inference methods.
@@ -44,8 +45,17 @@ class NetworkInferenceWrapper(ABC):
             Rank of executing process. Default is 0.
         """
         self._inferred_networks.clear()
+        print('infer networks:')
         for block_id in self.partition.keys():
             block = self.partition[block_id]
+            before = len(block)
+            block = [item for item in block if item == item]
+            print(before == len(block))
+            if before != len(block):
+                #print(before)
+                #print(len(block))
+                raise Exception
+            #assert all([item == item for item in block])
             self._inferred_networks.update({block_id : self._infer_network(self.expression_data.loc[block], rank)})
 
     def mean_jaccard_index_at_k(self, k):

@@ -6,6 +6,7 @@ import numpy as np
 import subprocess
 import csv
 import qnorm
+import rpy2.robjects as robjects
 
 class WGCNAWrapper(NetworkInferenceWrapper):
 
@@ -33,7 +34,7 @@ class WGCNAWrapper(NetworkInferenceWrapper):
              https://github.com/bionetslab/grn-confounders to use predefined wrappers.'
 
         data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
-        
+
         # Quantile normalization of samples
         expression_data = expression_data.loc[:, (expression_data != 0).any(axis=0)]
         expression_data = qnorm.quantile_normalize(expression_data, axis=0)
@@ -54,8 +55,12 @@ class WGCNAWrapper(NetworkInferenceWrapper):
         command = f'Rscript {prog} {prefix}'
         ret = subprocess.run(command, shell=True)
 
+        robjects.r['source'](prog)
+        get_netw = robjects.globalenv['get_netw']
+        get_netw(str(prefix))
+
         # get results
-        network = pd.read_csv(out_path, sep='\t', index_col=0)
+        network = pd.read_csv(out_path, sep='\t', index_col=False)
         network = network.sort_values(by=['score', 'source', 'target'], axis=0, ascending=False)
         network['type'] = 'undirected'
 

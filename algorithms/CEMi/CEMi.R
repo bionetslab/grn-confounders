@@ -1,14 +1,13 @@
-cemi <- getwd()
+get_netw <- function(prefix) {
+
 library("WGCNA")
 library("CEMiTool")
 library(igraph)
 
-main <- file.path(cemi, '..', '..')
 args <- commandArgs(trailingOnly=TRUE)
-prefix <- args[1]
 
-data_path <- paste(main, '/temp/', prefix, '_expression_data.csv', sep="")
-out_path <- paste(main, '/temp/', prefix, '_edge_list.csv', sep="")
+data_path <- paste('/dev/shm/', prefix, '_expression_data.csv', sep="")
+out_path <- paste('/dev/shm/', prefix,'_edge_list.csv', sep="")
 
 # gene data has to be of the form genes x samples
 geneData <- read.table(data_path, row.names=1, header = TRUE, sep='\t', as.is=TRUE)
@@ -24,4 +23,4 @@ Edges<<-graph_from_adjacency_matrix(adj, weighted=TRUE, diag=FALSE, mode = "undi
 Edges <- cbind(get.edgelist(Edges), E(Edges)$weight)
 colnames(Edges) <- c('source', 'target', 'score')
 write.table(Edges, out_path, sep='\t')
-
+}
