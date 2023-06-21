@@ -323,7 +323,7 @@ class TestRunner(object):
         """
         if not os.path.exists(os.path.join(self.cwd, 'partitions')):
             os.mkdir(os.path.join(self.cwd, 'partitions'))
-        expression_data = pd.read_csv(os.path.join(self.cwd,'..', 'data', sel_dict['ged']), sep='\t', header=0, index_col=0)
+        expression_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['ged']), sep='\t', header=0, index_col=0)
         print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
         expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
         print('Only leave protein-coding genes in expression data set for cohort ' + str(cancer_type_selector) + '...')
@@ -358,7 +358,7 @@ class TestRunner(object):
             tissue_type_field, tissue_type = None, None
         if logger:
             logger.info(cancer_type_selector + ' - Reading pheno type data from file: ' + sel_dict['pt'])
-        pheno_data = pd.read_csv(os.path.join(self.cwd, '..', 'data', sel_dict['pt']), sep='\t', header=0, index_col=0)
+        pheno_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['pt']), sep='\t', header=0, index_col=0)
         assert len(pheno_data.iloc[0]) == len(pheno_data.iloc[0].values)
         pheno_data['cohort'] = str(cancer_type_selector)
         if tissue_type is not None and tissue_type_field is not None:
