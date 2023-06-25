@@ -33,11 +33,7 @@ def download_TCGA_phenotype_data(cancer_type_selector):
     if cancer_type_selector in [str(val) for val in list(Selectors.TCGACancerTypeSelector)]:
         url = f'https://gdc-hub.s3.us-east-1.amazonaws.com/download/TCGA-{str(cancer_type_selector)}.GDC_phenotype.tsv.gz'
         pheno_data = pd.read_csv(url, delimiter='\t', index_col='submitter_id.samples')
-        print(ct)
         pheno_data =  pheno_data[pheno_data['sample_type.samples'] == 'Primary Tumor']
-        # rename columns
-        pheno_data = pheno_data.rename(columns={'gender.demographic': 'sex', 'age_at_initial_pathologic_diagnosis': 'age',
-                                            'tumor_stage.diagnoses': 'stage', 'race.demographic': 'ethnicity'}, errors='ignore')
         
         if not os.path.exists(os.path.join(cwd, 'data')):
             os.mkdir(os.path.join(cwd, 'data'))
