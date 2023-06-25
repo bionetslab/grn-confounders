@@ -7,8 +7,9 @@ The scripts and package provided in this repository allow users to investigate c
 ## Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade [pip](https://pypi.org/project/pip/).
 
-Download this repository. The directory results_paper can be omitted, unless you wish to visualize the results from our paper.
-#### Install confinspect as a local package from the source code. Move into the root directory of the repository, then run the following command:
+Download this repository. In the directory results/plots/ you find the plots in our paper. In results/, you find the jupyter-notebook and all results used to create the plots.
+#### Install confinspect as a local package from the source code
+Move into the root directory of the repository, then run the following command:
 ```
 pip install .
 ```
