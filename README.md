@@ -134,7 +134,7 @@ You can modify the config files such that you can run your own tests, or use the
 #### Reproduce the tests from the paper
 To reproduce the presented tests, you can use the scripts download_tcga_data.py before running run_tests.py. All scripts will use the TCGA study abbreviations we use in our paper to address the different cohorts.
 ##### Download TCGA data
-Make sure you are connected to the internet when running download_tcga_data.py. The script will download the data from [UCSC Xena](TODO), aggregate substages into superior stages and merge stages iii and iv, as described in our paper. Further, the columns 'gender.demographic', 'age_at_initial_pathologic_diagnosis', 'race.demographic', and 'tumor_stage.diagnoses' will be renamed into 'sex', 'age', 'ethnicity', and 'stage', respectively, as in our tests. The pheno type file and gene expression file are saved to the data directory.
+Make sure you are connected to the internet when running download_tcga_data.py. The script will download the data from [UCSC Xena](TODO), aggregate substages into superior stages and merge stages iii and iv, as described in our paper. Note that the columns 'gender.demographic', 'age_at_initial_pathologic_diagnosis', 'race.demographic', and 'tumor_stage.diagnoses' will not be renamed into 'sex', 'age', 'ethnicity', and 'stage', respectively, as in our tests. The pheno type file and gene expression file are saved to the data directory.
 
 To download the LUSC and HNSC cohorts and the human known transcription factors, use the following command:
 ```
