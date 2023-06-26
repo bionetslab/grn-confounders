@@ -1,5 +1,4 @@
 HNSC: # required! arbitrary string identifier of the cohort
-
    ged: 'ged_file_name.csv' # required! name of the gene expression file, located in the data directory
    pt: 'pt_file_name.csv' # required! name of the pheno type file, located in the data directory
    sep: ',' # default ',' separator used in both the files at ged and pt, default is ','
