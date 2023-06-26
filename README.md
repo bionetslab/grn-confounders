@@ -4,6 +4,8 @@ Investigating confounding in gene regulatory networks (GRNs) and gene co-express
 
 The scripts and package provided in this repository allow users to investigate confounding in network inference using the methods ARACNe-AP, CEMiTool, GENIE3, GRNBoost2, and WGCNA, as presented in this [paper](TODO). The directory 'results_paper' contains all the results presented and jupyter-notebooks used in the paper. Further, programmers can import the confinspect package directly into their own scripts to implement customized algorithm wrappers and testing procedures.
 
+Information on the output of the program can be found at the very bottom in 'Plot the results: output explained'.
+
 ## Prerequisites
 Install [Python](https://www.python.org/downloads/) version 3.8, [R](https://www.r-project.org/) version 4.2, and [Java](https://www.oracle.com/java/technologies/downloads/) openjdk version "1.8.0_345". Install [Apache ANT](https://ant.apache.org/). Upgrade [pip](https://pypi.org/project/pip/).
 
@@ -221,10 +223,10 @@ if __name__ == "__main__":
     print('This will throw an error unless the CustomWrapper gets implemented properly.')
     tr.run_all()
 ```
-##### Plot the results
-*Visualization of the first part of the protocol (i.e. comparisons of the networks inferred from the blocks of the same partition)
+##### Plot the results: output explained
+*Jupyter-notebook used in our paper can be found in results/
 
-Check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. The path names resolve as follows:
+Visualization of mean JIs obtained from comparing the networks inferred from the different blocks (see first part of the test protocol described in our paper): check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. The path names resolve as follows:
 
 JIs obtained from confounder-based partition _i_ of the cohort _cohort_ induced by the variable _variable_ inferred by the method _method_: cb\_{i}\_{method}\_{variable}\_{cohort}\_jaccInd.csv
 
@@ -232,13 +234,17 @@ JIs obtained from random partition _i_ of the cohort _cohort_ induced by the var
 
 Modify the entries for method names, confounders, and cohorts in the jupyter-notebook visualize_mean_JIs_blocks.ipynb, then run the notebook.
 
-*Visualization of the first part of the protocol (i.e. comparisons of the networks inferred from the single blocks with the network inferred from the entire data)
-
-Check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. The path names resolve as follows:
+Visualization of mean JIs obtained from comparing each network inferred from a single block with a network inferred from the whole data (see second part of the test protocol described in our paper): check whether the computed mean Jaccard Indices (JIs) are stored in results/JI. The path names resolve as follows:
 
 JIs obtained from comparison of the network inferred from block _l_ belongin to the confounder-based partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_conf\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
 
 JIs obtained from comparison of the network inferred from block _l_ belongin to the random partition _i_ of the cohort _cohort_ induced by the variable _variable_, with the network inferred from the entire data, both inferred by the method _method_: g\_all\_rnd\_i\_{method}\_{confounder}\_{cohort}\_{l}\_jaccInd.csv
+
+All lists of mean Jaccard Indices are comma-separated csv files with five columns: size intersection, size union, state (information about availability of edges in the compared networks), k, mean JI.
+
+All networks are stored as comma-separated csv files with four columns: source gene, target gene, score, type. In case of undirected networks, the two connected genes are sorted lexicographically (source <= target).
+
+log.txt is the default name for the log file. It contains information about block sizes, the chi^2 tests, and program run.
 
 ## License
 GNU General Public License v3.0
