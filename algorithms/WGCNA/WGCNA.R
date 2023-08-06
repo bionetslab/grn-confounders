@@ -5,20 +5,12 @@ get_netw <- function(prefix) {
         enableWGCNAThreads(nThreads=2)
         library(reshape2, warn.conflicts=FALSE)
         main <- file.path(wgcna)
-        #args <- commandArgs(trailingOnly=TRUE)
-        #prefix <- args[1]
-
-        #data_path <- paste('/dev/shm/', prefix, '_expression_data.csv', sep= "")
-        #out_path <- paste('/dev/shm/', prefix,  '_edge_list.csv', sep = "")
 
 	data_path <- paste(wgcna, '/temp/', prefix, '_expression_data.csv', sep= "")
 	out_path <- paste(wgcna, '/temp/', prefix,  '_edge_list.csv', sep = "")
 
         datExpr <- read.csv(data_path, header = TRUE, sep='\t', as.is=TRUE)
-        #print('after read:')
-	#print(head(datExpr))
 	datExpr <- datExpr[-c(1)]
-	#print(datExpr[0:5,0:5])
 
         # https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/Tutorials/Simulated-05-NetworkConstruction.pdf
         powers = c(c(1:10), seq(from = 10, to=20, by=2))
@@ -46,11 +38,7 @@ get_netw <- function(prefix) {
         #edges<-edges[(edges$score > 0.001),]
 
         edges$score<-as.numeric(as.character(edges$score))
-	#print(head(edges))
-	#network = network.sort_values(by=['score', 'source', 'target'], axis=0, ascending=False)
         edges <- edges[order(edges$score,edges$source,edges$target, decreasing=TRUE),]
-	print(head(edges))
-
 	write.table(edges[1:5005,], out_path, sep='\t', row.names=FALSE)
 }
                                               
