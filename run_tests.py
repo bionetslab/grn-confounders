@@ -68,10 +68,15 @@ def parse_config(data_p, fields_p, params_p):
     return data, fields, params
 
 if __name__ == '__main__':
-    InputHandler.setup_directories()
     data_p, fields_p, params_p = 'data.yml', 'fields.yml', 'params.yml'
     data, fields, params = parse_config(data_p, fields_p, params_p)
     print(params)
     print(fields)
     print(data)
+    if params['par']:
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        rank= comm.Get_rank()
+        if rank == 0:
+            InputHandler.setup_directories()
     run_tests(data, fields, params)
