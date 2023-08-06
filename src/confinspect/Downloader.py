@@ -55,6 +55,6 @@ def download_protein_coding_genes():
     if not os.path.exists(os.path.join(cwd, 'data')):
         os.mkdir(os.path.join(cwd, 'data'))
     df = pd.read_csv('http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/locus_groups/protein-coding_gene.txt', delimiter='\t', index_col=False, dtype=str)
-    df = df['ensembl_gene_id']
+    df = df[['ensembl_gene_id', 'symbol']]
     df.to_csv(os.path.join(cwd, 'data', 'protein-coding_gene.csv'), sep=',', index=False)
 

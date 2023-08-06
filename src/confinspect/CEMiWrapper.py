@@ -33,12 +33,10 @@ class CEMiWrapper(NetworkInferenceWrapper):
         prefix = 'cemi'+str(rank)
 
         expression_data = expression_data.T
-        #data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
-        data_path = os.path.abspath(f'/dev/shm/{prefix}_expression_data.csv')
+        data_path = os.path.join(main, 'temp', f'{prefix}_expression_data.csv')
         expression_data.to_csv(data_path, sep='\t')
 
-        #out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
-        out_path = os.path.abspath(f'/dev/shm/{prefix}_edge_list.csv')
+        out_path = os.path.join(main, 'temp', f'{prefix}_edge_list.csv')
 
         prog = os.path.join(main, 'algorithms', 'CEMi', 'CEMi.R')
         robjects.r['source'](prog)
