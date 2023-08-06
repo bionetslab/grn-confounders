@@ -122,7 +122,6 @@ class TestRunner(object):
         new = [item for sublist in l for item in sublist if item == item]
         print('new len: ' + str(len(new)))
         assert len(set(new)) == len(new), 'Duplicates in list!'
-        #assert all([not math.isnan(x) for x in new]), 'nan value in index encountered!'
         return new
 
     def infer_g_all(self):
@@ -324,6 +323,7 @@ class TestRunner(object):
         if not os.path.exists(os.path.join(self.cwd, 'partitions')):
             os.mkdir(os.path.join(self.cwd, 'partitions'))
         expression_data = pd.read_csv(os.path.join(self.cwd, 'data', sel_dict['ged']), sep='\t', header=0, index_col=0)
+        expression_data = expression_data.astype(float)
         print('Remove version identifiers from gene symbols in expression data for cohort ' + str(cancer_type_selector) + '...')
         expression_data.columns = expression_data.columns.str.split('.').str[0].tolist()
         print('Only leave protein-coding genes in expression data set for cohort ' + str(cancer_type_selector) + '...')
@@ -420,16 +420,16 @@ class TestRunner(object):
                 pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iia', 'stage iib', 'stage iic']), 'tumor_stage.diagnoses'] = 'stage ii'
                 pheno_data.loc[pheno_data['tumor_stage.diagnoses'].str.strip().isin(['stage iiia', 'stage iiib', 'stage iiic', 'stage iv', 'stage iva', 'stage ivb', 'stage ivc']), 'tumor_stage.diagnoses'] = 'stage iii'
                 print('Aggregated stages according to field tumor_stage.diagnoses (i.e. stage) into stages i, ii, and iii+iv.\n')
-            blocks = sorted(list(set(pheno_data[pheno_field].str.strip().values)))
+            blocks = sorted(list(set(pheno_data[pheno_field].astype('string').str.strip().values)))
             if logger:
                 logger.info('Induce partition by ' + str(pheno_field) + '\n')
             for block_attr in blocks:
-                samples = pheno_data.loc[pheno_data[pheno_field].str.strip() == block_attr].index.tolist()
+                samples = pheno_data.loc[pheno_data[pheno_field].astype('string').str.strip() == str(block_attr)].index.tolist()
                 samples = [x for x in samples if str(x) != 'nan']
                 if len(samples) >= min_block_size:
                     samples = [sample for sample in samples if sample == sample]
                     assert all([item == item for item in samples])
-                    print(pheno_field + ' ' + str(len(samples)))
+                    print(block_attr + ' ' + str(len(samples)))
                     conf_partition.append((block_attr, samples))
                     if logger:
                         logger.info('block ' + block_attr + ': ' + str(len(samples)) + ' samples\n')
