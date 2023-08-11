@@ -1,5 +1,6 @@
 from confinspect import Downloader
 import argparse
+from confinspect import Selectors
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -9,7 +10,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not args.ct:
-        ct_sels = ['brca_metabric', 'BRCA', 'CESC', 'COAD', 'GBM', 'HNSC', 'KIRC', 'KIRP', 'LUSC', 'PCPG', 'READ', 'STAD']
+        ct_sels = ['brca_metabric'] + [str(val) for val in list(Selectors.TCGACancerTypeSelector)]
     else:
         ct_sels = list(args.ct)
 
