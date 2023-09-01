@@ -75,8 +75,8 @@ def download_metabric_data():
     assert pd.Series(pheno.index).is_unique
     pheno = pheno.set_index('Sample Identifier')
     # add age_quartile column according to age quartiles in TCGA-BRCA data (values taken from paper)
-    pheno = pheno[(pheno['Age at Diagnosis'].astype(float) <= 49) | (pheno['Age at Diagnosis'].astype(float) > 67)]
-    pheno['age_quartile'] = np.where(pheno['Age at Diagnosis'].astype(float) > 67, 'upper', 'lower')
+    pheno.loc[(pheno['Age at Diagnosis'].astype(float) <= 49, 'age_quartile')] = 'lower'
+    pheno.loc[(pheno['Age at Diagnosis'].astype(float) > 67, 'age_quartile')] = 'upper'
     # save expression data and phenotype data
     pheno.to_csv(os.path.join(cwd, 'data', 'metabric_brca_pheno.tsv'), sep='\t')
     df.to_csv(os.path.join(cwd, 'data', 'metabric_brca.tsv'), sep='\t')
