@@ -10,28 +10,6 @@ import os
 
 class TCGACancerTypeSelector(Enum):
     """Enum listing TCGA cancer type selectors by study abbreviations."""
-    ACC = 'ACC'
-    LAML = 'LAML'
-    CHOL = 'CHOL'
-    BLCA = 'BLCA'
-    UCEC = 'UCEC'
-    ESCA = 'ESCA'
-    KICH = 'KICH'
-    DLBC = 'DLBC'
-    LIHC = 'LIHC'
-    LGG = 'LGG'
-    LUAD = 'LUAD'
-    SKCM = 'SKCM'
-    MESO = 'MESO'
-    UVM = 'UVM'
-    OV = 'OV'
-    PAAD = 'PAAD'
-    PRAD = 'PRAD'
-    SARC = 'SARC'
-    TGCT = 'TGCT'
-    THYM = 'THYM'
-    THCA = 'THCA'
-    UCS = 'UCS'
     PCPG = 'PCPG'
     GBM = 'GBM'
     COAD = 'COAD'
@@ -43,6 +21,7 @@ class TCGACancerTypeSelector(Enum):
     CESC = 'CESC'
     KIRP = 'KIRP'
     KIRC = 'KIRC'
+    PRAD = 'PRAD'
 
     def __str__(self):
         return self.value

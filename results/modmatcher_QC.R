@@ -1,7 +1,7 @@
 library(Modmatcher)
 
 cwd <- getwd()
-cohorts <- list('COAD')#, 'KIRC', 'KIRP', 'LUSC', 'PCPG', 'READ', 'STAD')
+cohorts <- list('GBM')#, 'KIRC', 'KIRP', 'LUSC', 'PCPG', 'READ', 'STAD')
 
 for (cohort in cohorts) {
     expr_data <- read.csv(paste0(cwd,"/datasets/", paste0("TCGA-", cohort, ".htseq_fpkm.tsv")), header = TRUE, row.names=1, sep = "\t")
@@ -15,8 +15,6 @@ for (cohort in cohorts) {
     # Select specific gene columns
     selected_genes <- c("ENSG00000129824", "ENSG00000067048")
     expr_data_selected <- expr_data[selected_genes]
-    #expr_data_selected <- expr_data_selected[expr_data_selected["ENSG00000129824"] != 0,]
-    #expr_data_selected <- expr_data_selected[expr_data_selected["ENSG00000067048"] != 0,]
 
     # Select phenotype columns containing 'Sex', 'sex', or 'gender'
     pheno_columns <- colnames(pheno_data)
