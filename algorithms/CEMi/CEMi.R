@@ -22,5 +22,5 @@ adj <- adj_data(cem)
 Edges<-graph_from_adjacency_matrix(adj, weighted=TRUE, diag=FALSE, mode = "undirected")
 Edges <- cbind(get.edgelist(Edges), E(Edges)$weight)
 colnames(Edges) <- c('source', 'target', 'score')
-write.table(Edges[1:5005,], out_path, sep='\t')
+write.table(Edges, out_path, sep='\t')
 }
